@@ -1,12 +1,25 @@
-# Dependencies
-node_modules/
+# Nuxt dev/build outputs
+.output
+.data
+.nuxt
+.nitro
+.cache
+dist
 
-# Build
-.output/
-.nuxt/
-dist/
+# Node dependencies
+node_modules
 
-# Environment
+# Logs
+logs
+*.log
+
+# Misc
+.DS_Store
+.fleet
+.idea
+.vscode
+
+# Local env files
 .env
 .env.*
 !.env.example
@@ -16,20 +29,10 @@ dist/
 *.db-journal
 
 # Bun
-bun.lockb
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Specs (never commit)
-ame-spec.md
+bun.lock
 
 # Turso
 .turso/
+
+# Specs (never commit)
+ame-spec.md
