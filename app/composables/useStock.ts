@@ -1,0 +1,70 @@
+interface ArticleFilters {
+  search?: string
+  categorie?: string
+  alerte?: boolean
+  page?: number
+  limit?: number
+}
+
+interface ArticleListItem {
+  id: string
+  reference: string
+  nom: string
+  categorieId: string | null
+  categorieNom: string | null
+  unite: string
+  prixUnitaire: number | null
+  stockActuel: number
+  seuilAlerte: number
+  emplacement: string | null
+}
+
+interface ArticlesResponse {
+  data: ArticleListItem[]
+  total: number
+  page: number
+  limit: number
+}
+
+export function useStock() {
+  const articles = ref<ArticleListItem[]>([])
+  const total = ref(0)
+  const loading = ref(false)
+  const error = ref<string | null>(null)
+
+  async function fetchArticles(filters: ArticleFilters = {}) {
+    loading.value = true
+    error.value = null
+
+    try {
+      const params = new URLSearchParams()
+      if (filters.search) params.set('search', filters.search)
+      if (filters.categorie) params.set('categorie', filters.categorie)
+      if (filters.alerte) params.set('alerte', 'true')
+      if (filters.page) params.set('page', String(filters.page))
+      if (filters.limit) params.set('limit', String(filters.limit))
+
+      const response = await $fetch<ArticlesResponse>(`/api/articles?${params}`)
+      articles.value = response.data
+      total.value = response.total
+    } catch (e: unknown) {
+      error.value = e instanceof Error ? e.message : 'Erreur lors du chargement'
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function createArticle(data: Record<string, unknown>) {
+    await $fetch('/api/articles', { method: 'POST', body: data })
+  }
+
+  async function updateArticle(id: string, data: Record<string, unknown>) {
+    await $fetch(`/api/articles/${id}`, { method: 'PUT', body: data })
+  }
+
+  async function deleteArticle(id: string) {
+    await $fetch(`/api/articles/${id}`, { method: 'DELETE' })
+  }
+
+  return { articles, total, loading, error, fetchArticles, createArticle, updateArticle, deleteArticle }
+}
