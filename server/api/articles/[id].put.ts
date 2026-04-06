@@ -1,7 +1,7 @@
 import { eq, sql } from 'drizzle-orm'
-import { db } from '~/server/db'
-import { articles } from '~/server/db/schema'
-import { updateArticleSchema } from '~/server/utils/validation'
+import { db } from '../../db'
+import { articles } from '../../db/schema'
+import { updateArticleSchema } from '../../utils/validation'
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')!

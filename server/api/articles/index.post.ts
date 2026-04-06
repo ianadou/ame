@@ -1,7 +1,7 @@
-import { db } from '~/server/db'
-import { articles } from '~/server/db/schema'
-import { createArticleSchema } from '~/server/utils/validation'
-import { generateId } from '~/server/utils/helpers'
+import { db } from '../../db'
+import { articles } from '../../db/schema'
+import { createArticleSchema } from '../../utils/validation'
+import { generateId } from '../../utils/helpers'
 
 export default defineEventHandler(async (event) => {
   const body = await readValidatedBody(event, createArticleSchema.parse)

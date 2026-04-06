@@ -1,5 +1,5 @@
-import { db } from '~/server/db'
-import { categories } from '~/server/db/schema'
+import { db } from '../../db'
+import { categories } from '../../db/schema'
 
 export default defineEventHandler(async () => {
   const allCategories = await db.select().from(categories).orderBy(categories.nom)

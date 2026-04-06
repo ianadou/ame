@@ -1,6 +1,6 @@
-import { eq, like, lte, sql, and } from 'drizzle-orm'
-import { db } from '~/server/db'
-import { articles, categories } from '~/server/db/schema'
+import { eq, lte, sql, and } from 'drizzle-orm'
+import { db } from '../../db'
+import { articles, categories } from '../../db/schema'
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event)
