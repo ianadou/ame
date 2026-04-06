@@ -13,7 +13,6 @@ const emit = defineEmits<{
 
 const searchQuery = ref('')
 const selectedArticleId = ref(props.articleId ?? '')
-const selectedArticleLabel = ref(props.articleLabel ?? '')
 const quantite = ref('')
 const fournisseurId = ref('')
 const chantierId = ref('')
@@ -25,7 +24,9 @@ const { data: articlesResult } = await useFetch('/api/articles', {
   watch: [searchQuery],
 })
 
-const { data: fournisseursData } = await useFetch<{ id: string; nom: string }[]>('/api/fournisseurs')
+const { data: fournisseursData } = await useFetch<{ id: string; nom: string }[]>(
+  '/api/fournisseurs',
+)
 const { data: chantiersData } = await useFetch<{ id: string; nom: string }[]>('/api/chantiers')
 
 const articleOptions = computed(() => {
@@ -70,7 +71,7 @@ function handleSubmit() {
       />
     </div>
     <div v-else>
-      <label class="mb-1 block text-sm font-medium text-slate-700">Article</label>
+      <p class="mb-1 text-sm font-medium text-slate-700">Article</p>
       <p class="text-sm text-slate-900">{{ articleLabel }}</p>
     </div>
 
