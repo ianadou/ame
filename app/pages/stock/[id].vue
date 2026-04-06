@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import { ArrowLeft, Plus, Minus, Pencil } from 'lucide-vue-next'
+import { ArrowLeft, Plus, Minus } from 'lucide-vue-next'
 
 const route = useRoute()
 const articleId = route.params.id as string
+
+const showEntreeModal = ref(false)
+const showSortieModal = ref(false)
 
 interface ArticleMouvement {
   id: string
@@ -50,6 +53,13 @@ function stockLabel(a: { stockActuel: number; seuilAlerte: number }) {
   return 'En stock'
 }
 
+async function handleMouvement(data: Record<string, unknown>) {
+  await $fetch('/api/mouvements', { method: 'POST', body: data })
+  showEntreeModal.value = false
+  showSortieModal.value = false
+  await refresh()
+}
+
 function formatDate(iso: string) {
   return new Intl.DateTimeFormat('fr-FR', {
     day: '2-digit',
@@ -76,11 +86,11 @@ function formatDate(iso: string) {
         <p class="text-sm text-slate-500">{{ article.reference }}</p>
       </div>
       <div class="flex gap-2">
-        <AppButton variant="secondary" size="sm">
+        <AppButton variant="secondary" size="sm" @click="showEntreeModal = true">
           <Plus class="h-4 w-4" />
           Entrée
         </AppButton>
-        <AppButton variant="secondary" size="sm">
+        <AppButton variant="secondary" size="sm" @click="showSortieModal = true">
           <Minus class="h-4 w-4" />
           Sortie
         </AppButton>
@@ -164,5 +174,33 @@ function formatDate(iso: string) {
         />
       </AppCard>
     </div>
+    <!-- Mouvement modals -->
+    <AppModal v-model:open="showEntreeModal" title="Entrée de stock">
+      <MouvementForm
+        type="entree"
+        :article-id="article.id"
+        :article-label="`${article.reference} — ${article.nom}`"
+        @submit="handleMouvement"
+      >
+        <template #actions>
+          <AppButton variant="secondary" @click="showEntreeModal = false">Annuler</AppButton>
+          <AppButton type="submit">Valider l'entrée</AppButton>
+        </template>
+      </MouvementForm>
+    </AppModal>
+
+    <AppModal v-model:open="showSortieModal" title="Sortie de stock">
+      <MouvementForm
+        type="sortie"
+        :article-id="article.id"
+        :article-label="`${article.reference} — ${article.nom}`"
+        @submit="handleMouvement"
+      >
+        <template #actions>
+          <AppButton variant="secondary" @click="showSortieModal = false">Annuler</AppButton>
+          <AppButton type="submit">Valider la sortie</AppButton>
+        </template>
+      </MouvementForm>
+    </AppModal>
   </div>
 </template>
