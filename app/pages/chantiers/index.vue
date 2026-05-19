@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Plus } from 'lucide-vue-next'
+import { Plus, Upload, Download } from 'lucide-vue-next'
 import { useDebounceFn } from '@vueuse/core'
 
 const { chantiers, loading, fetchChantiers, createChantier } = useChantiers()
@@ -7,6 +7,9 @@ const { chantiers, loading, fetchChantiers, createChantier } = useChantiers()
 const search = ref('')
 const statutFilter = ref('')
 const showCreateModal = ref(false)
+const showImportModal = ref(false)
+const showExportModal = ref(false)
+const importEntites = [{ value: 'chantiers', label: 'Chantiers' }]
 
 const statutOptions = [
   { value: 'en_cours', label: 'En cours' },
@@ -60,10 +63,20 @@ await loadChantiers()
         </div>
         <AppSelect v-model="statutFilter" :options="statutOptions" placeholder="Tous les statuts" />
       </div>
-      <AppButton @click="showCreateModal = true">
-        <Plus class="h-4 w-4" />
-        Ajouter
-      </AppButton>
+      <div class="flex gap-2">
+        <AppButton variant="secondary" @click="showExportModal = true">
+          <Download class="h-4 w-4" />
+          Exporter
+        </AppButton>
+        <AppButton variant="secondary" @click="showImportModal = true">
+          <Upload class="h-4 w-4" />
+          Importer
+        </AppButton>
+        <AppButton @click="showCreateModal = true">
+          <Plus class="h-4 w-4" />
+          Ajouter
+        </AppButton>
+      </div>
     </div>
 
     <!-- Table -->
@@ -143,5 +156,7 @@ await loadChantiers()
         </template>
       </ChantierForm>
     </AppModal>
+
+    <ImportDialog v-model:open="showImportModal" :entites="importEntites" @done="loadChantiers" />
   </div>
 </template>
