@@ -5,7 +5,10 @@ import {
   ArrowLeftRight,
   ShoppingCart,
   Truck,
-  HardHat,
+  Users,
+  PackageMinus,
+  Tags,
+  Settings,
   Search,
 } from 'lucide-vue-next'
 
@@ -17,10 +20,13 @@ defineEmits<{ close: [] }>()
 const navigation = [
   { name: 'Dashboard', to: '/', icon: LayoutDashboard },
   { name: 'Stock', to: '/stock', icon: Package },
-  { name: 'Mouvements', to: '/mouvements', icon: ArrowLeftRight },
+  { name: 'Catégories', to: '/categories', icon: Tags },
+  { name: 'Bons de sortie', to: '/sorties', icon: PackageMinus },
+  { name: 'Transactions', to: '/mouvements', icon: ArrowLeftRight },
   { name: 'Commandes', to: '/commandes', icon: ShoppingCart },
   { name: 'Fournisseurs', to: '/fournisseurs', icon: Truck },
-  { name: 'Chantiers', to: '/chantiers', icon: HardHat },
+  { name: 'Clients', to: '/clients', icon: Users },
+  { name: 'Réglages', to: '/parametres', icon: Settings },
 ]
 
 const { data: alertes } = await useFetch<unknown[]>('/api/alertes', { default: () => [] })
@@ -31,6 +37,18 @@ const { data: dashboard } = await useFetch<{ valeurStock: number }>('/api/dashbo
 const nbAlertes = computed(() => alertes.value?.length ?? 0)
 const valeurK = computed(() =>
   Math.round((dashboard.value?.valeurStock ?? 0) / 1000).toLocaleString('fr-FR'),
+)
+
+const { user, editing } = useSessionUser()
+const initiales = computed(() => {
+  const p = user.value.utilisateurPrenom?.[0] ?? ''
+  const n = user.value.utilisateurNom?.[0] ?? ''
+  return (p + n).toUpperCase() || '—'
+})
+const nomComplet = computed(
+  () =>
+    `${user.value.utilisateurPrenom ?? ''} ${user.value.utilisateurNom ?? ''}`.trim() ||
+    'Utilisateur',
 )
 </script>
 
@@ -86,17 +104,21 @@ const valeurK = computed(() =>
         {{ valeurK }}<span class="ml-1 text-[13px] text-muted">K FCFA</span>
       </div>
 
-      <div class="mt-1 flex items-center gap-2.5 border-t border-line pt-3">
+      <button
+        class="mt-1 flex w-full items-center gap-2.5 rounded-md border-t border-line pt-3 text-left transition-colors hover:opacity-80"
+        title="Modifier mon profil"
+        @click="editing = true"
+      >
         <div
           class="flex h-8 w-8 items-center justify-center rounded-full bg-ink text-[11.5px] font-semibold text-white"
         >
-          KK
+          {{ initiales }}
         </div>
         <div class="leading-tight">
-          <div class="text-[12.5px] font-medium text-ink">Kouamé K.</div>
+          <div class="text-[12.5px] font-medium text-ink">{{ nomComplet }}</div>
           <div class="text-[11px] text-muted">Gérant</div>
         </div>
-      </div>
+      </button>
     </div>
   </aside>
 </template>

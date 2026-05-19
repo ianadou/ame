@@ -1,6 +1,6 @@
-import { eq, sql } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import { db } from '../../db'
-import { commandes, lignesCommande, articles, mouvements } from '../../db/schema'
+import { commandes, lignesCommande } from '../../db/schema'
 import { updateCommandeSchema } from '../../utils/validation'
 import { generateId } from '../../utils/helpers'
 
@@ -11,6 +11,15 @@ export default defineEventHandler(async (event) => {
   const [existing] = await db.select().from(commandes).where(eq(commandes.id, id))
   if (!existing) {
     throw createError({ statusCode: 404, message: 'Commande introuvable' })
+  }
+
+  // Les statuts « partielle » et « recue » sont pilotés par les réceptions
+  // (POST /api/commandes/:id/reception) qui mettent le stock à jour.
+  if (body.statut === 'recue' || body.statut === 'partielle') {
+    throw createError({
+      statusCode: 400,
+      message: 'Le passage en « reçue » se fait via une réception de commande',
+    })
   }
 
   // Les lignes ne sont modifiables qu'en brouillon
@@ -27,8 +36,6 @@ export default defineEventHandler(async (event) => {
   if (body.dateLivraisonPrevue !== undefined) champs.dateLivraisonPrevue = body.dateLivraisonPrevue
   if (body.notes !== undefined) champs.notes = body.notes
 
-  const receptionne = body.statut === 'recue' && existing.statut !== 'recue'
-
   await db.transaction(async (tx) => {
     if (body.lignes) {
       await tx.delete(lignesCommande).where(eq(lignesCommande.commandeId, id))
@@ -42,32 +49,6 @@ export default defineEventHandler(async (event) => {
           prixUnitaire: ligne.prixUnitaire ?? null,
         })),
       )
-    }
-
-    if (receptionne) {
-      const lignes = await tx.select().from(lignesCommande).where(eq(lignesCommande.commandeId, id))
-
-      for (const ligne of lignes) {
-        await tx.insert(mouvements).values({
-          id: generateId(),
-          articleId: ligne.articleId,
-          type: 'entree',
-          quantite: ligne.quantite,
-          fournisseurId: existing.fournisseurId,
-          motif: `Réception commande ${existing.reference}`,
-        })
-        await tx
-          .update(articles)
-          .set({
-            stockActuel: sql`${articles.stockActuel} + ${ligne.quantite}`,
-            updatedAt: sql`(datetime('now'))`,
-          })
-          .where(eq(articles.id, ligne.articleId))
-        await tx
-          .update(lignesCommande)
-          .set({ quantiteRecue: ligne.quantite })
-          .where(eq(lignesCommande.id, ligne.id))
-      }
     }
 
     if (Object.keys(champs).length > 0) {

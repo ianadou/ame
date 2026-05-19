@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core'
+import { sqliteTable, text, integer, real, check } from 'drizzle-orm/sqlite-core'
 import { sql } from 'drizzle-orm'
 
 export const categories = sqliteTable('categories', {
@@ -11,24 +11,32 @@ export const categories = sqliteTable('categories', {
     .notNull(),
 })
 
-export const articles = sqliteTable('articles', {
-  id: text('id').primaryKey(),
-  reference: text('reference').notNull().unique(),
-  nom: text('nom').notNull(),
-  categorieId: text('categorie_id').references(() => categories.id, { onDelete: 'set null' }),
-  unite: text('unite').notNull().default('pièce'),
-  prixUnitaire: real('prix_unitaire'),
-  stockActuel: integer('stock_actuel').notNull().default(0),
-  seuilAlerte: integer('seuil_alerte').notNull().default(5),
-  emplacement: text('emplacement'),
-  notes: text('notes'),
-  createdAt: text('created_at')
-    .default(sql`(datetime('now'))`)
-    .notNull(),
-  updatedAt: text('updated_at')
-    .default(sql`(datetime('now'))`)
-    .notNull(),
-})
+export const articles = sqliteTable(
+  'articles',
+  {
+    id: text('id').primaryKey(),
+    reference: text('reference').notNull().unique(),
+    nom: text('nom').notNull(),
+    categorieId: text('categorie_id').references(() => categories.id, { onDelete: 'set null' }),
+    unite: text('unite').notNull().default('pièce'),
+    prixUnitaire: real('prix_unitaire'),
+    stockActuel: integer('stock_actuel').notNull().default(0),
+    seuilAlerte: integer('seuil_alerte').notNull().default(5),
+    emplacement: text('emplacement'),
+    notes: text('notes'),
+    createdAt: text('created_at')
+      .default(sql`(datetime('now'))`)
+      .notNull(),
+    updatedAt: text('updated_at')
+      .default(sql`(datetime('now'))`)
+      .notNull(),
+  },
+  (t) => [
+    check('articles_prix_positif', sql`${t.prixUnitaire} IS NULL OR ${t.prixUnitaire} > 0`),
+    check('articles_stock_positif', sql`${t.stockActuel} >= 0`),
+    check('articles_seuil_positif', sql`${t.seuilAlerte} >= 0`),
+  ],
+)
 
 export const fournisseurs = sqliteTable('fournisseurs', {
   id: text('id').primaryKey(),
@@ -43,36 +51,88 @@ export const fournisseurs = sqliteTable('fournisseurs', {
     .notNull(),
 })
 
-export const chantiers = sqliteTable('chantiers', {
+export const clients = sqliteTable('clients', {
   id: text('id').primaryKey(),
   nom: text('nom').notNull(),
+  type: text('type').notNull().default('entreprise'),
+  contact: text('contact'),
+  telephone: text('telephone'),
+  email: text('email'),
   adresse: text('adresse'),
-  statut: text('statut').notNull().default('en_cours'),
-  dateDebut: text('date_debut'),
-  dateFin: text('date_fin'),
+  ville: text('ville'),
   notes: text('notes'),
   createdAt: text('created_at')
     .default(sql`(datetime('now'))`)
     .notNull(),
 })
 
-export const mouvements = sqliteTable('mouvements', {
-  id: text('id').primaryKey(),
-  articleId: text('article_id')
-    .references(() => articles.id, { onDelete: 'restrict' })
-    .notNull(),
-  type: text('type').notNull(),
-  quantite: integer('quantite').notNull(),
-  fournisseurId: text('fournisseur_id').references(() => fournisseurs.id, {
-    onDelete: 'set null',
-  }),
-  chantierId: text('chantier_id').references(() => chantiers.id, { onDelete: 'set null' }),
-  bonLivraison: text('bon_livraison'),
-  motif: text('motif'),
-  createdAt: text('created_at')
-    .default(sql`(datetime('now'))`)
-    .notNull(),
-})
+export const sorties = sqliteTable(
+  'sorties',
+  {
+    id: text('id').primaryKey(),
+    reference: text('reference').notNull().unique(),
+    clientId: text('client_id')
+      .references(() => clients.id, { onDelete: 'restrict' })
+      .notNull(),
+    dateSortie: text('date_sortie'),
+    objet: text('objet'),
+    montantTotal: real('montant_total').notNull().default(0),
+    modeReglement: text('mode_reglement').notNull().default('comptant'),
+    statutPaiement: text('statut_paiement').notNull().default('paye'),
+    montantPaye: real('montant_paye').notNull().default(0),
+    notes: text('notes'),
+    createdAt: text('created_at')
+      .default(sql`(datetime('now'))`)
+      .notNull(),
+  },
+  (t) => [
+    check('sorties_montant_total_positif', sql`${t.montantTotal} >= 0`),
+    check('sorties_montant_paye_positif', sql`${t.montantPaye} >= 0`),
+  ],
+)
+
+export const lignesSortie = sqliteTable(
+  'lignes_sortie',
+  {
+    id: text('id').primaryKey(),
+    sortieId: text('sortie_id')
+      .references(() => sorties.id, { onDelete: 'cascade' })
+      .notNull(),
+    articleId: text('article_id')
+      .references(() => articles.id, { onDelete: 'restrict' })
+      .notNull(),
+    quantite: integer('quantite').notNull(),
+    prixUnitaire: real('prix_unitaire').notNull().default(0),
+    stockApres: integer('stock_apres').notNull().default(0),
+  },
+  (t) => [
+    check('lignes_sortie_quantite_positive', sql`${t.quantite} > 0`),
+    check('lignes_sortie_prix_positif', sql`${t.prixUnitaire} >= 0`),
+    check('lignes_sortie_stock_positif', sql`${t.stockApres} >= 0`),
+  ],
+)
+
+export const mouvements = sqliteTable(
+  'mouvements',
+  {
+    id: text('id').primaryKey(),
+    articleId: text('article_id')
+      .references(() => articles.id, { onDelete: 'restrict' })
+      .notNull(),
+    type: text('type').notNull(),
+    quantite: integer('quantite').notNull(),
+    fournisseurId: text('fournisseur_id').references(() => fournisseurs.id, {
+      onDelete: 'set null',
+    }),
+    sortieId: text('sortie_id').references(() => sorties.id, { onDelete: 'set null' }),
+    bonLivraison: text('bon_livraison'),
+    motif: text('motif'),
+    createdAt: text('created_at')
+      .default(sql`(datetime('now'))`)
+      .notNull(),
+  },
+  (t) => [check('mouvements_quantite_positive', sql`${t.quantite} > 0`)],
+)
 
 export const commandes = sqliteTable('commandes', {
   id: text('id').primaryKey(),
@@ -89,15 +149,34 @@ export const commandes = sqliteTable('commandes', {
     .notNull(),
 })
 
-export const lignesCommande = sqliteTable('lignes_commande', {
+// Paramètres applicatifs mono-ligne (id fixe 'app') : identité de
+// l'utilisateur de session (Phase 1 mono-poste, cf. archi déploiement).
+export const parametres = sqliteTable('parametres', {
   id: text('id').primaryKey(),
-  commandeId: text('commande_id')
-    .references(() => commandes.id, { onDelete: 'cascade' })
+  utilisateurPrenom: text('utilisateur_prenom'),
+  utilisateurNom: text('utilisateur_nom'),
+  updatedAt: text('updated_at')
+    .default(sql`(datetime('now'))`)
     .notNull(),
-  articleId: text('article_id')
-    .references(() => articles.id, { onDelete: 'restrict' })
-    .notNull(),
-  quantite: integer('quantite').notNull(),
-  quantiteRecue: integer('quantite_recue').notNull().default(0),
-  prixUnitaire: real('prix_unitaire'),
 })
+
+export const lignesCommande = sqliteTable(
+  'lignes_commande',
+  {
+    id: text('id').primaryKey(),
+    commandeId: text('commande_id')
+      .references(() => commandes.id, { onDelete: 'cascade' })
+      .notNull(),
+    articleId: text('article_id')
+      .references(() => articles.id, { onDelete: 'restrict' })
+      .notNull(),
+    quantite: integer('quantite').notNull(),
+    quantiteRecue: integer('quantite_recue').notNull().default(0),
+    prixUnitaire: real('prix_unitaire'),
+  },
+  (t) => [
+    check('lignes_commande_quantite_positive', sql`${t.quantite} > 0`),
+    check('lignes_commande_recue_positive', sql`${t.quantiteRecue} >= 0`),
+    check('lignes_commande_prix_positif', sql`${t.prixUnitaire} IS NULL OR ${t.prixUnitaire} > 0`),
+  ],
+)

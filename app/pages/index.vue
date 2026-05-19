@@ -7,7 +7,7 @@ import {
   Package,
   Coins,
   AlertTriangle,
-  HardHat,
+  Users,
   ArrowUpRight as ArrowLink,
 } from 'lucide-vue-next'
 interface Tendance {
@@ -39,17 +39,17 @@ interface DernierMouvement {
   articleNom: string | null
   articleReference: string | null
   fournisseurNom: string | null
-  chantierNom: string | null
+  clientNom: string | null
   createdAt: string
 }
 interface DashboardData {
   nbArticles: number
   valeurStock: number
   nbAlertes: number
-  nbChantiersEnCours: number
+  nbClients: number
   derniersMouvements: DernierMouvement[]
   topCategories: Tendance[]
-  topChantiers: Tendance[]
+  topClients: Tendance[]
   rotationJours: number
   couvertureJours: number
 }
@@ -175,9 +175,9 @@ const valEvolution = computed(() =>
         spark-color="#9E3A20"
       />
       <KpiCard
-        label="Chantiers en cours"
-        :value="fmt(dashboard?.nbChantiersEnCours ?? 0)"
-        :icon="HardHat"
+        label="Clients"
+        :value="fmt(dashboard?.nbClients ?? 0)"
+        :icon="Users"
         :spark="[4, 4, 5, 5, 5, 6, 6, 6]"
         spark-color="#475569"
       />
@@ -198,7 +198,7 @@ const valEvolution = computed(() =>
     <!-- Period KPI -->
     <div class="grid grid-cols-2 gap-4 lg:grid-cols-5">
       <KpiCard
-        label="Mouvements"
+        label="Transactions"
         :value="fmt(data.kpi.mvmts)"
         :delta="data.delta.mvmts"
         :delta-sub="data.deltaSub"
@@ -247,7 +247,7 @@ const valEvolution = computed(() =>
     <div class="grid grid-cols-1 gap-4 lg:grid-cols-12">
       <PanelCard
         class="lg:col-span-8"
-        :kicker="'Mouvements / ' + data.label.toLowerCase()"
+        :kicker="'Transactions / ' + data.label.toLowerCase()"
         title="Entrées vs sorties"
       >
         <template #action>
@@ -296,7 +296,7 @@ const valEvolution = computed(() =>
     <!-- Value evolution -->
     <PanelCard
       :kicker="'Évolution / ' + data.label.toLowerCase()"
-      title="Valeur des mouvements (FCFA)"
+      title="Valeur des transactions (FCFA)"
     >
       <template #action
         ><span class="text-[11.5px] text-muted">Cumul entrées + sorties</span></template
@@ -312,15 +312,19 @@ const valEvolution = computed(() =>
         <template #action><span class="text-[11.5px] text-muted">FCFA HT</span></template>
         <HBarList :items="dashboard?.topCategories ?? []" accent="slate" />
       </PanelCard>
-      <PanelCard :kicker="'Consommation / ' + data.label.toLowerCase()" title="Top chantiers">
+      <PanelCard :kicker="'Ventes / ' + data.label.toLowerCase()" title="Top clients">
         <template #action><span class="text-[11.5px] text-muted">FCFA HT</span></template>
-        <HBarList :items="dashboard?.topChantiers ?? []" accent="forest" />
+        <HBarList :items="dashboard?.topClients ?? []" accent="forest" />
       </PanelCard>
     </div>
 
     <!-- Latest + Alertes -->
     <div class="grid grid-cols-1 gap-4 lg:grid-cols-12">
-      <PanelCard class="lg:col-span-7" kicker="5 dernières opérations" title="Derniers mouvements">
+      <PanelCard
+        class="lg:col-span-7"
+        kicker="5 dernières opérations"
+        title="Dernières transactions"
+      >
         <template #action>
           <button
             class="flex items-center gap-1 text-[12px] text-muted hover:text-ink"
@@ -346,7 +350,7 @@ const valEvolution = computed(() =>
               </td>
               <td class="truncate px-2 py-2.5 text-[13px] text-ink">{{ m.articleNom }}</td>
               <td class="w-[140px] truncate px-2 py-2.5 text-[12.5px] text-muted">
-                {{ m.fournisseurNom || m.chantierNom || '—' }}
+                {{ m.fournisseurNom || m.clientNom || '—' }}
               </td>
               <td class="mono num w-[58px] px-2 py-2.5 text-right text-[13.5px] font-semibold">
                 {{ m.type === 'entree' ? '+' : '−' }}{{ m.quantite }}

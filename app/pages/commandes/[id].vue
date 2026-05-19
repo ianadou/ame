@@ -4,11 +4,13 @@ import { ArrowLeft, Trash2, Send, PackageCheck, Ban } from 'lucide-vue-next'
 const route = useRoute()
 const commandeId = route.params.id as string
 
-const { updateCommande, deleteCommande } = useCommandes()
+const { updateCommande, deleteCommande, receptionner } = useCommandes()
 const notifications = useNotifications()
 
 const actionError = ref<string | null>(null)
 const busy = ref(false)
+const showReception = ref(false)
+const recu = reactive<Record<string, string>>({})
 
 interface LigneCommande {
   id: string
@@ -47,8 +49,28 @@ const statutMeta: Record<
 > = {
   brouillon: { label: 'Brouillon', variant: 'neutral' },
   envoyee: { label: 'Envoyée', variant: 'info' },
+  partielle: { label: 'Reçue partiellement', variant: 'warning' },
   recue: { label: 'Reçue', variant: 'success' },
   annulee: { label: 'Annulée', variant: 'danger' },
+}
+
+const peutReceptionner = computed(
+  () =>
+    commande.value &&
+    commande.value.statut !== 'annulee' &&
+    commande.value.statut !== 'recue' &&
+    commande.value.lignes.some((l) => l.quantiteRecue < l.quantite),
+)
+
+function reste(l: LigneCommande) {
+  return l.quantite - l.quantiteRecue
+}
+
+function openReception(toutRecevoir = false) {
+  for (const l of commande.value?.lignes ?? []) {
+    recu[l.id] = toutRecevoir ? String(reste(l)) : ''
+  }
+  showReception.value = true
 }
 
 async function changeStatut(statut: string) {
@@ -58,12 +80,7 @@ async function changeStatut(statut: string) {
     await updateCommande(commandeId, { statut })
     await refresh()
     const cref = commande.value?.reference ?? ''
-    if (statut === 'recue') {
-      notifications.success(
-        `Commande ${cref} reçue`,
-        'Mouvements d’entrée créés, stock mis à jour.',
-      )
-    } else if (statut === 'envoyee') {
+    if (statut === 'envoyee') {
       notifications.info(`Commande ${cref} envoyée`, undefined, { desktop: false })
     } else if (statut === 'annulee') {
       notifications.warning(`Commande ${cref} annulée`)
@@ -71,6 +88,36 @@ async function changeStatut(statut: string) {
   } catch (e: unknown) {
     actionError.value = e instanceof Error ? e.message : 'Action impossible'
     notifications.danger('Action impossible', actionError.value ?? undefined)
+  } finally {
+    busy.value = false
+  }
+}
+
+async function handleReception() {
+  actionError.value = null
+  const lignes = Object.entries(recu)
+    .map(([ligneId, q]) => ({ ligneId, quantite: Number(q) }))
+    .filter((l) => l.quantite > 0)
+  if (lignes.length === 0) {
+    actionError.value = 'Saisissez au moins une quantité reçue.'
+    return
+  }
+  busy.value = true
+  try {
+    await receptionner(commandeId, lignes)
+    showReception.value = false
+    await refresh()
+    notifications.success(
+      `Réception enregistrée — ${commande.value?.reference ?? ''}`,
+      'Stock mis à jour, entrées créées.',
+    )
+  } catch (e: unknown) {
+    const msg =
+      e && typeof e === 'object' && 'data' in e
+        ? ((e as { data?: { message?: string } }).data?.message ?? 'Réception impossible')
+        : 'Réception impossible'
+    actionError.value = msg
+    notifications.danger('Réception impossible', msg)
   } finally {
     busy.value = false
   }
@@ -139,14 +186,14 @@ function formatMontant(montant: number) {
           Envoyer
         </AppButton>
         <AppButton
-          v-if="commande.statut === 'brouillon' || commande.statut === 'envoyee'"
+          v-if="peutReceptionner"
           variant="secondary"
           size="sm"
           :disabled="busy"
-          @click="changeStatut('recue')"
+          @click="openReception(false)"
         >
           <PackageCheck class="h-4 w-4" />
-          Marquer comme reçue
+          Réceptionner
         </AppButton>
         <AppButton
           v-if="commande.statut === 'brouillon' || commande.statut === 'envoyee'"
@@ -171,7 +218,7 @@ function formatMontant(montant: number) {
       </div>
     </div>
 
-    <p v-if="actionError" class="rounded-md bg-red-50 px-4 py-3 text-sm text-rust-dark">
+    <p v-if="actionError" class="rounded-md bg-rust/10 px-4 py-3 text-sm text-rust-dark">
       {{ actionError }}
     </p>
 
@@ -216,8 +263,9 @@ function formatMontant(montant: number) {
             <tr>
               <th>Référence</th>
               <th>Article</th>
-              <th class="text-right">Quantité</th>
-              <th class="text-right">Reçue</th>
+              <th class="text-right">Commandé</th>
+              <th class="text-right">Reçu</th>
+              <th class="text-right">Reste</th>
               <th class="text-right">Prix unitaire</th>
               <th class="text-right">Sous-total</th>
             </tr>
@@ -229,7 +277,13 @@ function formatMontant(montant: number) {
               <td class="px-4 py-3 text-right text-sm text-ink">
                 {{ ligne.quantite }} {{ ligne.unite }}
               </td>
-              <td class="px-4 py-3 text-right text-sm text-muted">{{ ligne.quantiteRecue }}</td>
+              <td class="px-4 py-3 text-right text-sm text-ink-2">{{ ligne.quantiteRecue }}</td>
+              <td
+                class="px-4 py-3 text-right text-sm font-medium"
+                :class="reste(ligne) > 0 ? 'text-rust-dark' : 'text-ink-3'"
+              >
+                {{ reste(ligne) }}
+              </td>
               <td class="px-4 py-3 text-right text-sm text-muted">
                 {{ ligne.prixUnitaire ? formatMontant(ligne.prixUnitaire) : '—' }}
               </td>
@@ -241,5 +295,52 @@ function formatMontant(montant: number) {
         </table>
       </AppCard>
     </div>
+
+    <!-- Réception modal -->
+    <AppModal v-model:open="showReception" title="Réceptionner la commande">
+      <div class="space-y-4">
+        <div class="flex justify-end">
+          <AppButton variant="ghost" size="sm" @click="openReception(true)">
+            Tout recevoir
+          </AppButton>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Article</th>
+                <th class="text-right">Reste</th>
+                <th class="text-right">Quantité reçue</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="ligne in commande.lignes" :key="ligne.id" class="border-b border-line/60">
+                <td class="px-4 py-2 text-sm text-ink-2">
+                  {{ ligne.reference }} — {{ ligne.nom }}
+                </td>
+                <td class="px-4 py-2 text-right text-sm text-muted">{{ reste(ligne) }}</td>
+                <td class="px-4 py-2">
+                  <AppInput
+                    v-model="recu[ligne.id]"
+                    type="number"
+                    align="right"
+                    :placeholder="String(reste(ligne))"
+                  />
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="text-[11px] text-muted">
+          La quantité reçue s'ajoute au stock et ne peut pas dépasser le reste à recevoir.
+        </p>
+        <div class="flex justify-end gap-3 pt-1">
+          <AppButton variant="secondary" :disabled="busy" @click="showReception = false">
+            Annuler
+          </AppButton>
+          <AppButton :disabled="busy" @click="handleReception"> Valider la réception </AppButton>
+        </div>
+      </div>
+    </AppModal>
   </div>
 </template>

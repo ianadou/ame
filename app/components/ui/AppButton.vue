@@ -2,7 +2,7 @@
 import { Loader2 } from 'lucide-vue-next'
 
 interface Props {
-  variant?: 'primary' | 'secondary' | 'ghost'
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger'
   size?: 'default' | 'sm'
   loading?: boolean
   disabled?: boolean
@@ -20,6 +20,7 @@ const variantClasses = {
   secondary:
     'border border-line bg-white text-ink hover:bg-paper-4 hover:border-line-2 shadow-soft focus:ring-line-2',
   ghost: 'text-ink-3 hover:text-ink hover:bg-paper-2 focus:ring-line-2',
+  danger: 'bg-rust text-white hover:bg-rust-dark shadow-soft focus:ring-rust',
 }
 
 const sizeClasses = {

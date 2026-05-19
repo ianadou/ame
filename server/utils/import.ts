@@ -3,23 +3,18 @@ import ExcelJS from 'exceljs'
 import { eq } from 'drizzle-orm'
 import type { ZodTypeAny } from 'zod'
 import { db } from '../db'
-import { articles, categories, fournisseurs, chantiers } from '../db/schema'
+import { articles, categories, fournisseurs, clients } from '../db/schema'
 import { generateId } from './helpers'
 import {
   importArticleSchema,
   importCategorieSchema,
   importFournisseurSchema,
-  importChantierSchema,
+  importClientSchema,
 } from './validation'
 
-export type EntiteImport = 'articles' | 'categories' | 'fournisseurs' | 'chantiers'
+export type EntiteImport = 'articles' | 'categories' | 'fournisseurs' | 'clients'
 
-export const ENTITES_IMPORT: EntiteImport[] = [
-  'articles',
-  'categories',
-  'fournisseurs',
-  'chantiers',
-]
+export const ENTITES_IMPORT: EntiteImport[] = ['articles', 'categories', 'fournisseurs', 'clients']
 
 export const MAX_TAILLE = 5 * 1024 * 1024
 export const MAX_LIGNES = 5000
@@ -144,7 +139,7 @@ async function lireFichier(
   throw createError({ statusCode: 400, message: 'Format non supporté (utiliser .csv ou .xlsx)' })
 }
 
-async function upsertParNom<T extends typeof fournisseurs | typeof chantiers | typeof categories>(
+async function upsertParNom<T extends typeof fournisseurs | typeof clients | typeof categories>(
   table: T,
   lignes: { ligne: number; data: Record<string, unknown> }[],
   dryRun: boolean,
@@ -422,23 +417,34 @@ const CONFIGS: Record<EntiteImport, EntiteConfig> = {
     },
   },
 
-  chantiers: {
+  clients: {
     cleUpsert: 'nom',
-    schema: importChantierSchema,
+    schema: importClientSchema,
     colonnes: [
-      { champ: 'nom', alias: ['nom', 'chantier'], obligatoire: true },
+      { champ: 'nom', alias: ['nom', 'client', 'raison sociale'], obligatoire: true },
+      { champ: 'type', alias: ['type', 'categorie', 'catégorie'] },
+      { champ: 'contact', alias: ['contact', 'interlocuteur'] },
+      { champ: 'telephone', alias: ['telephone', 'téléphone', 'tel', 'tél'] },
+      { champ: 'email', alias: ['email', 'mail', 'courriel'] },
       { champ: 'adresse', alias: ['adresse', 'lieu'] },
-      { champ: 'statut', alias: ['statut', 'etat', 'état'] },
-      { champ: 'dateDebut', alias: ['datedebut', 'date debut', 'début', 'debut'] },
-      { champ: 'dateFin', alias: ['datefin', 'date fin', 'fin'] },
+      { champ: 'ville', alias: ['ville', 'commune'] },
       { champ: 'notes', alias: ['notes', 'remarque', 'remarques'] },
     ],
     modele: {
-      entetes: ['nom', 'adresse', 'statut', 'dateDebut', 'dateFin', 'notes'],
-      exemple: ['Chantier Cocody', 'Cocody Riviera 3, Abidjan', 'en_cours', '2026-01-15', '', ''],
+      entetes: ['nom', 'type', 'contact', 'telephone', 'email', 'adresse', 'ville', 'notes'],
+      exemple: [
+        'Entreprise Kouassi BTP',
+        'entreprise',
+        'Kouassi Yao',
+        '07 07 07 07 07',
+        'contact@client.ci',
+        'Cocody Riviera 3',
+        'Abidjan',
+        '',
+      ],
     },
     appliquer(lignes, dryRun) {
-      return upsertParNom(chantiers, lignes, dryRun)
+      return upsertParNom(clients, lignes, dryRun)
     },
   },
 }

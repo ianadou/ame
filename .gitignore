@@ -34,5 +34,10 @@ bun.lock
 # Turso
 .turso/
 
+# Tauri (artefacts de build + binaire bun régénéré par script)
+src-tauri/target
+src-tauri/gen
+src-tauri/binaries
+
 # Specs (never commit)
 ame-spec.md
