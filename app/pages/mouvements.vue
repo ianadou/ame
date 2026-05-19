@@ -98,21 +98,45 @@ function formatDate(iso: string) {
         <table v-if="mouvements.length > 0" class="w-full">
           <thead>
             <tr class="border-b border-slate-200 bg-slate-50">
-              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Date</th>
-              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Type</th>
-              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Article</th>
-              <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-500">Quantité</th>
-              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Fournisseur / Chantier</th>
-              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Bon livraison</th>
-              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Motif</th>
+              <th
+                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500"
+              >
+                Date
+              </th>
+              <th
+                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500"
+              >
+                Type
+              </th>
+              <th
+                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500"
+              >
+                Article
+              </th>
+              <th
+                class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-500"
+              >
+                Quantité
+              </th>
+              <th
+                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500"
+              >
+                Fournisseur / Chantier
+              </th>
+              <th
+                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500"
+              >
+                Bon livraison
+              </th>
+              <th
+                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500"
+              >
+                Motif
+              </th>
             </tr>
           </thead>
           <tbody>
-            <tr
-              v-for="mvt in mouvements"
-              :key="mvt.id"
-              class="border-b border-slate-100"
-            >
+            <tr v-for="mvt in mouvements" :key="mvt.id" class="border-b border-slate-100">
               <td class="px-4 py-3 text-xs text-slate-500">{{ formatDate(mvt.createdAt) }}</td>
               <td class="px-4 py-3">
                 <AppBadge :variant="mvt.type === 'entree' ? 'success' : 'danger'">
@@ -123,8 +147,12 @@ function formatDate(iso: string) {
                 <span class="font-medium text-slate-900">{{ mvt.articleReference }}</span>
                 — {{ mvt.articleNom }}
               </td>
-              <td class="px-4 py-3 text-right text-sm font-medium text-slate-900">{{ mvt.quantite }}</td>
-              <td class="px-4 py-3 text-sm text-slate-500">{{ mvt.fournisseurNom || mvt.chantierNom || '—' }}</td>
+              <td class="px-4 py-3 text-right text-sm font-medium text-slate-900">
+                {{ mvt.quantite }}
+              </td>
+              <td class="px-4 py-3 text-sm text-slate-500">
+                {{ mvt.fournisseurNom || mvt.chantierNom || '—' }}
+              </td>
               <td class="px-4 py-3 text-sm text-slate-500">{{ mvt.bonLivraison || '—' }}</td>
               <td class="px-4 py-3 text-sm text-slate-500">{{ mvt.motif || '—' }}</td>
             </tr>
@@ -147,10 +175,20 @@ function formatDate(iso: string) {
           {{ (currentPage - 1) * 20 + 1 }}–{{ Math.min(currentPage * 20, total) }} sur {{ total }}
         </p>
         <div class="flex gap-2">
-          <AppButton variant="secondary" size="sm" :disabled="currentPage <= 1" @click="currentPage--">
+          <AppButton
+            variant="secondary"
+            size="sm"
+            :disabled="currentPage <= 1"
+            @click="currentPage--"
+          >
             Précédent
           </AppButton>
-          <AppButton variant="secondary" size="sm" :disabled="currentPage >= totalPages" @click="currentPage++">
+          <AppButton
+            variant="secondary"
+            size="sm"
+            :disabled="currentPage >= totalPages"
+            @click="currentPage++"
+          >
             Suivant
           </AppButton>
         </div>

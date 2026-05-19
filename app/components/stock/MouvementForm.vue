@@ -24,9 +24,8 @@ const { data: articlesResult } = await useFetch('/api/articles', {
   watch: [searchQuery],
 })
 
-const { data: fournisseursData } = await useFetch<{ id: string; nom: string }[]>(
-  '/api/fournisseurs',
-)
+const { data: fournisseursData } =
+  await useFetch<{ id: string; nom: string }[]>('/api/fournisseurs')
 const { data: chantiersData } = await useFetch<{ id: string; nom: string }[]>('/api/chantiers')
 
 const articleOptions = computed(() => {
