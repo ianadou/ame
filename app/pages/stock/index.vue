@@ -55,15 +55,15 @@ async function handleCreate(data: Record<string, unknown>) {
   await loadArticles()
 }
 
-function stockStatus(article: { stockActuel: number; seuilAlerte: number }) {
-  if (article.stockActuel === 0) return 'danger'
-  if (article.stockActuel <= article.seuilAlerte) return 'warning'
+function stockStatus(a: { stockActuel: number; seuilAlerte: number }) {
+  if (a.stockActuel <= a.seuilAlerte) return 'danger'
+  if (a.stockActuel <= a.seuilAlerte * 1.4) return 'warning'
   return 'success'
 }
 
-function stockLabel(article: { stockActuel: number; seuilAlerte: number }) {
-  if (article.stockActuel === 0) return 'Rupture'
-  if (article.stockActuel <= article.seuilAlerte) return 'Stock bas'
+function stockLabel(a: { stockActuel: number; seuilAlerte: number }) {
+  if (a.stockActuel <= a.seuilAlerte) return 'Bas'
+  if (a.stockActuel <= a.seuilAlerte * 1.4) return 'Limite'
   return 'En stock'
 }
 
@@ -122,56 +122,38 @@ onMounted(async () => {
     <!-- Table -->
     <AppCard :padding="false">
       <div class="overflow-x-auto">
-        <table class="w-full">
+        <table class="data-table">
           <thead>
-            <tr class="border-b border-slate-200 bg-slate-50">
-              <th
-                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500"
-              >
-                Référence
-              </th>
-              <th
-                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500"
-              >
-                Nom
-              </th>
-              <th
-                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500"
-              >
-                Catégorie
-              </th>
-              <th
-                class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-500"
-              >
-                Stock
-              </th>
-              <th
-                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500"
-              >
-                Unité
-              </th>
-              <th
-                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500"
-              >
-                Statut
-              </th>
+            <tr>
+              <th class="w-[120px]">Réf.</th>
+              <th>Nom</th>
+              <th>Catégorie</th>
+              <th class="text-right">Stock</th>
+              <th>Unité</th>
+              <th>Statut</th>
             </tr>
           </thead>
           <tbody v-if="!loading && articles.length > 0">
             <tr
               v-for="article in articles"
               :key="article.id"
-              class="cursor-pointer border-b border-slate-100 transition-colors hover:bg-slate-50"
+              class="row-hover cursor-pointer"
               @click="navigateTo(`/stock/${article.id}`)"
             >
-              <td class="px-4 py-3 text-sm font-medium text-slate-900">{{ article.reference }}</td>
-              <td class="px-4 py-3 text-sm text-slate-700">{{ article.nom }}</td>
-              <td class="px-4 py-3 text-sm text-slate-500">{{ article.categorieNom ?? '—' }}</td>
-              <td class="px-4 py-3 text-right text-sm font-medium text-slate-900">
+              <td class="mono font-medium text-ink-2">{{ article.reference }}</td>
+              <td class="font-medium">{{ article.nom }}</td>
+              <td class="text-muted">{{ article.categorieNom ?? '—' }}</td>
+              <td
+                class="mono num text-right text-[14px] font-semibold"
+                :class="{
+                  'text-rust-dark': stockStatus(article) === 'danger',
+                  'text-ochre-dark': stockStatus(article) === 'warning',
+                }"
+              >
                 {{ article.stockActuel }}
               </td>
-              <td class="px-4 py-3 text-sm text-slate-500">{{ article.unite }}</td>
-              <td class="px-4 py-3">
+              <td class="text-muted">{{ article.unite }}</td>
+              <td>
                 <AppBadge :variant="stockStatus(article)">{{ stockLabel(article) }}</AppBadge>
               </td>
             </tr>
@@ -179,11 +161,7 @@ onMounted(async () => {
         </table>
       </div>
 
-      <div v-if="loading" class="flex justify-center py-12">
-        <div
-          class="h-6 w-6 animate-spin rounded-full border-2 border-primary-600 border-t-transparent"
-        />
-      </div>
+      <TableSkeleton v-if="loading" :cols="6" />
 
       <AppEmptyState
         v-if="!loading && articles.length === 0"

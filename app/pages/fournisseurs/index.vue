@@ -53,52 +53,32 @@ await loadFournisseurs()
     <!-- Table -->
     <AppCard :padding="false">
       <div class="overflow-x-auto">
-        <table class="w-full">
+        <table class="data-table">
           <thead>
-            <tr class="border-b border-slate-200 bg-slate-50">
-              <th
-                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500"
-              >
-                Nom
-              </th>
-              <th
-                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500"
-              >
-                Contact
-              </th>
-              <th
-                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500"
-              >
-                Téléphone
-              </th>
-              <th
-                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500"
-              >
-                Email
-              </th>
+            <tr>
+              <th>Nom</th>
+              <th>Contact</th>
+              <th>Téléphone</th>
+              <th>Email</th>
             </tr>
           </thead>
           <tbody v-if="!loading && fournisseurs.length > 0">
             <tr
               v-for="fournisseur in fournisseurs"
               :key="fournisseur.id"
-              class="cursor-pointer border-b border-slate-100 transition-colors hover:bg-slate-50"
+              class="row-hover cursor-pointer"
               @click="navigateTo(`/fournisseurs/${fournisseur.id}`)"
             >
-              <td class="px-4 py-3 text-sm font-medium text-slate-900">{{ fournisseur.nom }}</td>
-              <td class="px-4 py-3 text-sm text-slate-700">{{ fournisseur.contact ?? '—' }}</td>
-              <td class="px-4 py-3 text-sm text-slate-500">{{ fournisseur.telephone ?? '—' }}</td>
-              <td class="px-4 py-3 text-sm text-slate-500">{{ fournisseur.email ?? '—' }}</td>
+              <td class="font-medium">{{ fournisseur.nom }}</td>
+              <td>{{ fournisseur.contact ?? '—' }}</td>
+              <td class="mono text-[12.5px] text-muted">{{ fournisseur.telephone ?? '—' }}</td>
+              <td class="mono text-[12.5px] text-ink-3">{{ fournisseur.email ?? '—' }}</td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <div v-if="loading" class="flex justify-center py-12">
-        <div
-          class="h-6 w-6 animate-spin rounded-full border-2 border-primary-600 border-t-transparent"
-        />
-      </div>
+      <TableSkeleton v-if="loading" :cols="4" />
 
       <AppEmptyState
         v-if="!loading && fournisseurs.length === 0"

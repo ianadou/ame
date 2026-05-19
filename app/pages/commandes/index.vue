@@ -82,56 +82,34 @@ await loadCommandes()
     <!-- Table -->
     <AppCard :padding="false">
       <div class="overflow-x-auto">
-        <table class="w-full">
+        <table class="data-table">
           <thead>
-            <tr class="border-b border-slate-200 bg-slate-50">
-              <th
-                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500"
-              >
-                Référence
-              </th>
-              <th
-                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500"
-              >
-                Fournisseur
-              </th>
-              <th
-                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500"
-              >
-                Statut
-              </th>
-              <th
-                class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-500"
-              >
-                Total estimé
-              </th>
-              <th
-                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500"
-              >
-                Livraison prévue
-              </th>
+            <tr>
+              <th class="w-[200px]">Référence</th>
+              <th>Fournisseur</th>
+              <th>Statut</th>
+              <th class="text-right">Total estimé</th>
+              <th>Livraison prévue</th>
             </tr>
           </thead>
           <tbody v-if="!loading && commandes.length > 0">
             <tr
               v-for="commande in commandes"
               :key="commande.id"
-              class="cursor-pointer border-b border-slate-100 transition-colors hover:bg-slate-50"
+              class="row-hover cursor-pointer"
               @click="navigateTo(`/commandes/${commande.id}`)"
             >
-              <td class="px-4 py-3 text-sm font-medium text-slate-900">
-                {{ commande.reference }}
-              </td>
-              <td class="px-4 py-3 text-sm text-slate-700">{{ commande.fournisseurNom ?? '—' }}</td>
-              <td class="px-4 py-3">
+              <td class="mono font-medium text-ink-2">{{ commande.reference }}</td>
+              <td>{{ commande.fournisseurNom ?? '—' }}</td>
+              <td>
                 <AppBadge :variant="statutMeta[commande.statut]?.variant ?? 'neutral'">
                   {{ statutMeta[commande.statut]?.label ?? commande.statut }}
                 </AppBadge>
               </td>
-              <td class="px-4 py-3 text-right text-sm font-medium text-slate-900">
+              <td class="mono num text-right font-semibold">
                 {{ formatMontant(commande.total) }}
               </td>
-              <td class="px-4 py-3 text-sm text-slate-500">
+              <td class="mono text-[12.5px] text-muted">
                 {{ formatDate(commande.dateLivraisonPrevue) }}
               </td>
             </tr>
@@ -139,11 +117,7 @@ await loadCommandes()
         </table>
       </div>
 
-      <div v-if="loading" class="flex justify-center py-12">
-        <div
-          class="h-6 w-6 animate-spin rounded-full border-2 border-primary-600 border-t-transparent"
-        />
-      </div>
+      <TableSkeleton v-if="loading" :cols="5" />
 
       <AppEmptyState
         v-if="!loading && commandes.length === 0"

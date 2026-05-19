@@ -51,6 +51,26 @@
     border-color: #f1f2f4;
     border-radius: 14px;
   }
+
+  /* Tableau de données — style maquette */
+  .data-table {
+    @apply w-full;
+  }
+  .data-table thead tr {
+    @apply bg-paper-2;
+  }
+  .data-table th {
+    @apply border-b border-line px-4 py-2.5 text-left text-[11px] font-medium text-muted;
+  }
+  .data-table td {
+    @apply border-b border-line/60 px-4 py-3 text-[13px] text-ink align-middle;
+  }
+  .data-table tbody tr:last-child td {
+    @apply border-b-0;
+  }
+  .data-table tbody tr.row-hover:hover {
+    @apply bg-paper-2;
+  }
 }
 
 @layer utilities {
