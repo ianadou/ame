@@ -1,6 +1,6 @@
 import { drizzle } from 'drizzle-orm/libsql'
 import { createClient } from '@libsql/client'
-import { faker } from '@faker-js/faker/locale/fr'
+import { faker } from '@faker-js/faker'
 import * as schema from './schema'
 
 const client = createClient({ url: 'file:./dev.db' })
@@ -10,8 +10,44 @@ function id() {
   return crypto.randomUUID()
 }
 
+// Contexte Côte d'Ivoire (pas de données françaises)
+const communesAbidjan = [
+  'Cocody',
+  'Yopougon',
+  'Abobo',
+  'Plateau',
+  'Marcory',
+  'Treichville',
+  'Adjamé',
+  'Koumassi',
+  'Port-Bouët',
+  'Bingerville',
+]
+
+function telephoneIvoirien() {
+  const prefixe = faker.helpers.arrayElement(['01', '05', '07', '25', '27'])
+  const reste = faker.string.numeric(8)
+  return `${prefixe} ${reste.slice(0, 2)} ${reste.slice(2, 4)} ${reste.slice(4, 6)} ${reste.slice(6, 8)}`
+}
+
+function adresseIvoirienne() {
+  const commune = faker.helpers.arrayElement(communesAbidjan)
+  const quartier = faker.number.int({ min: 1, max: 4 })
+  return `${commune} ${quartier}, Rue ${faker.string.alpha({ length: 1, casing: 'upper' })}${faker.number.int({ min: 10, max: 99 })}, Abidjan`
+}
+
 async function seed() {
   console.log('Seeding database...')
+
+  // Nettoyage (ordre des dépendances : enfants avant parents)
+  await db.delete(schema.lignesCommande)
+  await db.delete(schema.commandes)
+  await db.delete(schema.mouvements)
+  await db.delete(schema.articles)
+  await db.delete(schema.chantiers)
+  await db.delete(schema.fournisseurs)
+  await db.delete(schema.categories)
+  console.log('  tables vidées')
 
   // Categories
   const categoriesData = [
@@ -44,11 +80,11 @@ async function seed() {
   // Fournisseurs
   const fournisseursData = Array.from({ length: 8 }, () => ({
     id: id(),
-    nom: faker.company.name(),
+    nom: `${faker.company.name()} CI`,
     contact: faker.person.fullName(),
-    telephone: faker.phone.number({ style: 'national' }),
-    email: faker.internet.email(),
-    adresse: `${faker.location.streetAddress()}, ${faker.location.zipCode()} ${faker.location.city()}`,
+    telephone: telephoneIvoirien(),
+    email: faker.internet.email({ provider: 'orange.ci' }),
+    adresse: adresseIvoirienne(),
     notes: faker.helpers.maybe(() => faker.lorem.sentence(), { probability: 0.3 }) ?? null,
   }))
 
@@ -61,11 +97,12 @@ async function seed() {
     const statut = faker.helpers.arrayElement(statuts)
     return {
       id: id(),
-      nom: `Chantier ${faker.location.street()}`,
-      adresse: `${faker.location.streetAddress()}, ${faker.location.zipCode()} ${faker.location.city()}`,
+      nom: `Chantier ${faker.helpers.arrayElement(communesAbidjan)}`,
+      adresse: adresseIvoirienne(),
       statut,
       dateDebut: faker.date.past({ years: 1 }).toISOString().split('T')[0],
-      dateFin: statut === 'termine' ? faker.date.recent({ days: 30 }).toISOString().split('T')[0] : null,
+      dateFin:
+        statut === 'termine' ? faker.date.recent({ days: 30 }).toISOString().split('T')[0] : null,
       notes: faker.helpers.maybe(() => faker.lorem.sentence(), { probability: 0.4 }) ?? null,
     }
   })
@@ -85,16 +122,36 @@ async function seed() {
   }
 
   const articleNames = [
-    'Tuyau PVC 32mm', 'Tuyau PVC 50mm', 'Coude PVC 90° 32mm', 'Raccord T PVC 50mm',
-    'Câble H07VR 2.5mm² rouge', 'Câble H07VR 1.5mm² bleu', 'Interrupteur simple',
-    'Prise 2P+T encastrable', 'Ciment Portland CEM I 25kg', 'Parpaing creux 20x20x50',
-    'Brique pleine 22x10.5x5.5', 'Peinture blanche mat 10L', 'Enduit de lissage 5kg',
-    'Rouleau peinture 180mm', 'Perceuse visseuse 18V', 'Disqueuse 125mm',
-    'Niveau à bulle 60cm', 'Mètre ruban 5m', 'Vis à bois 4x40 (boîte 200)',
-    'Charnière inox 80mm', 'Planche sapin 200x20x2cm', 'Tasseau 40x40 2.4m',
-    'Sac de sable 35kg', 'Gravier 20/40 35kg', 'Joint silicone blanc 310ml',
-    'Scotch électricien', 'Gaine ICTA 20mm', 'Boîte de dérivation',
-    'Robinet à boisseau 1/2', 'Flexible inox 50cm',
+    'Tuyau PVC 32mm',
+    'Tuyau PVC 50mm',
+    'Coude PVC 90° 32mm',
+    'Raccord T PVC 50mm',
+    'Câble H07VR 2.5mm² rouge',
+    'Câble H07VR 1.5mm² bleu',
+    'Interrupteur simple',
+    'Prise 2P+T encastrable',
+    'Ciment Portland CEM I 25kg',
+    'Parpaing creux 20x20x50',
+    'Brique pleine 22x10.5x5.5',
+    'Peinture blanche mat 10L',
+    'Enduit de lissage 5kg',
+    'Rouleau peinture 180mm',
+    'Perceuse visseuse 18V',
+    'Disqueuse 125mm',
+    'Niveau à bulle 60cm',
+    'Mètre ruban 5m',
+    'Vis à bois 4x40 (boîte 200)',
+    'Charnière inox 80mm',
+    'Planche sapin 200x20x2cm',
+    'Tasseau 40x40 2.4m',
+    'Sac de sable 35kg',
+    'Gravier 20/40 35kg',
+    'Joint silicone blanc 310ml',
+    'Scotch électricien',
+    'Gaine ICTA 20mm',
+    'Boîte de dérivation',
+    'Robinet à boisseau 1/2',
+    'Flexible inox 50cm',
   ]
 
   const articlesData = articleNames.map((nom, i) => {
