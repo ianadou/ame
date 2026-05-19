@@ -74,6 +74,7 @@ watch(route, () => {
     </div>
 
     <ToastHost />
+    <GlobalSearch />
   </div>
 </template>
 

@@ -9,6 +9,8 @@ import {
   Search,
 } from 'lucide-vue-next'
 
+const { openSearch } = useGlobalSearch()
+
 defineProps<{ collapsed?: boolean }>()
 defineEmits<{ close: [] }>()
 
@@ -41,6 +43,7 @@ const valeurK = computed(() =>
     <div class="px-3 pb-3 pt-4">
       <button
         class="flex w-full items-center gap-2 rounded-md border border-line bg-paper-2 px-3 py-2 text-left text-[12.5px] text-ink-3 hover:bg-paper-4"
+        @click="openSearch"
       >
         <Search class="h-3.5 w-3.5" />
         <span class="flex-1">Rechercher…</span>
