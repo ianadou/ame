@@ -3,6 +3,8 @@ interface Props {
   type: 'entree' | 'sortie'
   articleId?: string
   articleLabel?: string
+  chantierId?: string
+  chantierLabel?: string
 }
 
 const props = defineProps<Props>()
@@ -15,7 +17,7 @@ const searchQuery = ref('')
 const selectedArticleId = ref(props.articleId ?? '')
 const quantite = ref('')
 const fournisseurId = ref('')
-const chantierId = ref('')
+const chantierId = ref(props.chantierId ?? '')
 const bonLivraison = ref('')
 const motif = ref('')
 
@@ -84,13 +86,19 @@ function handleSubmit() {
       placeholder="Optionnel..."
     />
 
-    <AppSelect
-      v-if="type === 'sortie'"
-      v-model="chantierId"
-      label="Chantier"
-      :options="chantierOptions"
-      placeholder="Optionnel..."
-    />
+    <template v-if="type === 'sortie'">
+      <AppSelect
+        v-if="!props.chantierId"
+        v-model="chantierId"
+        label="Chantier"
+        :options="chantierOptions"
+        placeholder="Optionnel..."
+      />
+      <div v-else>
+        <p class="mb-1 text-sm font-medium text-slate-700">Chantier</p>
+        <p class="text-sm text-slate-900">{{ chantierLabel }}</p>
+      </div>
+    </template>
 
     <AppInput
       v-if="type === 'entree'"
