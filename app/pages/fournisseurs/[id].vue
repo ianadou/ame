@@ -92,8 +92,8 @@ function formatDate(iso: string | null) {
         <ArrowLeft class="h-4 w-4" />
       </AppButton>
       <div class="flex-1">
-        <h2 class="text-lg font-semibold text-slate-900">{{ fournisseur.nom }}</h2>
-        <p class="text-sm text-slate-500">{{ fournisseur.contact ?? 'Aucun contact renseigné' }}</p>
+        <h2 class="text-lg font-semibold text-ink">{{ fournisseur.nom }}</h2>
+        <p class="text-sm text-muted">{{ fournisseur.contact ?? 'Aucun contact renseigné' }}</p>
       </div>
       <div class="flex gap-2">
         <AppButton variant="secondary" size="sm" @click="showEditModal = true">
@@ -107,27 +107,27 @@ function formatDate(iso: string | null) {
       </div>
     </div>
 
-    <p v-if="deleteError" class="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+    <p v-if="deleteError" class="rounded-md bg-red-50 px-4 py-3 text-sm text-rust-dark">
       {{ deleteError }}
     </p>
 
     <!-- Info cards -->
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <AppCard>
-        <p class="text-sm text-slate-500">Téléphone</p>
-        <p class="text-lg font-semibold text-slate-900">{{ fournisseur.telephone ?? '—' }}</p>
+        <p class="text-sm text-muted">Téléphone</p>
+        <p class="text-lg font-semibold text-ink">{{ fournisseur.telephone ?? '—' }}</p>
       </AppCard>
       <AppCard>
-        <p class="text-sm text-slate-500">Email</p>
-        <p class="truncate text-lg font-semibold text-slate-900">{{ fournisseur.email ?? '—' }}</p>
+        <p class="text-sm text-muted">Email</p>
+        <p class="truncate text-lg font-semibold text-ink">{{ fournisseur.email ?? '—' }}</p>
       </AppCard>
       <AppCard>
-        <p class="text-sm text-slate-500">Commandes</p>
-        <p class="text-lg font-semibold text-slate-900">{{ fournisseur.commandes.length }}</p>
+        <p class="text-sm text-muted">Commandes</p>
+        <p class="text-lg font-semibold text-ink">{{ fournisseur.commandes.length }}</p>
       </AppCard>
       <AppCard>
-        <p class="text-sm text-slate-500">Entrées de stock</p>
-        <p class="text-lg font-semibold text-slate-900">{{ fournisseur.entrees.length }}</p>
+        <p class="text-sm text-muted">Entrées de stock</p>
+        <p class="text-lg font-semibold text-ink">{{ fournisseur.entrees.length }}</p>
       </AppCard>
     </div>
 
@@ -135,57 +135,37 @@ function formatDate(iso: string | null) {
     <AppCard v-if="fournisseur.adresse || fournisseur.notes">
       <dl class="space-y-3">
         <div v-if="fournisseur.adresse">
-          <dt class="text-sm text-slate-500">Adresse</dt>
-          <dd class="text-sm font-medium text-slate-900">{{ fournisseur.adresse }}</dd>
+          <dt class="text-sm text-muted">Adresse</dt>
+          <dd class="text-sm font-medium text-ink">{{ fournisseur.adresse }}</dd>
         </div>
         <div v-if="fournisseur.notes">
-          <dt class="text-sm text-slate-500">Notes</dt>
-          <dd class="text-sm text-slate-700">{{ fournisseur.notes }}</dd>
+          <dt class="text-sm text-muted">Notes</dt>
+          <dd class="text-sm text-ink-2">{{ fournisseur.notes }}</dd>
         </div>
       </dl>
     </AppCard>
 
     <!-- Commandes -->
     <div>
-      <h3 class="mb-3 text-sm font-semibold text-slate-900">Commandes</h3>
+      <h3 class="mb-3 text-sm font-semibold text-ink">Commandes</h3>
       <AppCard :padding="false">
-        <table v-if="fournisseur.commandes.length > 0" class="w-full">
+        <table v-if="fournisseur.commandes.length > 0" class="data-table">
           <thead>
-            <tr class="border-b border-slate-200 bg-slate-50">
-              <th
-                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500"
-              >
-                Référence
-              </th>
-              <th
-                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500"
-              >
-                Statut
-              </th>
-              <th
-                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500"
-              >
-                Date commande
-              </th>
-              <th
-                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500"
-              >
-                Livraison prévue
-              </th>
+            <tr>
+              <th>Référence</th>
+              <th>Statut</th>
+              <th>Date commande</th>
+              <th>Livraison prévue</th>
             </tr>
           </thead>
           <tbody>
-            <tr
-              v-for="cmd in fournisseur.commandes"
-              :key="cmd.id"
-              class="border-b border-slate-100"
-            >
-              <td class="px-4 py-3 text-sm font-medium text-slate-900">{{ cmd.reference }}</td>
+            <tr v-for="cmd in fournisseur.commandes" :key="cmd.id" class="border-b border-line/60">
+              <td class="px-4 py-3 text-sm font-medium text-ink">{{ cmd.reference }}</td>
               <td class="px-4 py-3">
                 <AppBadge :variant="statutVariant(cmd.statut)">{{ cmd.statut }}</AppBadge>
               </td>
-              <td class="px-4 py-3 text-sm text-slate-500">{{ formatDate(cmd.dateCommande) }}</td>
-              <td class="px-4 py-3 text-sm text-slate-500">
+              <td class="px-4 py-3 text-sm text-muted">{{ formatDate(cmd.dateCommande) }}</td>
+              <td class="px-4 py-3 text-sm text-muted">
                 {{ formatDate(cmd.dateLivraisonPrevue) }}
               </td>
             </tr>
@@ -201,45 +181,29 @@ function formatDate(iso: string | null) {
 
     <!-- Entrées de stock liées -->
     <div>
-      <h3 class="mb-3 text-sm font-semibold text-slate-900">Entrées de stock liées</h3>
+      <h3 class="mb-3 text-sm font-semibold text-ink">Entrées de stock liées</h3>
       <AppCard :padding="false">
-        <table v-if="fournisseur.entrees.length > 0" class="w-full">
+        <table v-if="fournisseur.entrees.length > 0" class="data-table">
           <thead>
-            <tr class="border-b border-slate-200 bg-slate-50">
-              <th
-                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500"
-              >
-                Date
-              </th>
-              <th
-                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500"
-              >
-                Article
-              </th>
-              <th
-                class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-500"
-              >
-                Quantité
-              </th>
-              <th
-                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500"
-              >
-                Bon de livraison
-              </th>
+            <tr>
+              <th>Date</th>
+              <th>Article</th>
+              <th class="text-right">Quantité</th>
+              <th>Bon de livraison</th>
             </tr>
           </thead>
           <tbody>
             <tr
               v-for="entree in fournisseur.entrees"
               :key="entree.id"
-              class="border-b border-slate-100"
+              class="border-b border-line/60"
             >
-              <td class="px-4 py-3 text-xs text-slate-500">{{ formatDate(entree.createdAt) }}</td>
-              <td class="px-4 py-3 text-sm text-slate-700">{{ entree.articleNom ?? '—' }}</td>
-              <td class="px-4 py-3 text-right text-sm font-medium text-slate-900">
+              <td class="px-4 py-3 text-xs text-muted">{{ formatDate(entree.createdAt) }}</td>
+              <td class="px-4 py-3 text-sm text-ink-2">{{ entree.articleNom ?? '—' }}</td>
+              <td class="px-4 py-3 text-right text-sm font-medium text-ink">
                 {{ entree.quantite }}
               </td>
-              <td class="px-4 py-3 text-sm text-slate-500">{{ entree.bonLivraison ?? '—' }}</td>
+              <td class="px-4 py-3 text-sm text-muted">{{ entree.bonLivraison ?? '—' }}</td>
             </tr>
           </tbody>
         </table>

@@ -42,14 +42,14 @@ if (!article.value) {
 }
 
 function stockStatus(a: { stockActuel: number; seuilAlerte: number }) {
-  if (a.stockActuel === 0) return 'danger'
-  if (a.stockActuel <= a.seuilAlerte) return 'warning'
+  if (a.stockActuel <= a.seuilAlerte) return 'danger'
+  if (a.stockActuel <= a.seuilAlerte * 1.4) return 'warning'
   return 'success'
 }
 
 function stockLabel(a: { stockActuel: number; seuilAlerte: number }) {
-  if (a.stockActuel === 0) return 'Rupture'
-  if (a.stockActuel <= a.seuilAlerte) return 'Stock bas'
+  if (a.stockActuel <= a.seuilAlerte) return 'Bas'
+  if (a.stockActuel <= a.seuilAlerte * 1.4) return 'Limite'
   return 'En stock'
 }
 
@@ -80,10 +80,10 @@ function formatDate(iso: string) {
       </AppButton>
       <div class="flex-1">
         <div class="flex items-center gap-3">
-          <h2 class="text-lg font-semibold text-slate-900">{{ article.nom }}</h2>
+          <h2 class="text-lg font-semibold text-ink">{{ article.nom }}</h2>
           <AppBadge :variant="stockStatus(article)">{{ stockLabel(article) }}</AppBadge>
         </div>
-        <p class="text-sm text-slate-500">{{ article.reference }}</p>
+        <p class="text-sm text-muted">{{ article.reference }}</p>
       </div>
       <div class="flex gap-2">
         <AppButton variant="secondary" size="sm" @click="showEntreeModal = true">
@@ -100,20 +100,16 @@ function formatDate(iso: string) {
     <!-- Info cards -->
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <AppCard>
-        <p class="text-sm text-slate-500">Stock actuel</p>
-        <p class="text-lg font-semibold text-slate-900">
-          {{ article.stockActuel }} {{ article.unite }}
-        </p>
+        <p class="text-sm text-muted">Stock actuel</p>
+        <p class="text-lg font-semibold text-ink">{{ article.stockActuel }} {{ article.unite }}</p>
       </AppCard>
       <AppCard>
-        <p class="text-sm text-slate-500">Seuil d'alerte</p>
-        <p class="text-lg font-semibold text-slate-900">
-          {{ article.seuilAlerte }} {{ article.unite }}
-        </p>
+        <p class="text-sm text-muted">Seuil d'alerte</p>
+        <p class="text-lg font-semibold text-ink">{{ article.seuilAlerte }} {{ article.unite }}</p>
       </AppCard>
       <AppCard>
-        <p class="text-sm text-slate-500">Prix unitaire HT</p>
-        <p class="text-lg font-semibold text-slate-900">
+        <p class="text-sm text-muted">Prix unitaire HT</p>
+        <p class="text-lg font-semibold text-ink">
           {{
             article.prixUnitaire
               ? `${article.prixUnitaire.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} FCFA`
@@ -122,8 +118,8 @@ function formatDate(iso: string) {
         </p>
       </AppCard>
       <AppCard>
-        <p class="text-sm text-slate-500">Catégorie</p>
-        <p class="text-lg font-semibold text-slate-900">{{ article.categorieNom ?? '—' }}</p>
+        <p class="text-sm text-muted">Catégorie</p>
+        <p class="text-lg font-semibold text-ink">{{ article.categorieNom ?? '—' }}</p>
       </AppCard>
     </div>
 
@@ -131,65 +127,43 @@ function formatDate(iso: string) {
     <AppCard v-if="article.emplacement || article.notes">
       <dl class="space-y-3">
         <div v-if="article.emplacement">
-          <dt class="text-sm text-slate-500">Emplacement</dt>
-          <dd class="text-sm font-medium text-slate-900">{{ article.emplacement }}</dd>
+          <dt class="text-sm text-muted">Emplacement</dt>
+          <dd class="text-sm font-medium text-ink">{{ article.emplacement }}</dd>
         </div>
         <div v-if="article.notes">
-          <dt class="text-sm text-slate-500">Notes</dt>
-          <dd class="text-sm text-slate-700">{{ article.notes }}</dd>
+          <dt class="text-sm text-muted">Notes</dt>
+          <dd class="text-sm text-ink-2">{{ article.notes }}</dd>
         </div>
       </dl>
     </AppCard>
 
     <!-- Mouvements history -->
     <div>
-      <h3 class="mb-3 text-sm font-semibold text-slate-900">Derniers mouvements</h3>
+      <h3 class="mb-3 text-sm font-semibold text-ink">Derniers mouvements</h3>
       <AppCard :padding="false">
-        <table v-if="article.mouvements.length > 0" class="w-full">
+        <table v-if="article.mouvements.length > 0" class="data-table">
           <thead>
-            <tr class="border-b border-slate-200 bg-slate-50">
-              <th
-                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500"
-              >
-                Date
-              </th>
-              <th
-                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500"
-              >
-                Type
-              </th>
-              <th
-                class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-500"
-              >
-                Quantité
-              </th>
-              <th
-                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500"
-              >
-                Origine / Destination
-              </th>
-              <th
-                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500"
-              >
-                Motif
-              </th>
+            <tr>
+              <th class="w-[140px]">Date</th>
+              <th class="w-[100px]">Type</th>
+              <th class="text-right">Qté</th>
+              <th>Origine / Destination</th>
+              <th>Motif</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="mvt in article.mouvements" :key="mvt.id" class="border-b border-slate-100">
-              <td class="px-4 py-3 text-xs text-slate-500">{{ formatDate(mvt.createdAt) }}</td>
-              <td class="px-4 py-3">
-                <AppBadge :variant="mvt.type === 'entree' ? 'success' : 'danger'">
+            <tr v-for="mvt in article.mouvements" :key="mvt.id" class="row-hover">
+              <td class="mono text-[12px] text-ink-3">{{ formatDate(mvt.createdAt) }}</td>
+              <td>
+                <AppBadge :variant="mvt.type === 'entree' ? 'success' : 'neutral'">
                   {{ mvt.type === 'entree' ? 'Entrée' : 'Sortie' }}
                 </AppBadge>
               </td>
-              <td class="px-4 py-3 text-right text-sm font-medium text-slate-900">
-                {{ mvt.quantite }}
+              <td class="mono num text-right text-[14px] font-semibold">
+                {{ mvt.type === 'entree' ? '+' : '−' }}{{ mvt.quantite }}
               </td>
-              <td class="px-4 py-3 text-sm text-slate-700">
-                {{ mvt.fournisseurNom || mvt.chantierNom || '—' }}
-              </td>
-              <td class="px-4 py-3 text-sm text-slate-500">{{ mvt.motif || '—' }}</td>
+              <td class="text-ink-2">{{ mvt.fournisseurNom || mvt.chantierNom || '—' }}</td>
+              <td class="text-[12.5px] text-muted">{{ mvt.motif || '—' }}</td>
             </tr>
           </tbody>
         </table>

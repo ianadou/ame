@@ -100,12 +100,12 @@ function formatMontant(montant: number) {
       </AppButton>
       <div class="flex-1">
         <div class="flex items-center gap-3">
-          <h2 class="text-lg font-semibold text-slate-900">{{ commande.reference }}</h2>
+          <h2 class="text-lg font-semibold text-ink">{{ commande.reference }}</h2>
           <AppBadge :variant="statutMeta[commande.statut]?.variant ?? 'neutral'">
             {{ statutMeta[commande.statut]?.label ?? commande.statut }}
           </AppBadge>
         </div>
-        <p class="text-sm text-slate-500">{{ commande.fournisseurNom ?? '—' }}</p>
+        <p class="text-sm text-muted">{{ commande.fournisseurNom ?? '—' }}</p>
       </div>
       <div class="flex gap-2">
         <AppButton
@@ -151,29 +151,29 @@ function formatMontant(montant: number) {
       </div>
     </div>
 
-    <p v-if="actionError" class="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+    <p v-if="actionError" class="rounded-md bg-red-50 px-4 py-3 text-sm text-rust-dark">
       {{ actionError }}
     </p>
 
     <!-- Info cards -->
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <AppCard>
-        <p class="text-sm text-slate-500">Date de commande</p>
-        <p class="text-lg font-semibold text-slate-900">{{ formatDate(commande.dateCommande) }}</p>
+        <p class="text-sm text-muted">Date de commande</p>
+        <p class="text-lg font-semibold text-ink">{{ formatDate(commande.dateCommande) }}</p>
       </AppCard>
       <AppCard>
-        <p class="text-sm text-slate-500">Livraison prévue</p>
-        <p class="text-lg font-semibold text-slate-900">
+        <p class="text-sm text-muted">Livraison prévue</p>
+        <p class="text-lg font-semibold text-ink">
           {{ formatDate(commande.dateLivraisonPrevue) }}
         </p>
       </AppCard>
       <AppCard>
-        <p class="text-sm text-slate-500">Lignes</p>
-        <p class="text-lg font-semibold text-slate-900">{{ commande.lignes.length }}</p>
+        <p class="text-sm text-muted">Lignes</p>
+        <p class="text-lg font-semibold text-ink">{{ commande.lignes.length }}</p>
       </AppCard>
       <AppCard>
-        <p class="text-sm text-slate-500">Total estimé</p>
-        <p class="text-lg font-semibold text-slate-900">{{ formatMontant(commande.total) }}</p>
+        <p class="text-sm text-muted">Total estimé</p>
+        <p class="text-lg font-semibold text-ink">{{ formatMontant(commande.total) }}</p>
       </AppCard>
     </div>
 
@@ -181,63 +181,39 @@ function formatMontant(montant: number) {
     <AppCard v-if="commande.notes">
       <dl class="space-y-3">
         <div>
-          <dt class="text-sm text-slate-500">Notes</dt>
-          <dd class="text-sm text-slate-700">{{ commande.notes }}</dd>
+          <dt class="text-sm text-muted">Notes</dt>
+          <dd class="text-sm text-ink-2">{{ commande.notes }}</dd>
         </div>
       </dl>
     </AppCard>
 
     <!-- Lignes -->
     <div>
-      <h3 class="mb-3 text-sm font-semibold text-slate-900">Lignes de la commande</h3>
+      <h3 class="mb-3 text-sm font-semibold text-ink">Lignes de la commande</h3>
       <AppCard :padding="false">
-        <table class="w-full">
+        <table class="data-table">
           <thead>
-            <tr class="border-b border-slate-200 bg-slate-50">
-              <th
-                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500"
-              >
-                Référence
-              </th>
-              <th
-                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500"
-              >
-                Article
-              </th>
-              <th
-                class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-500"
-              >
-                Quantité
-              </th>
-              <th
-                class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-500"
-              >
-                Reçue
-              </th>
-              <th
-                class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-500"
-              >
-                Prix unitaire
-              </th>
-              <th
-                class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-500"
-              >
-                Sous-total
-              </th>
+            <tr>
+              <th>Référence</th>
+              <th>Article</th>
+              <th class="text-right">Quantité</th>
+              <th class="text-right">Reçue</th>
+              <th class="text-right">Prix unitaire</th>
+              <th class="text-right">Sous-total</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="ligne in commande.lignes" :key="ligne.id" class="border-b border-slate-100">
-              <td class="px-4 py-3 text-sm font-medium text-slate-900">{{ ligne.reference }}</td>
-              <td class="px-4 py-3 text-sm text-slate-700">{{ ligne.nom }}</td>
-              <td class="px-4 py-3 text-right text-sm text-slate-900">
+            <tr v-for="ligne in commande.lignes" :key="ligne.id" class="border-b border-line/60">
+              <td class="px-4 py-3 text-sm font-medium text-ink">{{ ligne.reference }}</td>
+              <td class="px-4 py-3 text-sm text-ink-2">{{ ligne.nom }}</td>
+              <td class="px-4 py-3 text-right text-sm text-ink">
                 {{ ligne.quantite }} {{ ligne.unite }}
               </td>
-              <td class="px-4 py-3 text-right text-sm text-slate-500">{{ ligne.quantiteRecue }}</td>
-              <td class="px-4 py-3 text-right text-sm text-slate-500">
+              <td class="px-4 py-3 text-right text-sm text-muted">{{ ligne.quantiteRecue }}</td>
+              <td class="px-4 py-3 text-right text-sm text-muted">
                 {{ ligne.prixUnitaire ? formatMontant(ligne.prixUnitaire) : '—' }}
               </td>
-              <td class="px-4 py-3 text-right text-sm font-medium text-slate-900">
+              <td class="px-4 py-3 text-right text-sm font-medium text-ink">
                 {{ formatMontant(ligne.quantite * (ligne.prixUnitaire ?? 0)) }}
               </td>
             </tr>
