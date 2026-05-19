@@ -32,16 +32,34 @@ export const createFournisseurSchema = z.object({
 
 export const updateFournisseurSchema = createFournisseurSchema.partial()
 
-export const createChantierSchema = z.object({
+export const createClientSchema = z.object({
   nom: z.string().min(1).max(200),
+  type: z.enum(['entreprise', 'particulier']).default('entreprise'),
+  contact: z.string().max(200).optional(),
+  telephone: z.string().max(50).optional(),
+  email: z.string().email().max(200).optional(),
   adresse: z.string().max(500).optional(),
-  statut: z.enum(['en_cours', 'termine', 'en_pause']).default('en_cours'),
-  dateDebut: z.string().optional(),
-  dateFin: z.string().optional(),
+  ville: z.string().max(200).optional(),
   notes: z.string().optional(),
 })
 
-export const updateChantierSchema = createChantierSchema.partial()
+export const updateClientSchema = createClientSchema.partial()
+
+export const ligneSortieSchema = z.object({
+  articleId: z.string().uuid(),
+  quantite: z.number().int().positive(),
+})
+
+export const createSortieSchema = z.object({
+  clientId: z.string().uuid(),
+  dateSortie: z.string().optional(),
+  objet: z.string().max(300).optional(),
+  modeReglement: z.enum(['comptant', 'credit', 'mobile_money']).default('comptant'),
+  statutPaiement: z.enum(['paye', 'partiel', 'impaye']).default('paye'),
+  montantPaye: z.number().min(0).optional(),
+  notes: z.string().optional(),
+  lignes: z.array(ligneSortieSchema).min(1),
+})
 
 export const ligneCommandeSchema = z.object({
   articleId: z.string().uuid(),
@@ -57,8 +75,19 @@ export const createCommandeSchema = z.object({
   lignes: z.array(ligneCommandeSchema).min(1),
 })
 
+export const receptionSchema = z.object({
+  lignes: z
+    .array(
+      z.object({
+        ligneId: z.string().uuid(),
+        quantite: z.number().int().positive(),
+      }),
+    )
+    .min(1),
+})
+
 export const updateCommandeSchema = z.object({
-  statut: z.enum(['brouillon', 'envoyee', 'recue', 'annulee']).optional(),
+  statut: z.enum(['brouillon', 'envoyee', 'partielle', 'recue', 'annulee']).optional(),
   dateCommande: z.string().optional(),
   dateLivraisonPrevue: z.string().optional(),
   notes: z.string().optional(),
@@ -70,7 +99,6 @@ export const createMouvementSchema = z.object({
   type: z.enum(['entree', 'sortie']),
   quantite: z.number().int().positive(),
   fournisseurId: z.string().uuid().optional(),
-  chantierId: z.string().uuid().optional(),
   bonLivraison: z.string().optional(),
   motif: z.string().optional(),
 })
@@ -130,14 +158,19 @@ export const importFournisseurSchema = z.object({
   notes: texteOpt,
 })
 
-export const importChantierSchema = z.object({
+export const importClientSchema = z.object({
   nom: texte,
-  adresse: texteOpt,
-  statut: z.preprocess(
-    (v) => (typeof v === 'string' && v.trim() !== '' ? v.trim() : 'en_cours'),
-    z.enum(['en_cours', 'termine', 'en_pause']),
+  type: z.preprocess(
+    (v) => (typeof v === 'string' && v.trim() !== '' ? v.trim() : 'entreprise'),
+    z.enum(['entreprise', 'particulier']),
   ),
-  dateDebut: texteOpt,
-  dateFin: texteOpt,
+  contact: texteOpt,
+  telephone: texteOpt,
+  email: z.preprocess(
+    (v) => (typeof v === 'string' && v.trim() === '' ? undefined : v),
+    z.string().trim().email().optional(),
+  ),
+  adresse: texteOpt,
+  ville: texteOpt,
   notes: texteOpt,
 })

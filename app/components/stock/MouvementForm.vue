@@ -1,10 +1,9 @@
 <script setup lang="ts">
+// Entrées de stock uniquement (réceptions fournisseur). Les sorties se
+// font désormais via les bons de sortie (page /sorties).
 interface Props {
-  type: 'entree' | 'sortie'
   articleId?: string
   articleLabel?: string
-  chantierId?: string
-  chantierLabel?: string
 }
 
 const props = defineProps<Props>()
@@ -17,7 +16,6 @@ const searchQuery = ref('')
 const selectedArticleId = ref(props.articleId ?? '')
 const quantite = ref('')
 const fournisseurId = ref('')
-const chantierId = ref(props.chantierId ?? '')
 const bonLivraison = ref('')
 const motif = ref('')
 
@@ -28,7 +26,6 @@ const { data: articlesResult } = await useFetch('/api/articles', {
 
 const { data: fournisseursData } =
   await useFetch<{ id: string; nom: string }[]>('/api/fournisseurs')
-const { data: chantiersData } = await useFetch<{ id: string; nom: string }[]>('/api/chantiers')
 
 const articleOptions = computed(() => {
   if (!articlesResult.value?.data) return []
@@ -42,18 +39,13 @@ const fournisseurOptions = computed(() =>
   (fournisseursData.value ?? []).map((f) => ({ value: f.id, label: f.nom })),
 )
 
-const chantierOptions = computed(() =>
-  (chantiersData.value ?? []).map((c) => ({ value: c.id, label: c.nom })),
-)
-
 function handleSubmit() {
   const data: Record<string, unknown> = {
     articleId: selectedArticleId.value,
-    type: props.type,
+    type: 'entree',
     quantite: Number(quantite.value),
   }
   if (fournisseurId.value) data.fournisseurId = fournisseurId.value
-  if (chantierId.value) data.chantierId = chantierId.value
   if (bonLivraison.value) data.bonLivraison = bonLivraison.value
   if (motif.value) data.motif = motif.value
 
@@ -79,35 +71,15 @@ function handleSubmit() {
     <AppInput v-model="quantite" label="Quantité" type="number" placeholder="0" />
 
     <AppSelect
-      v-if="type === 'entree'"
       v-model="fournisseurId"
       label="Fournisseur"
       :options="fournisseurOptions"
       placeholder="Optionnel..."
     />
 
-    <template v-if="type === 'sortie'">
-      <AppSelect
-        v-if="!props.chantierId"
-        v-model="chantierId"
-        label="Chantier"
-        :options="chantierOptions"
-        placeholder="Optionnel..."
-      />
-      <div v-else>
-        <p class="mb-1 text-sm font-medium text-slate-700">Chantier</p>
-        <p class="text-sm text-slate-900">{{ chantierLabel }}</p>
-      </div>
-    </template>
+    <AppInput v-model="bonLivraison" label="Bon de livraison" placeholder="N° du bon..." />
 
-    <AppInput
-      v-if="type === 'entree'"
-      v-model="bonLivraison"
-      label="Bon de livraison"
-      placeholder="N° du bon..."
-    />
-
-    <AppInput v-model="motif" label="Motif" placeholder="Raison de la transaction..." />
+    <AppInput v-model="motif" label="Motif" placeholder="Raison de l'entrée..." />
 
     <div class="flex justify-end gap-3 pt-2">
       <slot name="actions" />

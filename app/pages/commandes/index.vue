@@ -10,6 +10,7 @@ const showCreateModal = ref(false)
 const statutOptions = [
   { value: 'brouillon', label: 'Brouillon' },
   { value: 'envoyee', label: 'Envoyée' },
+  { value: 'partielle', label: 'Reçue partiellement' },
   { value: 'recue', label: 'Reçue' },
   { value: 'annulee', label: 'Annulée' },
 ]
@@ -20,6 +21,7 @@ const statutMeta: Record<
 > = {
   brouillon: { label: 'Brouillon', variant: 'neutral' },
   envoyee: { label: 'Envoyée', variant: 'info' },
+  partielle: { label: 'Partielle', variant: 'warning' },
   recue: { label: 'Reçue', variant: 'success' },
   annulee: { label: 'Annulée', variant: 'danger' },
 }

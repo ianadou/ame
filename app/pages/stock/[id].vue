@@ -1,18 +1,17 @@
 <script setup lang="ts">
-import { ArrowLeft, Plus, Minus } from 'lucide-vue-next'
+import { ArrowLeft, Plus } from 'lucide-vue-next'
 
 const route = useRoute()
 const articleId = route.params.id as string
 
 const showEntreeModal = ref(false)
-const showSortieModal = ref(false)
 
 interface ArticleMouvement {
   id: string
   type: string
   quantite: number
   fournisseurNom: string | null
-  chantierNom: string | null
+  clientNom: string | null
   bonLivraison: string | null
   motif: string | null
   createdAt: string
@@ -59,11 +58,9 @@ async function handleMouvement(data: Record<string, unknown>) {
   try {
     await $fetch('/api/mouvements', { method: 'POST', body: data })
     showEntreeModal.value = false
-    showSortieModal.value = false
     await refresh()
-    const t = data.type === 'entree' ? 'Entrée' : 'Sortie'
     notifications.success(
-      `${t} enregistrée`,
+      'Entrée enregistrée',
       `${data.quantite} × ${article.value?.reference ?? ''}`,
     )
   } catch (e: unknown) {
@@ -103,11 +100,7 @@ function formatDate(iso: string) {
       <div class="flex gap-2">
         <AppButton variant="secondary" size="sm" @click="showEntreeModal = true">
           <Plus class="h-4 w-4" />
-          Entrée
-        </AppButton>
-        <AppButton variant="secondary" size="sm" @click="showSortieModal = true">
-          <Minus class="h-4 w-4" />
-          Sortie
+          Entrée de stock
         </AppButton>
       </div>
     </div>
@@ -177,7 +170,7 @@ function formatDate(iso: string) {
               <td class="mono num text-right text-[14px] font-semibold">
                 {{ mvt.type === 'entree' ? '+' : '−' }}{{ mvt.quantite }}
               </td>
-              <td class="text-ink-2">{{ mvt.fournisseurNom || mvt.chantierNom || '—' }}</td>
+              <td class="text-ink-2">{{ mvt.fournisseurNom || mvt.clientNom || '—' }}</td>
               <td class="text-[12.5px] text-muted">{{ mvt.motif || '—' }}</td>
             </tr>
           </tbody>
@@ -192,7 +185,6 @@ function formatDate(iso: string) {
     <!-- Mouvement modals -->
     <AppModal v-model:open="showEntreeModal" title="Entrée de stock">
       <MouvementForm
-        type="entree"
         :article-id="article.id"
         :article-label="`${article.reference} — ${article.nom}`"
         @submit="handleMouvement"
@@ -200,20 +192,6 @@ function formatDate(iso: string) {
         <template #actions>
           <AppButton variant="secondary" @click="showEntreeModal = false">Annuler</AppButton>
           <AppButton type="submit">Valider l'entrée</AppButton>
-        </template>
-      </MouvementForm>
-    </AppModal>
-
-    <AppModal v-model:open="showSortieModal" title="Sortie de stock">
-      <MouvementForm
-        type="sortie"
-        :article-id="article.id"
-        :article-label="`${article.reference} — ${article.nom}`"
-        @submit="handleMouvement"
-      >
-        <template #actions>
-          <AppButton variant="secondary" @click="showSortieModal = false">Annuler</AppButton>
-          <AppButton type="submit">Valider la sortie</AppButton>
         </template>
       </MouvementForm>
     </AppModal>

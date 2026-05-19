@@ -11,7 +11,9 @@ interface Mouvement {
   articleReference: string
   articleNom: string
   fournisseurNom: string | null
-  chantierNom: string | null
+  clientNom: string | null
+  sortieId: string | null
+  sortieReference: string | null
 }
 
 interface MouvementsResponse {
@@ -26,7 +28,6 @@ const dateDebut = ref('')
 const dateFin = ref('')
 const currentPage = ref(1)
 const showEntreeModal = ref(false)
-const showSortieModal = ref(false)
 
 const typeOptions = [
   { value: 'entree', label: 'Entrées' },
@@ -56,7 +57,6 @@ watch([typeFilter, dateDebut, dateFin], () => {
 async function handleMouvement(data: Record<string, unknown>) {
   await $fetch('/api/mouvements', { method: 'POST', body: data })
   showEntreeModal.value = false
-  showSortieModal.value = false
   await refresh()
 }
 
@@ -85,9 +85,9 @@ function formatDate(iso: string) {
           <Plus class="h-4 w-4" />
           Entrée
         </AppButton>
-        <AppButton variant="secondary" @click="showSortieModal = true">
+        <AppButton variant="secondary" @click="navigateTo('/sorties/nouveau')">
           <Minus class="h-4 w-4" />
-          Sortie
+          Bon de sortie
         </AppButton>
       </div>
     </div>
@@ -102,8 +102,8 @@ function formatDate(iso: string) {
               <th class="w-[100px]">Type</th>
               <th>Article</th>
               <th class="text-right">Qté</th>
-              <th>Fournisseur / Chantier</th>
-              <th>Bon livraison</th>
+              <th>Fournisseur / Client</th>
+              <th>Bon</th>
               <th>Motif</th>
             </tr>
           </thead>
@@ -122,8 +122,17 @@ function formatDate(iso: string) {
               <td class="mono num text-right text-[14px] font-semibold">
                 {{ mvt.type === 'entree' ? '+' : '−' }}{{ mvt.quantite }}
               </td>
-              <td class="text-ink-2">{{ mvt.fournisseurNom || mvt.chantierNom || '—' }}</td>
-              <td class="mono text-[12px] text-muted">{{ mvt.bonLivraison || '—' }}</td>
+              <td class="text-ink-2">{{ mvt.fournisseurNom || mvt.clientNom || '—' }}</td>
+              <td class="mono text-[12px] text-muted">
+                <NuxtLink
+                  v-if="mvt.sortieId"
+                  :to="`/sorties/${mvt.sortieId}`"
+                  class="hover:text-ink"
+                >
+                  {{ mvt.sortieReference }}
+                </NuxtLink>
+                <span v-else>{{ mvt.bonLivraison || '—' }}</span>
+              </td>
               <td class="text-[12.5px] text-muted">{{ mvt.motif || '—' }}</td>
             </tr>
           </tbody>
@@ -167,19 +176,10 @@ function formatDate(iso: string) {
 
     <!-- Mouvement modals -->
     <AppModal v-model:open="showEntreeModal" title="Nouvelle entrée de stock">
-      <MouvementForm type="entree" @submit="handleMouvement">
+      <MouvementForm @submit="handleMouvement">
         <template #actions>
           <AppButton variant="secondary" @click="showEntreeModal = false">Annuler</AppButton>
           <AppButton type="submit">Valider l'entrée</AppButton>
-        </template>
-      </MouvementForm>
-    </AppModal>
-
-    <AppModal v-model:open="showSortieModal" title="Nouvelle sortie de stock">
-      <MouvementForm type="sortie" @submit="handleMouvement">
-        <template #actions>
-          <AppButton variant="secondary" @click="showSortieModal = false">Annuler</AppButton>
-          <AppButton type="submit">Valider la sortie</AppButton>
         </template>
       </MouvementForm>
     </AppModal>

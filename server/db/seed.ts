@@ -42,9 +42,11 @@ async function seed() {
   // Nettoyage (ordre des dépendances : enfants avant parents)
   await db.delete(schema.lignesCommande)
   await db.delete(schema.commandes)
+  await db.delete(schema.lignesSortie)
   await db.delete(schema.mouvements)
+  await db.delete(schema.sorties)
   await db.delete(schema.articles)
-  await db.delete(schema.chantiers)
+  await db.delete(schema.clients)
   await db.delete(schema.fournisseurs)
   await db.delete(schema.categories)
   console.log('  tables vidées')
@@ -91,24 +93,27 @@ async function seed() {
   await db.insert(schema.fournisseurs).values(fournisseursData)
   console.log(`  ${fournisseursData.length} fournisseurs créés`)
 
-  // Chantiers
-  const statuts = ['en_cours', 'en_cours', 'en_cours', 'termine', 'en_pause'] as const
-  const chantiersData = Array.from({ length: 6 }, () => {
-    const statut = faker.helpers.arrayElement(statuts)
+  // Clients
+  const clientsData = Array.from({ length: 8 }, () => {
+    const type = faker.helpers.arrayElement(['entreprise', 'entreprise', 'particulier'] as const)
     return {
       id: id(),
-      nom: `Chantier ${faker.helpers.arrayElement(communesAbidjan)}`,
+      nom: type === 'entreprise' ? `${faker.company.name()} BTP` : faker.person.fullName(),
+      type,
+      contact: type === 'entreprise' ? faker.person.fullName() : null,
+      telephone: telephoneIvoirien(),
+      email:
+        faker.helpers.maybe(() => faker.internet.email({ provider: 'orange.ci' }), {
+          probability: 0.6,
+        }) ?? null,
       adresse: adresseIvoirienne(),
-      statut,
-      dateDebut: faker.date.past({ years: 1 }).toISOString().split('T')[0],
-      dateFin:
-        statut === 'termine' ? faker.date.recent({ days: 30 }).toISOString().split('T')[0] : null,
-      notes: faker.helpers.maybe(() => faker.lorem.sentence(), { probability: 0.4 }) ?? null,
+      ville: faker.helpers.arrayElement(communesAbidjan),
+      notes: faker.helpers.maybe(() => faker.lorem.sentence(), { probability: 0.3 }) ?? null,
     }
   })
 
-  await db.insert(schema.chantiers).values(chantiersData)
-  console.log(`  ${chantiersData.length} chantiers créés`)
+  await db.insert(schema.clients).values(clientsData)
+  console.log(`  ${clientsData.length} clients créés`)
 
   // Articles
   const unites = ['pièce', 'mètre', 'kg', 'litre', 'sac', 'rouleau', 'lot']
@@ -177,26 +182,94 @@ async function seed() {
   await db.insert(schema.articles).values(articlesData)
   console.log(`  ${articlesData.length} articles créés`)
 
-  // Mouvements
-  const mouvementsData = Array.from({ length: 50 }, () => {
+  // Mouvements d'entrée (réceptions fournisseur, autonomes)
+  const mouvementsData = Array.from({ length: 25 }, () => {
     const article = faker.helpers.arrayElement(articlesData)
-    const type = faker.helpers.arrayElement(['entree', 'sortie'] as const)
-
     return {
       id: id(),
       articleId: article.id,
-      type,
+      type: 'entree' as const,
       quantite: faker.number.int({ min: 1, max: 30 }),
-      fournisseurId: type === 'entree' ? faker.helpers.arrayElement(fournisseursData).id : null,
-      chantierId: type === 'sortie' ? faker.helpers.arrayElement(chantiersData).id : null,
-      bonLivraison: type === 'entree' ? `BL-${faker.string.alphanumeric(6).toUpperCase()}` : null,
-      motif: faker.helpers.maybe(() => faker.lorem.sentence(), { probability: 0.5 }) ?? null,
+      fournisseurId: faker.helpers.arrayElement(fournisseursData).id,
+      sortieId: null,
+      bonLivraison: `BL-${faker.string.alphanumeric(6).toUpperCase()}`,
+      motif: faker.helpers.maybe(() => faker.lorem.sentence(), { probability: 0.4 }) ?? null,
       createdAt: faker.date.recent({ days: 60 }).toISOString().replace('T', ' ').slice(0, 19),
     }
   })
 
+  // Bons de sortie (entête + lignes + mouvements de sortie rattachés)
+  const sortiesData: (typeof schema.sorties.$inferInsert)[] = []
+  const lignesSortieData: (typeof schema.lignesSortie.$inferInsert)[] = []
+
+  for (let i = 0; i < 12; i++) {
+    const sortieId = id()
+    const date = faker.date.recent({ days: 60 })
+    const dateIso = date.toISOString().slice(0, 10)
+    const articlesSortie = faker.helpers.arrayElements(articlesData, { min: 1, max: 4 })
+
+    let montantTotal = 0
+    for (const article of articlesSortie) {
+      const quantite = faker.number.int({ min: 1, max: 15 })
+      const prixUnitaire = article.prixUnitaire ?? 0
+      montantTotal += quantite * prixUnitaire
+      lignesSortieData.push({
+        id: id(),
+        sortieId,
+        articleId: article.id,
+        quantite,
+        prixUnitaire,
+        stockApres: article.stockActuel,
+      })
+      mouvementsData.push({
+        id: id(),
+        articleId: article.id,
+        type: 'sortie',
+        quantite,
+        fournisseurId: null,
+        sortieId,
+        bonLivraison: null,
+        motif: `Bon de sortie`,
+        createdAt: date.toISOString().replace('T', ' ').slice(0, 19),
+      })
+    }
+
+    const statutPaiement = faker.helpers.arrayElement([
+      'paye',
+      'paye',
+      'partiel',
+      'impaye',
+    ] as const)
+    const montantPaye =
+      statutPaiement === 'paye'
+        ? montantTotal
+        : statutPaiement === 'impaye'
+          ? 0
+          : Math.round(montantTotal * 0.5)
+
+    sortiesData.push({
+      id: sortieId,
+      reference: `BS-${dateIso.replace(/-/g, '')}-${faker.string.alphanumeric(4).toUpperCase()}`,
+      clientId: faker.helpers.arrayElement(clientsData).id,
+      dateSortie: dateIso,
+      objet:
+        faker.helpers.maybe(() => `Livraison ${faker.commerce.department()}`, {
+          probability: 0.5,
+        }) ?? null,
+      montantTotal,
+      modeReglement: faker.helpers.arrayElement(['comptant', 'credit', 'mobile_money'] as const),
+      statutPaiement,
+      montantPaye,
+      notes: faker.helpers.maybe(() => faker.lorem.sentence(), { probability: 0.2 }) ?? null,
+    })
+  }
+
+  await db.insert(schema.sorties).values(sortiesData)
+  await db.insert(schema.lignesSortie).values(lignesSortieData)
   await db.insert(schema.mouvements).values(mouvementsData)
-  console.log(`  ${mouvementsData.length} mouvements créés`)
+  console.log(
+    `  ${sortiesData.length} bons de sortie, ${lignesSortieData.length} lignes, ${mouvementsData.length} mouvements créés`,
+  )
 
   console.log('Seed terminé !')
 }

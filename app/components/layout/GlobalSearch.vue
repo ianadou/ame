@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { Search, Package, Truck, HardHat, CornerDownLeft } from 'lucide-vue-next'
+import { Search, Package, Truck, Users, CornerDownLeft } from 'lucide-vue-next'
 import { useDebounceFn } from '@vueuse/core'
 
 const { open, closeSearch } = useGlobalSearch()
 
 interface Result {
-  type: 'article' | 'fournisseur' | 'chantier'
+  type: 'article' | 'fournisseur' | 'client'
   id: string
   titre: string
   sous: string
@@ -26,9 +26,9 @@ const groupes = computed(() => {
 const labelGroupe: Record<string, string> = {
   article: 'Articles',
   fournisseur: 'Fournisseurs',
-  chantier: 'Chantiers',
+  client: 'Clients',
 }
-const iconGroupe = { article: Package, fournisseur: Truck, chantier: HardHat }
+const iconGroupe = { article: Package, fournisseur: Truck, client: Users }
 
 const run = useDebounceFn(async () => {
   const q = query.value.trim()
@@ -38,15 +38,15 @@ const run = useDebounceFn(async () => {
   }
   loading.value = true
   try {
-    const [arts, fours, chans] = await Promise.all([
+    const [arts, fours, clis] = await Promise.all([
       $fetch<{
         data: { id: string; reference: string; nom: string; categorieNom: string | null }[]
       }>(`/api/articles?search=${encodeURIComponent(q)}&limit=6`),
       $fetch<{ id: string; nom: string; contact: string | null }[]>(
         `/api/fournisseurs?search=${encodeURIComponent(q)}`,
       ),
-      $fetch<{ id: string; nom: string; adresse: string | null }[]>(
-        `/api/chantiers?search=${encodeURIComponent(q)}`,
+      $fetch<{ id: string; nom: string; ville: string | null; contact: string | null }[]>(
+        `/api/clients?search=${encodeURIComponent(q)}`,
       ),
     ])
     const out: Result[] = []
@@ -66,13 +66,13 @@ const run = useDebounceFn(async () => {
         sous: f.contact ?? '—',
         to: `/fournisseurs/${f.id}`,
       })
-    for (const c of (chans ?? []).slice(0, 5))
+    for (const c of (clis ?? []).slice(0, 5))
       out.push({
-        type: 'chantier',
+        type: 'client',
         id: c.id,
         titre: c.nom,
-        sous: c.adresse ?? '—',
-        to: `/chantiers/${c.id}`,
+        sous: c.ville ?? c.contact ?? '—',
+        to: `/clients/${c.id}`,
       })
     results.value = out
     activeIndex.value = 0
@@ -145,7 +145,7 @@ onBeforeUnmount(() => {
               ref="inputEl"
               v-model="query"
               type="text"
-              placeholder="Rechercher un article, fournisseur, chantier…"
+              placeholder="Rechercher un article, fournisseur, client…"
               class="h-12 w-full bg-transparent text-[14px] text-ink placeholder:text-muted/80 focus:outline-none"
             />
             <span class="mono rounded border border-line px-1.5 py-0.5 text-[10px] text-muted">
@@ -164,7 +164,7 @@ onBeforeUnmount(() => {
               Aucun résultat pour « {{ query }} »
             </div>
             <div v-else-if="!query" class="px-4 py-10 text-center text-[12.5px] text-muted">
-              Tapez pour rechercher dans le stock, les fournisseurs et les chantiers.
+              Tapez pour rechercher dans le stock, les fournisseurs et les clients.
             </div>
 
             <template v-for="(grp, key) in groupes" v-else :key="key">
