@@ -10,7 +10,26 @@ import {
   HardHat,
   ArrowUpRight as ArrowLink,
 } from 'lucide-vue-next'
-import { PERIOD_DATA, TOP_CATEGORIES, TOP_CHANTIERS } from '~/composables/useDashboardViz'
+interface Tendance {
+  nom: string
+  valeur: number
+  sub: string
+}
+interface Activite {
+  label: string
+  sub: string
+  deltaSub: string
+  ticks: string[]
+  series: { entrees: (number | null)[]; sorties: (number | null)[] }
+  kpi: { mvmts: number; entrees: number; sorties: number; valEntree: number; valSortie: number }
+  delta: {
+    mvmts: string
+    entrees: string
+    sorties: string
+    valEntree: string
+    valSortie: string
+  }
+}
 
 interface DernierMouvement {
   id: string
@@ -29,6 +48,10 @@ interface DashboardData {
   nbAlertes: number
   nbChantiersEnCours: number
   derniersMouvements: DernierMouvement[]
+  topCategories: Tendance[]
+  topChantiers: Tendance[]
+  rotationJours: number
+  couvertureJours: number
 }
 interface ArticleAlerte {
   id: string
@@ -47,7 +70,20 @@ const { data: articlesResp } = await useFetch<{
 }>('/api/articles?limit=500', { default: () => ({ data: [] }) })
 
 const period = ref('mois')
-const data = computed(() => PERIOD_DATA[period.value])
+const videActivite: Activite = {
+  label: 'Mois',
+  sub: '',
+  deltaSub: '',
+  ticks: [],
+  series: { entrees: [], sorties: [] },
+  kpi: { mvmts: 0, entrees: 0, sorties: 0, valEntree: 0, valSortie: 0 },
+  delta: { mvmts: '+0%', entrees: '+0%', sorties: '+0%', valEntree: '+0%', valSortie: '+0%' },
+}
+const { data: activite } = await useFetch<Activite>('/api/dashboard/activite', {
+  query: { periode: period },
+  default: () => videActivite,
+})
+const data = computed(() => activite.value ?? videActivite)
 
 const sante = computed(() => {
   const arr = articlesResp.value?.data ?? []
@@ -242,13 +278,15 @@ const valEvolution = computed(() =>
           <div class="px-5 py-3">
             <div class="text-[11px] text-muted">Rotation moy.</div>
             <div class="display num mt-0.5 text-[20px] font-semibold">
-              14<span class="ml-1 font-sans text-[12px] text-muted">jours</span>
+              {{ dashboard?.rotationJours ?? 0
+              }}<span class="ml-1 font-sans text-[12px] text-muted">jours</span>
             </div>
           </div>
           <div class="border-l border-line/70 px-5 py-3">
             <div class="text-[11px] text-muted">Couverture</div>
             <div class="display num mt-0.5 text-[20px] font-semibold">
-              21<span class="ml-1 font-sans text-[12px] text-muted">jours</span>
+              {{ dashboard?.couvertureJours ?? 0
+              }}<span class="ml-1 font-sans text-[12px] text-muted">jours</span>
             </div>
           </div>
         </div>
@@ -272,11 +310,11 @@ const valEvolution = computed(() =>
     <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
       <PanelCard :kicker="'Classement / ' + data.label.toLowerCase()" title="Top catégories">
         <template #action><span class="text-[11.5px] text-muted">FCFA HT</span></template>
-        <HBarList :items="TOP_CATEGORIES" accent="slate" />
+        <HBarList :items="dashboard?.topCategories ?? []" accent="slate" />
       </PanelCard>
       <PanelCard :kicker="'Consommation / ' + data.label.toLowerCase()" title="Top chantiers">
         <template #action><span class="text-[11.5px] text-muted">FCFA HT</span></template>
-        <HBarList :items="TOP_CHANTIERS" accent="forest" />
+        <HBarList :items="dashboard?.topChantiers ?? []" accent="forest" />
       </PanelCard>
     </div>
 
