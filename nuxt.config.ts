@@ -8,7 +8,11 @@ export default defineNuxtConfig({
   typescript: { strict: true },
   app: {
     head: {
-      title: 'AME — Gestion de stock',
+      title: 'AME — Gestion de stock BTP',
+      link: [
+        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
+        { rel: 'alternate icon', type: 'image/png', href: '/icon-256.png' },
+      ],
     },
   },
 })

@@ -16,15 +16,15 @@ withDefaults(defineProps<Props>(), {
 })
 
 const variantClasses = {
-  primary: 'bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500',
+  primary: 'bg-ink text-white hover:bg-ink-2 shadow-soft focus:ring-ink',
   secondary:
-    'border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 focus:ring-slate-400',
-  ghost: 'bg-transparent text-slate-500 hover:bg-slate-100 focus:ring-slate-400',
+    'border border-line bg-white text-ink hover:bg-paper-4 hover:border-line-2 shadow-soft focus:ring-line-2',
+  ghost: 'text-ink-3 hover:text-ink hover:bg-paper-2 focus:ring-line-2',
 }
 
 const sizeClasses = {
-  default: 'h-9 px-4 text-sm',
-  sm: 'h-8 px-3 text-xs',
+  default: 'h-9 px-3.5 text-[13px]',
+  sm: 'h-8 px-2.5 text-[12px]',
 }
 </script>
 
