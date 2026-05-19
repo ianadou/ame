@@ -1,15 +1,15 @@
 import { eq, desc, asc } from 'drizzle-orm'
 import ExcelJS from 'exceljs'
 import { db } from '../db'
-import { articles, categories, fournisseurs, chantiers, mouvements } from '../db/schema'
+import { articles, categories, fournisseurs, clients, sorties, mouvements } from '../db/schema'
 
-export type EntiteExport = 'articles' | 'categories' | 'fournisseurs' | 'chantiers' | 'mouvements'
+export type EntiteExport = 'articles' | 'categories' | 'fournisseurs' | 'clients' | 'mouvements'
 
 export const ENTITES_EXPORT: EntiteExport[] = [
   'articles',
   'categories',
   'fournisseurs',
-  'chantiers',
+  'clients',
   'mouvements',
 ]
 
@@ -109,16 +109,18 @@ async function jeuDonnees(entite: EntiteExport, opts: Options): Promise<Jeu> {
     }
   }
 
-  if (entite === 'chantiers') {
-    const rows = await db.select().from(chantiers).orderBy(asc(chantiers.nom))
+  if (entite === 'clients') {
+    const rows = await db.select().from(clients).orderBy(asc(clients.nom))
     return {
-      entetes: ['nom', 'adresse', 'statut', 'dateDebut', 'dateFin', 'notes'],
+      entetes: ['nom', 'type', 'contact', 'telephone', 'email', 'adresse', 'ville', 'notes'],
       lignes: rows.map((r) => [
         r.nom,
+        r.type,
+        r.contact ?? '',
+        r.telephone ?? '',
+        r.email ?? '',
         r.adresse ?? '',
-        r.statut,
-        r.dateDebut ?? '',
-        r.dateFin ?? '',
+        r.ville ?? '',
         r.notes ?? '',
       ]),
     }
@@ -133,14 +135,15 @@ async function jeuDonnees(entite: EntiteExport, opts: Options): Promise<Jeu> {
       article: articles.nom,
       quantite: mouvements.quantite,
       fournisseur: fournisseurs.nom,
-      chantier: chantiers.nom,
+      client: clients.nom,
       bonLivraison: mouvements.bonLivraison,
       motif: mouvements.motif,
     })
     .from(mouvements)
     .leftJoin(articles, eq(mouvements.articleId, articles.id))
     .leftJoin(fournisseurs, eq(mouvements.fournisseurId, fournisseurs.id))
-    .leftJoin(chantiers, eq(mouvements.chantierId, chantiers.id))
+    .leftJoin(sorties, eq(mouvements.sortieId, sorties.id))
+    .leftJoin(clients, eq(sorties.clientId, clients.id))
     .orderBy(desc(mouvements.createdAt))
   const filtre = opts.type ? rows.filter((r) => r.type === opts.type) : rows
   return {
@@ -151,7 +154,7 @@ async function jeuDonnees(entite: EntiteExport, opts: Options): Promise<Jeu> {
       'article',
       'quantite',
       'fournisseur',
-      'chantier',
+      'client',
       'bonLivraison',
       'motif',
     ],
@@ -162,7 +165,7 @@ async function jeuDonnees(entite: EntiteExport, opts: Options): Promise<Jeu> {
       r.article ?? '',
       r.quantite,
       r.fournisseur ?? '',
-      r.chantier ?? '',
+      r.client ?? '',
       r.bonLivraison ?? '',
       r.motif ?? '',
     ]),

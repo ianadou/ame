@@ -5,7 +5,10 @@ import {
   ArrowLeftRight,
   ShoppingCart,
   Truck,
-  HardHat,
+  Users,
+  PackageMinus,
+  Tags,
+  Settings,
   Search,
 } from 'lucide-vue-next'
 
@@ -17,10 +20,13 @@ defineEmits<{ close: [] }>()
 const navigation = [
   { name: 'Dashboard', to: '/', icon: LayoutDashboard },
   { name: 'Stock', to: '/stock', icon: Package },
+  { name: 'Catégories', to: '/categories', icon: Tags },
+  { name: 'Bons de sortie', to: '/sorties', icon: PackageMinus },
   { name: 'Transactions', to: '/mouvements', icon: ArrowLeftRight },
   { name: 'Commandes', to: '/commandes', icon: ShoppingCart },
   { name: 'Fournisseurs', to: '/fournisseurs', icon: Truck },
-  { name: 'Chantiers', to: '/chantiers', icon: HardHat },
+  { name: 'Clients', to: '/clients', icon: Users },
+  { name: 'Réglages', to: '/parametres', icon: Settings },
 ]
 
 const { data: alertes } = await useFetch<unknown[]>('/api/alertes', { default: () => [] })

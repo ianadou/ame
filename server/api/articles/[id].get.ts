@@ -1,6 +1,6 @@
 import { eq, desc } from 'drizzle-orm'
 import { db } from '../../db'
-import { articles, categories, mouvements, fournisseurs, chantiers } from '../../db/schema'
+import { articles, categories, mouvements, fournisseurs, sorties, clients } from '../../db/schema'
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')!
@@ -35,14 +35,15 @@ export default defineEventHandler(async (event) => {
       type: mouvements.type,
       quantite: mouvements.quantite,
       fournisseurNom: fournisseurs.nom,
-      chantierNom: chantiers.nom,
+      clientNom: clients.nom,
       bonLivraison: mouvements.bonLivraison,
       motif: mouvements.motif,
       createdAt: mouvements.createdAt,
     })
     .from(mouvements)
     .leftJoin(fournisseurs, eq(mouvements.fournisseurId, fournisseurs.id))
-    .leftJoin(chantiers, eq(mouvements.chantierId, chantiers.id))
+    .leftJoin(sorties, eq(mouvements.sortieId, sorties.id))
+    .leftJoin(clients, eq(sorties.clientId, clients.id))
     .where(eq(mouvements.articleId, id))
     .orderBy(desc(mouvements.createdAt))
     .limit(20)

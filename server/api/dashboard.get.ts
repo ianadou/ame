@@ -1,6 +1,6 @@
 import { eq, sql, lte, desc, and } from 'drizzle-orm'
 import { db } from '../db'
-import { articles, chantiers, mouvements, fournisseurs, categories } from '../db/schema'
+import { articles, clients, sorties, mouvements, fournisseurs, categories } from '../db/schema'
 
 export default defineEventHandler(async () => {
   const [stats] = await db
@@ -15,10 +15,7 @@ export default defineEventHandler(async () => {
     .from(articles)
     .where(lte(articles.stockActuel, articles.seuilAlerte))
 
-  const [{ nbChantiersEnCours }] = await db
-    .select({ nbChantiersEnCours: sql<number>`count(*)` })
-    .from(chantiers)
-    .where(eq(chantiers.statut, 'en_cours'))
+  const [{ nbClients }] = await db.select({ nbClients: sql<number>`count(*)` }).from(clients)
 
   const derniersMouvements = await db
     .select({
@@ -29,13 +26,14 @@ export default defineEventHandler(async () => {
       articleNom: articles.nom,
       articleReference: articles.reference,
       fournisseurNom: fournisseurs.nom,
-      chantierNom: chantiers.nom,
+      clientNom: clients.nom,
       createdAt: mouvements.createdAt,
     })
     .from(mouvements)
     .leftJoin(articles, eq(mouvements.articleId, articles.id))
     .leftJoin(fournisseurs, eq(mouvements.fournisseurId, fournisseurs.id))
-    .leftJoin(chantiers, eq(mouvements.chantierId, chantiers.id))
+    .leftJoin(sorties, eq(mouvements.sortieId, sorties.id))
+    .leftJoin(clients, eq(sorties.clientId, clients.id))
     .orderBy(desc(mouvements.createdAt))
     .limit(5)
 
@@ -54,21 +52,17 @@ export default defineEventHandler(async () => {
     )
     .limit(6)
 
-  // Top chantiers par valeur consommée (sorties × prix)
-  const topChantiers = await db
+  // Top clients par montant total des bons de sortie
+  const topClients = await db
     .select({
-      nom: chantiers.nom,
-      valeur: sql<number>`coalesce(sum(${mouvements.quantite} * coalesce(${articles.prixUnitaire}, 0)), 0)`,
-      nb: sql<number>`count(${mouvements.id})`,
+      nom: clients.nom,
+      valeur: sql<number>`coalesce(sum(${sorties.montantTotal}), 0)`,
+      nb: sql<number>`count(${sorties.id})`,
     })
-    .from(mouvements)
-    .innerJoin(chantiers, eq(mouvements.chantierId, chantiers.id))
-    .leftJoin(articles, eq(mouvements.articleId, articles.id))
-    .where(eq(mouvements.type, 'sortie'))
-    .groupBy(chantiers.id)
-    .orderBy(
-      desc(sql`coalesce(sum(${mouvements.quantite} * coalesce(${articles.prixUnitaire}, 0)), 0)`),
-    )
+    .from(sorties)
+    .innerJoin(clients, eq(sorties.clientId, clients.id))
+    .groupBy(clients.id)
+    .orderBy(desc(sql`coalesce(sum(${sorties.montantTotal}), 0)`))
     .limit(6)
 
   // Couverture (en quantités) et rotation (en valeur) sur 30 jours.
@@ -93,14 +87,14 @@ export default defineEventHandler(async () => {
     nbArticles: stats.nbArticles,
     valeurStock: stats.valeurStock,
     nbAlertes,
-    nbChantiersEnCours,
+    nbClients,
     derniersMouvements,
     topCategories: topCategories.map((c) => ({
       nom: c.nom,
       valeur: Math.round(c.valeur),
       sub: `${c.nb} art.`,
     })),
-    topChantiers: topChantiers.map((c) => ({
+    topClients: topClients.map((c) => ({
       nom: c.nom,
       valeur: Math.round(c.valeur),
       sub: `${c.nb} sorties`,

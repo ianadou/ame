@@ -1,10 +1,4 @@
 <script setup lang="ts">
-interface Category {
-  id: string
-  nom: string
-  children?: { id: string; nom: string }[]
-}
-
 interface ArticleFormData {
   reference: string
   nom: string
@@ -35,10 +29,10 @@ const form = reactive<ArticleFormData>({
   notes: props.initial?.notes ?? '',
 })
 
-const { data: categories } = await useFetch<Category[]>('/api/categories')
+const { categories, fetchCategories, createCategorie } = useCategories()
+await fetchCategories()
 
 const categoryOptions = computed(() => {
-  if (!categories.value) return []
   const opts: { value: string; label: string }[] = []
   for (const cat of categories.value) {
     opts.push({ value: cat.id, label: cat.nom })
@@ -50,6 +44,17 @@ const categoryOptions = computed(() => {
   }
   return opts
 })
+
+const parentOptions = computed(() => categories.value.map((c) => ({ value: c.id, label: c.nom })))
+
+const showNewCategory = ref(false)
+
+async function handleNewCategory(data: Record<string, unknown>) {
+  const created = await createCategorie(data)
+  await fetchCategories()
+  form.categorieId = created.id
+  showNewCategory.value = false
+}
 
 const uniteOptions = [
   { value: 'pièce', label: 'Pièce' },
@@ -85,12 +90,21 @@ function handleSubmit() {
     </div>
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-      <AppSelect
-        v-model="form.categorieId"
-        label="Catégorie"
-        :options="categoryOptions"
-        placeholder="Sélectionner..."
-      />
+      <div>
+        <AppSelect
+          v-model="form.categorieId"
+          label="Catégorie"
+          :options="categoryOptions"
+          placeholder="Sélectionner..."
+        />
+        <button
+          type="button"
+          class="mt-1.5 text-[12px] font-medium text-primary-600 hover:text-primary-700"
+          @click="showNewCategory = true"
+        >
+          + Nouvelle catégorie
+        </button>
+      </div>
       <AppSelect v-model="form.unite" label="Unité" :options="uniteOptions" />
     </div>
 
@@ -120,4 +134,13 @@ function handleSubmit() {
       <slot name="actions" />
     </div>
   </form>
+
+  <AppModal v-model:open="showNewCategory" title="Nouvelle catégorie">
+    <CategorieForm :parents="parentOptions" @submit="handleNewCategory">
+      <template #actions>
+        <AppButton variant="secondary" @click="showNewCategory = false">Annuler</AppButton>
+        <AppButton type="submit">Créer</AppButton>
+      </template>
+    </CategorieForm>
+  </AppModal>
 </template>

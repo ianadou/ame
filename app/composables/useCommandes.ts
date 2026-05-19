@@ -48,6 +48,10 @@ export function useCommandes() {
     await $fetch(`/api/commandes/${id}`, { method: 'DELETE' })
   }
 
+  async function receptionner(id: string, lignes: { ligneId: string; quantite: number }[]) {
+    await $fetch(`/api/commandes/${id}/reception`, { method: 'POST', body: { lignes } })
+  }
+
   return {
     commandes,
     loading,
@@ -56,5 +60,6 @@ export function useCommandes() {
     createCommande,
     updateCommande,
     deleteCommande,
+    receptionner,
   }
 }

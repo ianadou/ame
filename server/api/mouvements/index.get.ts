@@ -1,11 +1,11 @@
 import { eq, desc, sql, and, gte, lte } from 'drizzle-orm'
 import { db } from '../../db'
-import { mouvements, articles, fournisseurs, chantiers } from '../../db/schema'
+import { mouvements, articles, fournisseurs, sorties, clients } from '../../db/schema'
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event)
   const articleId = query.article as string | undefined
-  const chantierId = query.chantier as string | undefined
+  const clientId = query.client as string | undefined
   const fournisseurId = query.fournisseur as string | undefined
   const type = query.type as string | undefined
   const dateDebut = query.dateDebut as string | undefined
@@ -17,7 +17,7 @@ export default defineEventHandler(async (event) => {
   const conditions = []
 
   if (articleId) conditions.push(eq(mouvements.articleId, articleId))
-  if (chantierId) conditions.push(eq(mouvements.chantierId, chantierId))
+  if (clientId) conditions.push(eq(sorties.clientId, clientId))
   if (fournisseurId) conditions.push(eq(mouvements.fournisseurId, fournisseurId))
   if (type === 'entree' || type === 'sortie') conditions.push(eq(mouvements.type, type))
   if (dateDebut) conditions.push(gte(mouvements.createdAt, dateDebut))
@@ -37,12 +37,15 @@ export default defineEventHandler(async (event) => {
         articleReference: articles.reference,
         articleNom: articles.nom,
         fournisseurNom: fournisseurs.nom,
-        chantierNom: chantiers.nom,
+        clientNom: clients.nom,
+        sortieId: mouvements.sortieId,
+        sortieReference: sorties.reference,
       })
       .from(mouvements)
       .leftJoin(articles, eq(mouvements.articleId, articles.id))
       .leftJoin(fournisseurs, eq(mouvements.fournisseurId, fournisseurs.id))
-      .leftJoin(chantiers, eq(mouvements.chantierId, chantiers.id))
+      .leftJoin(sorties, eq(mouvements.sortieId, sorties.id))
+      .leftJoin(clients, eq(sorties.clientId, clients.id))
       .where(where)
       .orderBy(desc(mouvements.createdAt))
       .limit(limit)
@@ -50,6 +53,7 @@ export default defineEventHandler(async (event) => {
     db
       .select({ count: sql<number>`count(*)` })
       .from(mouvements)
+      .leftJoin(sorties, eq(mouvements.sortieId, sorties.id))
       .where(where),
   ])
 

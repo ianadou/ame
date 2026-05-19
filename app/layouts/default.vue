@@ -16,7 +16,9 @@ const PAGE_META: Record<string, { title: string; kicker: string; crumb: string }
     crumb: 'Achats',
   },
   '/fournisseurs': { title: 'Fournisseurs', kicker: 'Carnet fournisseurs', crumb: 'Partenaires' },
-  '/chantiers': { title: 'Chantiers', kicker: 'Sites en production', crumb: 'Suivi' },
+  '/clients': { title: 'Clients', kicker: 'Carnet clients', crumb: 'Ventes' },
+  '/sorties': { title: 'Bons de sortie', kicker: 'Sorties de stock clients', crumb: 'Ventes' },
+  '/parametres': { title: 'Réglages', kicker: 'Profil et données', crumb: 'Configuration' },
 }
 
 const meta = computed(() => {
