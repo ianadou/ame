@@ -132,8 +132,8 @@ function formatDate(iso: string) {
 
       <AppEmptyState
         v-if="mouvements.length === 0"
-        title="Aucun mouvement"
-        description="Les mouvements de stock apparaîtront ici."
+        title="Aucune transaction"
+        description="Les transactions de stock apparaîtront ici."
       />
 
       <!-- Pagination -->

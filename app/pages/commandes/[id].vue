@@ -61,7 +61,7 @@ async function changeStatut(statut: string) {
     if (statut === 'recue') {
       notifications.success(
         `Commande ${cref} reçue`,
-        'Mouvements d’entrée créés, stock mis à jour.',
+        'Transactions d’entrée créées, stock mis à jour.',
       )
     } else if (statut === 'envoyee') {
       notifications.info(`Commande ${cref} envoyée`, undefined, { desktop: false })

@@ -198,7 +198,7 @@ const valEvolution = computed(() =>
     <!-- Period KPI -->
     <div class="grid grid-cols-2 gap-4 lg:grid-cols-5">
       <KpiCard
-        label="Mouvements"
+        label="Transactions"
         :value="fmt(data.kpi.mvmts)"
         :delta="data.delta.mvmts"
         :delta-sub="data.deltaSub"
@@ -247,7 +247,7 @@ const valEvolution = computed(() =>
     <div class="grid grid-cols-1 gap-4 lg:grid-cols-12">
       <PanelCard
         class="lg:col-span-8"
-        :kicker="'Mouvements / ' + data.label.toLowerCase()"
+        :kicker="'Transactions / ' + data.label.toLowerCase()"
         title="Entrées vs sorties"
       >
         <template #action>
@@ -296,7 +296,7 @@ const valEvolution = computed(() =>
     <!-- Value evolution -->
     <PanelCard
       :kicker="'Évolution / ' + data.label.toLowerCase()"
-      title="Valeur des mouvements (FCFA)"
+      title="Valeur des transactions (FCFA)"
     >
       <template #action
         ><span class="text-[11.5px] text-muted">Cumul entrées + sorties</span></template
@@ -320,7 +320,11 @@ const valEvolution = computed(() =>
 
     <!-- Latest + Alertes -->
     <div class="grid grid-cols-1 gap-4 lg:grid-cols-12">
-      <PanelCard class="lg:col-span-7" kicker="5 dernières opérations" title="Derniers mouvements">
+      <PanelCard
+        class="lg:col-span-7"
+        kicker="5 dernières opérations"
+        title="Dernières transactions"
+      >
         <template #action>
           <button
             class="flex items-center gap-1 text-[12px] text-muted hover:text-ink"

@@ -6,7 +6,7 @@ const PAGE_META: Record<string, { title: string; kicker: string; crumb: string }
   '/': { title: 'Tableau de bord', kicker: 'Aperçu général', crumb: "Vue d'ensemble" },
   '/stock': { title: 'Stock', kicker: 'Inventaire articles', crumb: 'Catalogue' },
   '/mouvements': {
-    title: 'Mouvements',
+    title: 'Transactions',
     kicker: 'Historique entrées/sorties',
     crumb: 'Journal',
   },
@@ -28,7 +28,16 @@ watch(route, () => {
   sidebarOpen.value = false
 })
 
-onMounted(() => demanderPermissionBureau())
+const { load } = useSessionUser()
+
+onMounted(async () => {
+  demanderPermissionBureau()
+  try {
+    await load()
+  } catch {
+    // Table absente / serveur non prêt : la modal bloquante prendra le relais.
+  }
+})
 </script>
 
 <template>
@@ -63,10 +72,11 @@ onMounted(() => demanderPermissionBureau())
         <slot />
       </main>
       <footer
-        class="flex items-center justify-between border-t border-line bg-white px-4 py-4 text-[11.5px] text-muted lg:px-8"
+        class="grid grid-cols-3 items-center border-t border-line bg-white px-4 py-4 text-[11.5px] text-muted lg:px-8"
       >
         <span>AME / Gestion de stock BTP / Côte d'Ivoire</span>
-        <span class="flex items-center gap-4">
+        <span class="mono text-center tracking-wider2">Tous droits réservés à Eddin</span>
+        <span class="flex items-center justify-end gap-4">
           <span class="mono">v0.4.2</span>
           <span class="flex items-center gap-1.5">
             <span class="h-1.5 w-1.5 rounded-full bg-forest" />Base à jour
@@ -77,6 +87,7 @@ onMounted(() => demanderPermissionBureau())
 
     <ToastHost />
     <GlobalSearch />
+    <SessionUserModal />
   </div>
 </template>
 

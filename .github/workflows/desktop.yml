@@ -1,0 +1,73 @@
+name: Build desktop (Tauri)
+
+# Déclenchement manuel (onglet Actions) ou sur tag v*.
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            artifact: windows-exe-msi
+          - os: ubuntu-latest
+            artifact: linux-rpm-deb
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Dépendances système Linux (WebKitGTK + rpmbuild)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libgtk-3-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            rpm
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Installer les dépendances
+        run: bun install
+
+      # `tauri build` exécute le beforeBuildCommand de tauri.conf.json :
+      # nuxt build + copie @libsql + prépare le sidecar bun de la plateforme.
+      - name: Build Tauri
+        run: bun run desktop:build
+
+      - name: Publier les installeurs Windows
+        if: matrix.os == 'windows-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: AME-${{ matrix.artifact }}
+          path: |
+            src-tauri/target/release/bundle/nsis/*-setup.exe
+            src-tauri/target/release/bundle/msi/*.msi
+          if-no-files-found: error
+
+      - name: Publier les paquets Linux
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: AME-${{ matrix.artifact }}
+          path: |
+            src-tauri/target/release/bundle/rpm/*.rpm
+            src-tauri/target/release/bundle/deb/*.deb
+          if-no-files-found: error

@@ -69,9 +69,9 @@ async function handleMouvement(data: Record<string, unknown>) {
   } catch (e: unknown) {
     const msg =
       e && typeof e === 'object' && 'data' in e
-        ? ((e as { data?: { message?: string } }).data?.message ?? 'Mouvement refusé')
-        : 'Mouvement refusé'
-    notifications.danger('Mouvement refusé', msg)
+        ? ((e as { data?: { message?: string } }).data?.message ?? 'Transaction refusée')
+        : 'Transaction refusée'
+    notifications.danger('Transaction refusée', msg)
   }
 }
 
@@ -154,7 +154,7 @@ function formatDate(iso: string) {
 
     <!-- Mouvements history -->
     <div>
-      <h3 class="mb-3 text-sm font-semibold text-ink">Derniers mouvements</h3>
+      <h3 class="mb-3 text-sm font-semibold text-ink">Dernières transactions</h3>
       <AppCard :padding="false">
         <table v-if="article.mouvements.length > 0" class="data-table">
           <thead>
@@ -184,8 +184,8 @@ function formatDate(iso: string) {
         </table>
         <AppEmptyState
           v-else
-          title="Aucun mouvement"
-          description="Cet article n'a pas encore de mouvements enregistrés."
+          title="Aucune transaction"
+          description="Cet article n'a pas encore de transactions enregistrées."
         />
       </AppCard>
     </div>
