@@ -101,16 +101,24 @@ function formatDate(iso: string) {
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <AppCard>
         <p class="text-sm text-slate-500">Stock actuel</p>
-        <p class="text-lg font-semibold text-slate-900">{{ article.stockActuel }} {{ article.unite }}</p>
+        <p class="text-lg font-semibold text-slate-900">
+          {{ article.stockActuel }} {{ article.unite }}
+        </p>
       </AppCard>
       <AppCard>
         <p class="text-sm text-slate-500">Seuil d'alerte</p>
-        <p class="text-lg font-semibold text-slate-900">{{ article.seuilAlerte }} {{ article.unite }}</p>
+        <p class="text-lg font-semibold text-slate-900">
+          {{ article.seuilAlerte }} {{ article.unite }}
+        </p>
       </AppCard>
       <AppCard>
         <p class="text-sm text-slate-500">Prix unitaire HT</p>
         <p class="text-lg font-semibold text-slate-900">
-          {{ article.prixUnitaire ? `${article.prixUnitaire.toFixed(2)} €` : '—' }}
+          {{
+            article.prixUnitaire
+              ? `${article.prixUnitaire.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} FCFA`
+              : '—'
+          }}
         </p>
       </AppCard>
       <AppCard>
@@ -140,26 +148,44 @@ function formatDate(iso: string) {
         <table v-if="article.mouvements.length > 0" class="w-full">
           <thead>
             <tr class="border-b border-slate-200 bg-slate-50">
-              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Date</th>
-              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Type</th>
-              <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-500">Quantité</th>
-              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Origine / Destination</th>
-              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Motif</th>
+              <th
+                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500"
+              >
+                Date
+              </th>
+              <th
+                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500"
+              >
+                Type
+              </th>
+              <th
+                class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-500"
+              >
+                Quantité
+              </th>
+              <th
+                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500"
+              >
+                Origine / Destination
+              </th>
+              <th
+                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500"
+              >
+                Motif
+              </th>
             </tr>
           </thead>
           <tbody>
-            <tr
-              v-for="mvt in article.mouvements"
-              :key="mvt.id"
-              class="border-b border-slate-100"
-            >
+            <tr v-for="mvt in article.mouvements" :key="mvt.id" class="border-b border-slate-100">
               <td class="px-4 py-3 text-xs text-slate-500">{{ formatDate(mvt.createdAt) }}</td>
               <td class="px-4 py-3">
                 <AppBadge :variant="mvt.type === 'entree' ? 'success' : 'danger'">
                   {{ mvt.type === 'entree' ? 'Entrée' : 'Sortie' }}
                 </AppBadge>
               </td>
-              <td class="px-4 py-3 text-right text-sm font-medium text-slate-900">{{ mvt.quantite }}</td>
+              <td class="px-4 py-3 text-right text-sm font-medium text-slate-900">
+                {{ mvt.quantite }}
+              </td>
               <td class="px-4 py-3 text-sm text-slate-700">
                 {{ mvt.fournisseurNom || mvt.chantierNom || '—' }}
               </td>

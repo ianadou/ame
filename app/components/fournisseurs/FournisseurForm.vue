@@ -44,22 +44,18 @@ function handleSubmit() {
     <AppInput v-model="form.nom" label="Nom" placeholder="Matériaux BTP SARL" />
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-      <AppInput v-model="form.contact" label="Contact" placeholder="Jean Dupont" />
-      <AppInput v-model="form.telephone" label="Téléphone" placeholder="06 12 34 56 78" />
+      <AppInput v-model="form.contact" label="Contact" placeholder="Koffi Kouamé" />
+      <AppInput v-model="form.telephone" label="Téléphone" placeholder="07 07 07 07 07" />
     </div>
 
     <AppInput
       v-model="form.email"
       label="Email"
       type="email"
-      placeholder="contact@fournisseur.fr"
+      placeholder="contact@fournisseur.ci"
     />
 
-    <AppInput
-      v-model="form.adresse"
-      label="Adresse"
-      placeholder="12 rue des Bâtisseurs, 75000 Paris"
-    />
+    <AppInput v-model="form.adresse" label="Adresse" placeholder="Cocody Riviera 3, Abidjan" />
 
     <div>
       <label class="mb-1 block text-sm font-medium text-slate-700">Notes</label>
