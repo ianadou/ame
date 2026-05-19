@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "build": "nuxt build",
+    "build:desktop": "nuxt build && bun scripts/postbuild-libsql.mjs",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
@@ -20,6 +21,8 @@
     "@fontsource/ibm-plex-mono": "^5.2.7",
     "@fontsource/inter": "^5.2.8",
     "@libsql/client": "^0.17.2",
+    "@libsql/isomorphic-fetch": "^0.3.1",
+    "@libsql/isomorphic-ws": "^0.1.5",
     "@vueuse/core": "^14.2.1",
     "csv-parse": "^6.2.1",
     "drizzle-orm": "^0.45.2",
