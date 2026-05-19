@@ -53,11 +53,26 @@ function stockLabel(a: { stockActuel: number; seuilAlerte: number }) {
   return 'En stock'
 }
 
+const notifications = useNotifications()
+
 async function handleMouvement(data: Record<string, unknown>) {
-  await $fetch('/api/mouvements', { method: 'POST', body: data })
-  showEntreeModal.value = false
-  showSortieModal.value = false
-  await refresh()
+  try {
+    await $fetch('/api/mouvements', { method: 'POST', body: data })
+    showEntreeModal.value = false
+    showSortieModal.value = false
+    await refresh()
+    const t = data.type === 'entree' ? 'Entrée' : 'Sortie'
+    notifications.success(
+      `${t} enregistrée`,
+      `${data.quantite} × ${article.value?.reference ?? ''}`,
+    )
+  } catch (e: unknown) {
+    const msg =
+      e && typeof e === 'object' && 'data' in e
+        ? ((e as { data?: { message?: string } }).data?.message ?? 'Mouvement refusé')
+        : 'Mouvement refusé'
+    notifications.danger('Mouvement refusé', msg)
+  }
 }
 
 function formatDate(iso: string) {

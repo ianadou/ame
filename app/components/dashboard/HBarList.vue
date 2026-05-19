@@ -18,6 +18,9 @@ function fmt(n: number) {
 
 <template>
   <div class="divide-y divide-line/60">
+    <div v-if="items.length === 0" class="px-5 py-10 text-center text-[12.5px] text-muted">
+      Aucune donnée sur la période.
+    </div>
     <div v-for="(it, i) in items" :key="i" class="px-5 py-3 transition-colors hover:bg-paper-4/60">
       <div class="mb-2 flex items-baseline justify-between gap-3">
         <div class="flex min-w-0 items-baseline gap-2.5">

@@ -10,6 +10,7 @@ const open = defineModel<boolean>('open', { default: false })
 const emit = defineEmits<{ done: [] }>()
 
 const { urlModele, previsualiser, appliquer } = useImport()
+const notifications = useNotifications()
 
 const entite = ref(props.entites[0]?.value ?? '')
 const etape = ref<'select' | 'preview' | 'result'>('select')
@@ -60,11 +61,20 @@ async function confirmer() {
   chargement.value = true
   erreurGlobale.value = null
   try {
-    rapport.value = await appliquer(entite.value, fichier.value)
+    const r = await appliquer(entite.value, fichier.value)
+    rapport.value = r
     etape.value = 'result'
+    const titre = `Import ${entite.value} terminé`
+    const detail = `${r.crees ?? 0} créé(s), ${r.maj ?? 0} mis à jour`
+    if (r.erreurs.length > 0) {
+      notifications.warning(titre, `${detail}, ${r.erreurs.length} ligne(s) en erreur`)
+    } else {
+      notifications.success(titre, detail)
+    }
     emit('done')
   } catch (e: unknown) {
     erreurGlobale.value = messageErreur(e)
+    notifications.danger("Échec de l'import", messageErreur(e))
   } finally {
     chargement.value = false
   }

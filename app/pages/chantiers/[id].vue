@@ -5,6 +5,7 @@ const route = useRoute()
 const chantierId = route.params.id as string
 
 const { updateChantier, deleteChantier } = useChantiers()
+const notifications = useNotifications()
 
 const showEditModal = ref(false)
 const showSortieModal = ref(false)
@@ -56,22 +57,43 @@ async function handleEdit(data: Record<string, unknown>) {
   await updateChantier(chantierId, data)
   showEditModal.value = false
   await refresh()
+  notifications.success('Chantier mis à jour', chantier.value?.nom)
 }
 
 async function handleSortie(data: Record<string, unknown>) {
-  await $fetch('/api/mouvements', { method: 'POST', body: data })
-  showSortieModal.value = false
-  await refresh()
+  try {
+    await $fetch('/api/mouvements', { method: 'POST', body: data })
+    showSortieModal.value = false
+    await refresh()
+    notifications.success(
+      'Sortie enregistrée',
+      `${data.quantite} unité(s) — ${chantier.value?.nom ?? ''}`,
+    )
+  } catch (e: unknown) {
+    const msg =
+      e && typeof e === 'object' && 'data' in e
+        ? ((e as { data?: { message?: string } }).data?.message ?? 'Mouvement refusé')
+        : 'Mouvement refusé'
+    notifications.danger('Sortie refusée', msg)
+  }
 }
 
 async function handleDelete() {
   deleteError.value = null
   deleting.value = true
   try {
+    const nom = chantier.value?.nom ?? 'Chantier'
     await deleteChantier(chantierId)
+    notifications.success('Chantier supprimé', nom)
     await navigateTo('/chantiers')
   } catch (e: unknown) {
-    deleteError.value = e instanceof Error ? e.message : 'Suppression impossible (mouvements liés).'
+    const msg =
+      e && typeof e === 'object' && 'data' in e
+        ? ((e as { data?: { message?: string } }).data?.message ??
+          'Suppression impossible (mouvements liés).')
+        : 'Suppression impossible (mouvements liés).'
+    deleteError.value = msg
+    notifications.danger('Suppression impossible', msg)
   } finally {
     deleting.value = false
   }
