@@ -107,7 +107,7 @@ function handleSubmit() {
       placeholder="N° du bon..."
     />
 
-    <AppInput v-model="motif" label="Motif" placeholder="Raison du mouvement..." />
+    <AppInput v-model="motif" label="Motif" placeholder="Raison de la transaction..." />
 
     <div class="flex justify-end gap-3 pt-2">
       <slot name="actions" />

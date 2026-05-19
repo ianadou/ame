@@ -72,8 +72,8 @@ async function handleSortie(data: Record<string, unknown>) {
   } catch (e: unknown) {
     const msg =
       e && typeof e === 'object' && 'data' in e
-        ? ((e as { data?: { message?: string } }).data?.message ?? 'Mouvement refusé')
-        : 'Mouvement refusé'
+        ? ((e as { data?: { message?: string } }).data?.message ?? 'Transaction refusée')
+        : 'Transaction refusée'
     notifications.danger('Sortie refusée', msg)
   }
 }
@@ -90,8 +90,8 @@ async function handleDelete() {
     const msg =
       e && typeof e === 'object' && 'data' in e
         ? ((e as { data?: { message?: string } }).data?.message ??
-          'Suppression impossible (mouvements liés).')
-        : 'Suppression impossible (mouvements liés).'
+          'Suppression impossible (transactions liées).')
+        : 'Suppression impossible (transactions liées).'
     deleteError.value = msg
     notifications.danger('Suppression impossible', msg)
   } finally {

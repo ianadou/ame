@@ -19,7 +19,7 @@ export default defineEventHandler(async (event) => {
   if (linkedMouvements.length > 0) {
     throw createError({
       statusCode: 400,
-      message: 'Impossible de supprimer un chantier ayant des mouvements',
+      message: 'Impossible de supprimer un chantier ayant des transactions',
     })
   }
 

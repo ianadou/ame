@@ -36,7 +36,7 @@ const optionsFormat = [
 ]
 
 const optionsType = [
-  { value: '', label: 'Tous les mouvements' },
+  { value: '', label: 'Toutes les transactions' },
   { value: 'entree', label: 'Entrées seulement' },
   { value: 'sortie', label: 'Sorties seulement' },
 ]
