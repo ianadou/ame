@@ -16,6 +16,8 @@
     "db:push": "drizzle-kit push"
   },
   "dependencies": {
+    "@fontsource/antonio": "^5.2.8",
+    "@fontsource/ibm-plex-mono": "^5.2.7",
     "@fontsource/inter": "^5.2.8",
     "@libsql/client": "^0.17.2",
     "@vueuse/core": "^14.2.1",

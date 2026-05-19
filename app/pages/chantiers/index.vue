@@ -82,56 +82,36 @@ await loadChantiers()
     <!-- Table -->
     <AppCard :padding="false">
       <div class="overflow-x-auto">
-        <table class="w-full">
+        <table class="data-table">
           <thead>
-            <tr class="border-b border-slate-200 bg-slate-50">
-              <th
-                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500"
-              >
-                Nom
-              </th>
-              <th
-                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500"
-              >
-                Adresse
-              </th>
-              <th
-                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500"
-              >
-                Statut
-              </th>
-              <th
-                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500"
-              >
-                Début
-              </th>
+            <tr>
+              <th>Nom</th>
+              <th>Adresse</th>
+              <th>Statut</th>
+              <th>Début</th>
             </tr>
           </thead>
           <tbody v-if="!loading && chantiers.length > 0">
             <tr
               v-for="chantier in chantiers"
               :key="chantier.id"
-              class="cursor-pointer border-b border-slate-100 transition-colors hover:bg-slate-50"
+              class="row-hover cursor-pointer"
               @click="navigateTo(`/chantiers/${chantier.id}`)"
             >
-              <td class="px-4 py-3 text-sm font-medium text-slate-900">{{ chantier.nom }}</td>
-              <td class="px-4 py-3 text-sm text-slate-500">{{ chantier.adresse ?? '—' }}</td>
-              <td class="px-4 py-3">
+              <td class="font-medium">{{ chantier.nom }}</td>
+              <td class="text-muted">{{ chantier.adresse ?? '—' }}</td>
+              <td>
                 <AppBadge :variant="statutMeta[chantier.statut]?.variant ?? 'neutral'">
                   {{ statutMeta[chantier.statut]?.label ?? chantier.statut }}
                 </AppBadge>
               </td>
-              <td class="px-4 py-3 text-sm text-slate-500">{{ formatDate(chantier.dateDebut) }}</td>
+              <td class="mono text-[12.5px] text-muted">{{ formatDate(chantier.dateDebut) }}</td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <div v-if="loading" class="flex justify-center py-12">
-        <div
-          class="h-6 w-6 animate-spin rounded-full border-2 border-primary-600 border-t-transparent"
-        />
-      </div>
+      <TableSkeleton v-if="loading" :cols="4" />
 
       <AppEmptyState
         v-if="!loading && chantiers.length === 0"

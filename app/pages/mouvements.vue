@@ -95,66 +95,36 @@ function formatDate(iso: string) {
     <!-- Table -->
     <AppCard :padding="false">
       <div class="overflow-x-auto">
-        <table v-if="mouvements.length > 0" class="w-full">
+        <table v-if="mouvements.length > 0" class="data-table">
           <thead>
-            <tr class="border-b border-slate-200 bg-slate-50">
-              <th
-                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500"
-              >
-                Date
-              </th>
-              <th
-                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500"
-              >
-                Type
-              </th>
-              <th
-                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500"
-              >
-                Article
-              </th>
-              <th
-                class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-500"
-              >
-                Quantité
-              </th>
-              <th
-                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500"
-              >
-                Fournisseur / Chantier
-              </th>
-              <th
-                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500"
-              >
-                Bon livraison
-              </th>
-              <th
-                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500"
-              >
-                Motif
-              </th>
+            <tr>
+              <th class="w-[120px]">Date</th>
+              <th class="w-[100px]">Type</th>
+              <th>Article</th>
+              <th class="text-right">Qté</th>
+              <th>Fournisseur / Chantier</th>
+              <th>Bon livraison</th>
+              <th>Motif</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="mvt in mouvements" :key="mvt.id" class="border-b border-slate-100">
-              <td class="px-4 py-3 text-xs text-slate-500">{{ formatDate(mvt.createdAt) }}</td>
-              <td class="px-4 py-3">
-                <AppBadge :variant="mvt.type === 'entree' ? 'success' : 'danger'">
+            <tr v-for="mvt in mouvements" :key="mvt.id" class="row-hover">
+              <td class="mono text-[12px] text-ink-3">{{ formatDate(mvt.createdAt) }}</td>
+              <td>
+                <AppBadge :variant="mvt.type === 'entree' ? 'success' : 'neutral'">
                   {{ mvt.type === 'entree' ? 'Entrée' : 'Sortie' }}
                 </AppBadge>
               </td>
-              <td class="px-4 py-3 text-sm text-slate-700">
-                <span class="font-medium text-slate-900">{{ mvt.articleReference }}</span>
+              <td>
+                <span class="mono font-medium text-ink-2">{{ mvt.articleReference }}</span>
                 — {{ mvt.articleNom }}
               </td>
-              <td class="px-4 py-3 text-right text-sm font-medium text-slate-900">
-                {{ mvt.quantite }}
+              <td class="mono num text-right text-[14px] font-semibold">
+                {{ mvt.type === 'entree' ? '+' : '−' }}{{ mvt.quantite }}
               </td>
-              <td class="px-4 py-3 text-sm text-slate-500">
-                {{ mvt.fournisseurNom || mvt.chantierNom || '—' }}
-              </td>
-              <td class="px-4 py-3 text-sm text-slate-500">{{ mvt.bonLivraison || '—' }}</td>
-              <td class="px-4 py-3 text-sm text-slate-500">{{ mvt.motif || '—' }}</td>
+              <td class="text-ink-2">{{ mvt.fournisseurNom || mvt.chantierNom || '—' }}</td>
+              <td class="mono text-[12px] text-muted">{{ mvt.bonLivraison || '—' }}</td>
+              <td class="text-[12.5px] text-muted">{{ mvt.motif || '—' }}</td>
             </tr>
           </tbody>
         </table>

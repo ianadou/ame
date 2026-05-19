@@ -1,24 +1,57 @@
 <script setup lang="ts">
 import { Menu } from 'lucide-vue-next'
 
-defineProps<{
-  title: string
-}>()
+defineProps<{ title: string; kicker?: string; crumb?: string }>()
+defineEmits<{ toggleSidebar: [] }>()
 
-defineEmits<{
-  toggleSidebar: []
-}>()
+const now = new Date()
+const jours = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi']
+const mois = [
+  'Janvier',
+  'Février',
+  'Mars',
+  'Avril',
+  'Mai',
+  'Juin',
+  'Juillet',
+  'Août',
+  'Septembre',
+  'Octobre',
+  'Novembre',
+  'Décembre',
+]
+const p2 = (n: number) => String(n).padStart(2, '0')
+const jour = jours[now.getDay()]
+const dateStr = `${p2(now.getDate())} ${mois[now.getMonth()]} ${now.getFullYear()} / ${p2(now.getHours())}:${p2(now.getMinutes())}`
 </script>
 
 <template>
-  <header class="flex h-16 items-center gap-4 border-b border-slate-200 bg-white px-4 lg:px-6">
-    <button
-      class="rounded-md p-2 text-slate-500 hover:bg-slate-100 lg:hidden"
-      @click="$emit('toggleSidebar')"
-    >
-      <Menu class="h-5 w-5" />
-    </button>
+  <header class="sticky top-0 z-20 border-b border-line bg-white">
+    <div class="flex items-end justify-between gap-6 px-4 py-5 lg:px-8">
+      <div class="flex items-end gap-3">
+        <button
+          class="mb-0.5 rounded-md border border-line p-2 text-ink-3 hover:bg-paper-2 lg:hidden"
+          @click="$emit('toggleSidebar')"
+        >
+          <Menu class="h-5 w-5" />
+        </button>
+        <div>
+          <div v-if="kicker" class="mb-1.5 text-[12px] text-muted">{{ kicker }}</div>
+          <div class="flex items-baseline gap-3">
+            <h1 class="text-[22px] font-semibold leading-none text-ink">{{ title }}</h1>
+            <span v-if="crumb" class="text-[12.5px] text-muted">· {{ crumb }}</span>
+          </div>
+        </div>
+      </div>
 
-    <h1 class="text-lg font-semibold text-slate-900">{{ title }}</h1>
+      <div class="flex items-center gap-3">
+        <div class="hidden text-right leading-tight sm:block">
+          <div class="text-[11px] text-muted">{{ jour }}</div>
+          <div class="mono text-[12.5px] text-ink">{{ dateStr }}</div>
+        </div>
+        <div class="hidden h-8 w-px bg-line sm:block" />
+        <NotificationBell />
+      </div>
+    </div>
   </header>
 </template>

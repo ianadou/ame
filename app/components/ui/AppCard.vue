@@ -9,7 +9,7 @@ withDefaults(defineProps<Props>(), {
 </script>
 
 <template>
-  <div class="rounded-lg border border-slate-200 bg-white" :class="{ 'p-5': padding }">
+  <div class="card shadow-soft" :class="{ 'p-5': padding }">
     <slot />
   </div>
 </template>
