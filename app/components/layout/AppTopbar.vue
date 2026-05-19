@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Menu, Bell } from 'lucide-vue-next'
+import { Menu } from 'lucide-vue-next'
 
 defineProps<{ title: string; kicker?: string; crumb?: string }>()
 defineEmits<{ toggleSidebar: [] }>()
@@ -50,16 +50,7 @@ const dateStr = `${p2(now.getDate())} ${mois[now.getMonth()]} ${now.getFullYear(
           <div class="mono text-[12.5px] text-ink">{{ dateStr }}</div>
         </div>
         <div class="hidden h-8 w-px bg-line sm:block" />
-        <button
-          class="relative flex h-9 w-9 items-center justify-center rounded-md border border-line bg-white hover:bg-paper-4"
-        >
-          <Bell class="h-4 w-4" />
-          <span
-            class="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-rust text-[9px] font-semibold text-white"
-          >
-            1
-          </span>
-        </button>
+        <NotificationBell />
       </div>
     </div>
   </header>

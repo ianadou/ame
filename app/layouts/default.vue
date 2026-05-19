@@ -72,6 +72,8 @@ watch(route, () => {
         </span>
       </footer>
     </div>
+
+    <ToastHost />
   </div>
 </template>
 

@@ -26,10 +26,6 @@ const categoryFilterOptions = computed(() => {
 
 const totalPages = computed(() => Math.ceil(total.value / 20))
 
-const alertCount = computed(
-  () => articles.value.filter((a) => a.stockActuel <= a.seuilAlerte).length,
-)
-
 async function loadArticles() {
   await fetchArticles({
     search: search.value || undefined,
@@ -72,12 +68,25 @@ function stockLabel(article: { stockActuel: number; seuilAlerte: number }) {
 }
 
 await loadArticles()
+
+const notifications = useNotifications()
+onMounted(async () => {
+  try {
+    const a = await $fetch<unknown[]>('/api/alertes')
+    if (a.length > 0) {
+      notifications.warning(
+        `${a.length} article${a.length > 1 ? 's' : ''} en alerte de stock bas`,
+        'Réapprovisionnement conseillé.',
+      )
+    }
+  } catch {
+    /* silencieux */
+  }
+})
 </script>
 
 <template>
   <div class="space-y-4">
-    <StockAlertBanner :count="alertCount" />
-
     <!-- Filters bar -->
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div class="flex flex-1 flex-col gap-3 sm:flex-row">
