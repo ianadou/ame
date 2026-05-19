@@ -32,6 +32,17 @@ export const createFournisseurSchema = z.object({
 
 export const updateFournisseurSchema = createFournisseurSchema.partial()
 
+export const createChantierSchema = z.object({
+  nom: z.string().min(1).max(200),
+  adresse: z.string().max(500).optional(),
+  statut: z.enum(['en_cours', 'termine', 'en_pause']).default('en_cours'),
+  dateDebut: z.string().optional(),
+  dateFin: z.string().optional(),
+  notes: z.string().optional(),
+})
+
+export const updateChantierSchema = createChantierSchema.partial()
+
 export const createMouvementSchema = z.object({
   articleId: z.string().uuid(),
   type: z.enum(['entree', 'sortie']),
