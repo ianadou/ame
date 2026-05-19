@@ -74,3 +74,65 @@ export const createMouvementSchema = z.object({
   bonLivraison: z.string().optional(),
   motif: z.string().optional(),
 })
+
+// --- Import Excel/CSV : schémas dédiés (entrées = chaînes, coercition) ---
+
+const texte = z.preprocess((v) => (typeof v === 'string' ? v.trim() : v), z.string().min(1))
+const texteOpt = z.preprocess(
+  (v) => (typeof v === 'string' && v.trim() === '' ? undefined : v),
+  z.string().trim().optional(),
+)
+const entierOpt = (def: number) =>
+  z.preprocess(
+    (v) => (v === '' || v === null || v === undefined ? def : v),
+    z.coerce.number().int().min(0),
+  )
+const decimalOpt = z.preprocess(
+  (v) => (v === '' || v === null || v === undefined ? undefined : v),
+  z.coerce.number().positive().optional(),
+)
+
+export const importArticleSchema = z.object({
+  reference: texte,
+  nom: texte,
+  categorie: texteOpt,
+  unite: z.preprocess(
+    (v) => (typeof v === 'string' && v.trim() !== '' ? v.trim() : 'pièce'),
+    z.string(),
+  ),
+  prixUnitaire: decimalOpt,
+  stockActuel: entierOpt(0),
+  seuilAlerte: entierOpt(5),
+  emplacement: texteOpt,
+  notes: texteOpt,
+})
+
+export const importCategorieSchema = z.object({
+  nom: texte,
+  description: texteOpt,
+  parent: texteOpt,
+})
+
+export const importFournisseurSchema = z.object({
+  nom: texte,
+  contact: texteOpt,
+  telephone: texteOpt,
+  email: z.preprocess(
+    (v) => (typeof v === 'string' && v.trim() === '' ? undefined : v),
+    z.string().trim().email().optional(),
+  ),
+  adresse: texteOpt,
+  notes: texteOpt,
+})
+
+export const importChantierSchema = z.object({
+  nom: texte,
+  adresse: texteOpt,
+  statut: z.preprocess(
+    (v) => (typeof v === 'string' && v.trim() !== '' ? v.trim() : 'en_cours'),
+    z.enum(['en_cours', 'termine', 'en_pause']),
+  ),
+  dateDebut: texteOpt,
+  dateFin: texteOpt,
+  notes: texteOpt,
+})

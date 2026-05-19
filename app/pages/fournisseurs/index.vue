@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { Plus } from 'lucide-vue-next'
+import { Plus, Upload, Download } from 'lucide-vue-next'
 import { useDebounceFn } from '@vueuse/core'
 
 const { fournisseurs, loading, fetchFournisseurs, createFournisseur } = useFournisseurs()
 
 const search = ref('')
 const showCreateModal = ref(false)
+const showImportModal = ref(false)
+const showExportModal = ref(false)
+const importEntites = [{ value: 'fournisseurs', label: 'Fournisseurs' }]
 
 async function loadFournisseurs() {
   await fetchFournisseurs(search.value || undefined)
@@ -31,10 +34,20 @@ await loadFournisseurs()
       <div class="w-full sm:w-72">
         <AppSearchInput v-model="search" placeholder="Rechercher par nom, contact ou email..." />
       </div>
-      <AppButton @click="showCreateModal = true">
-        <Plus class="h-4 w-4" />
-        Ajouter
-      </AppButton>
+      <div class="flex gap-2">
+        <AppButton variant="secondary" @click="showExportModal = true">
+          <Download class="h-4 w-4" />
+          Exporter
+        </AppButton>
+        <AppButton variant="secondary" @click="showImportModal = true">
+          <Upload class="h-4 w-4" />
+          Importer
+        </AppButton>
+        <AppButton @click="showCreateModal = true">
+          <Plus class="h-4 w-4" />
+          Ajouter
+        </AppButton>
+      </div>
     </div>
 
     <!-- Table -->
@@ -110,5 +123,12 @@ await loadFournisseurs()
         </template>
       </FournisseurForm>
     </AppModal>
+
+    <ImportDialog
+      v-model:open="showImportModal"
+      :entites="importEntites"
+      @done="loadFournisseurs"
+    />
+    <ExportDialog v-model:open="showExportModal" :entites="importEntites" />
   </div>
 </template>
