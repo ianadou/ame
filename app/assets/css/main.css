@@ -1,0 +1,116 @@
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+@import '@fontsource/inter/700.css';
+@import '@fontsource/antonio/500.css';
+@import '@fontsource/antonio/600.css';
+@import '@fontsource/antonio/700.css';
+@import '@fontsource/ibm-plex-mono/400.css';
+@import '@fontsource/ibm-plex-mono/500.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body {
+    @apply bg-white text-ink antialiased;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  ::selection {
+    background: #0f172a;
+    color: #ffffff;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 6px;
+    border: 2px solid #ffffff;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+  }
+}
+
+@layer components {
+  .card {
+    @apply border border-line bg-white;
+    border-radius: 14px;
+  }
+  .card-flat {
+    @apply border bg-white;
+    border-color: #f1f2f4;
+    border-radius: 14px;
+  }
+
+  /* Tableau de données — style maquette */
+  .data-table {
+    @apply w-full;
+  }
+  .data-table thead tr {
+    @apply bg-paper-2;
+  }
+  .data-table th {
+    @apply border-b border-line px-4 py-2.5 text-left text-[11px] font-medium text-muted;
+  }
+  .data-table td {
+    @apply border-b border-line/60 px-4 py-3 text-[13px] text-ink align-middle;
+  }
+  .data-table tbody tr:last-child td {
+    @apply border-b-0;
+  }
+  .data-table tbody tr.row-hover:hover {
+    @apply bg-paper-2;
+  }
+}
+
+@layer utilities {
+  .num {
+    font-variant-numeric: tabular-nums;
+  }
+  .display {
+    font-family: 'Antonio', sans-serif;
+    letter-spacing: -0.015em;
+  }
+  .mono {
+    font-family: 'IBM Plex Mono', monospace;
+  }
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.fade-up {
+  animation: fadeUp 0.2s ease-out both;
+}
+
+@keyframes pulseDot {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(0.85);
+  }
+}
+.pulse-dot {
+  animation: pulseDot 1.8s ease-in-out infinite;
+}
