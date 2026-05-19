@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { ChevronDown } from 'lucide-vue-next'
+
 interface Props {
   label?: string
   error?: string
@@ -7,25 +9,29 @@ interface Props {
 }
 
 defineProps<Props>()
-
 const model = defineModel<string>()
 </script>
 
 <template>
   <div>
-    <label v-if="label" class="mb-1 block text-sm font-medium text-slate-700">
+    <label v-if="label" class="mb-1.5 block text-[12px] font-medium text-ink-2">
       {{ label }}
     </label>
-    <select
-      v-model="model"
-      class="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
-      :class="{ 'border-red-500 focus:border-red-500 focus:ring-red-500': error }"
+    <div
+      class="relative flex items-center rounded-md border border-line bg-white transition-colors hover:border-line-2 focus-within:border-ink-4"
+      :class="{ '!border-rust': error }"
     >
-      <option v-if="placeholder" value="" disabled>{{ placeholder }}</option>
-      <option v-for="opt in options" :key="opt.value" :value="opt.value">
-        {{ opt.label }}
-      </option>
-    </select>
-    <p v-if="error" class="mt-1 text-xs text-danger">{{ error }}</p>
+      <select
+        v-model="model"
+        class="h-9 w-full cursor-pointer appearance-none rounded-md bg-transparent pl-3 pr-9 text-[13px] text-ink focus:outline-none"
+      >
+        <option v-if="placeholder" value="">{{ placeholder }}</option>
+        <option v-for="opt in options" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+      </select>
+      <span class="pointer-events-none absolute right-2.5 text-muted">
+        <ChevronDown class="h-3.5 w-3.5" />
+      </span>
+    </div>
+    <p v-if="error" class="mt-1 text-[11px] text-rust-dark">{{ error }}</p>
   </div>
 </template>
