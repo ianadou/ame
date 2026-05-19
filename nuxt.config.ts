@@ -3,6 +3,7 @@ export default defineNuxtConfig({
   ssr: false,
   devtools: { enabled: true },
   css: ['~/assets/css/main.css'],
+  components: [{ path: '~/components', pathPrefix: false }],
   modules: ['@nuxtjs/tailwindcss', '@nuxt/eslint'],
   typescript: { strict: true },
   app: {
