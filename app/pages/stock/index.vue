@@ -19,8 +19,8 @@ const categoryFilterOptions = computed(() => {
 
 const totalPages = computed(() => Math.ceil(total.value / 20))
 
-const alertCount = computed(() =>
-  articles.value.filter((a) => a.stockActuel <= a.seuilAlerte).length,
+const alertCount = computed(
+  () => articles.value.filter((a) => a.stockActuel <= a.seuilAlerte).length,
 )
 
 async function loadArticles() {
@@ -99,12 +99,36 @@ await loadArticles()
         <table class="w-full">
           <thead>
             <tr class="border-b border-slate-200 bg-slate-50">
-              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Référence</th>
-              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Nom</th>
-              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Catégorie</th>
-              <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-500">Stock</th>
-              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Unité</th>
-              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Statut</th>
+              <th
+                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500"
+              >
+                Référence
+              </th>
+              <th
+                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500"
+              >
+                Nom
+              </th>
+              <th
+                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500"
+              >
+                Catégorie
+              </th>
+              <th
+                class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-500"
+              >
+                Stock
+              </th>
+              <th
+                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500"
+              >
+                Unité
+              </th>
+              <th
+                class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500"
+              >
+                Statut
+              </th>
             </tr>
           </thead>
           <tbody v-if="!loading && articles.length > 0">
@@ -117,7 +141,9 @@ await loadArticles()
               <td class="px-4 py-3 text-sm font-medium text-slate-900">{{ article.reference }}</td>
               <td class="px-4 py-3 text-sm text-slate-700">{{ article.nom }}</td>
               <td class="px-4 py-3 text-sm text-slate-500">{{ article.categorieNom ?? '—' }}</td>
-              <td class="px-4 py-3 text-right text-sm font-medium text-slate-900">{{ article.stockActuel }}</td>
+              <td class="px-4 py-3 text-right text-sm font-medium text-slate-900">
+                {{ article.stockActuel }}
+              </td>
               <td class="px-4 py-3 text-sm text-slate-500">{{ article.unite }}</td>
               <td class="px-4 py-3">
                 <AppBadge :variant="stockStatus(article)">{{ stockLabel(article) }}</AppBadge>
@@ -128,7 +154,9 @@ await loadArticles()
       </div>
 
       <div v-if="loading" class="flex justify-center py-12">
-        <div class="h-6 w-6 animate-spin rounded-full border-2 border-primary-600 border-t-transparent" />
+        <div
+          class="h-6 w-6 animate-spin rounded-full border-2 border-primary-600 border-t-transparent"
+        />
       </div>
 
       <AppEmptyState

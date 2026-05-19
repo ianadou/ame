@@ -66,5 +66,14 @@ export function useStock() {
     await $fetch(`/api/articles/${id}`, { method: 'DELETE' })
   }
 
-  return { articles, total, loading, error, fetchArticles, createArticle, updateArticle, deleteArticle }
+  return {
+    articles,
+    total,
+    loading,
+    error,
+    fetchArticles,
+    createArticle,
+    updateArticle,
+    deleteArticle,
+  }
 }

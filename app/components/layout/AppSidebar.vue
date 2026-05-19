@@ -32,7 +32,9 @@ defineEmits<{
     :class="collapsed ? 'w-16' : 'w-60'"
   >
     <div class="flex h-16 items-center gap-3 border-b border-slate-200 px-4">
-      <div class="flex h-8 w-8 items-center justify-center rounded-md bg-primary-600 text-sm font-semibold text-white">
+      <div
+        class="flex h-8 w-8 items-center justify-center rounded-md bg-primary-600 text-sm font-semibold text-white"
+      >
         A
       </div>
       <span v-if="!collapsed" class="text-lg font-semibold text-slate-900">AME</span>

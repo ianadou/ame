@@ -21,6 +21,17 @@ export const createArticleSchema = z.object({
 
 export const updateArticleSchema = createArticleSchema.partial()
 
+export const createFournisseurSchema = z.object({
+  nom: z.string().min(1).max(200),
+  contact: z.string().max(200).optional(),
+  telephone: z.string().max(50).optional(),
+  email: z.string().email().max(200).optional(),
+  adresse: z.string().max(500).optional(),
+  notes: z.string().optional(),
+})
+
+export const updateFournisseurSchema = createFournisseurSchema.partial()
+
 export const createMouvementSchema = z.object({
   articleId: z.string().uuid(),
   type: z.enum(['entree', 'sortie']),

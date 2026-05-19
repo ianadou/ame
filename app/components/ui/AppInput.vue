@@ -7,6 +7,9 @@ interface Props {
 }
 
 withDefaults(defineProps<Props>(), {
+  label: undefined,
+  error: undefined,
+  placeholder: undefined,
   type: 'text',
 })
 

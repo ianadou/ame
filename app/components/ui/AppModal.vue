@@ -13,10 +13,7 @@ const open = defineModel<boolean>('open', { default: false })
 <template>
   <Teleport to="body">
     <Transition name="modal">
-      <div
-        v-if="open"
-        class="fixed inset-0 z-50 flex items-center justify-center p-4"
-      >
+      <div v-if="open" class="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" @click="open = false" />
 
         <div class="relative w-full max-w-lg rounded-lg bg-white shadow-md">
@@ -34,7 +31,10 @@ const open = defineModel<boolean>('open', { default: false })
             <slot />
           </div>
 
-          <div v-if="$slots.footer" class="flex justify-end gap-3 border-t border-slate-200 px-5 py-4">
+          <div
+            v-if="$slots.footer"
+            class="flex justify-end gap-3 border-t border-slate-200 px-5 py-4"
+          >
             <slot name="footer" />
           </div>
         </div>

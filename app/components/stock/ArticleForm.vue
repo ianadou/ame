@@ -95,7 +95,12 @@ function handleSubmit() {
     </div>
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-      <AppInput v-model="form.prixUnitaire" label="Prix unitaire HT (€)" type="number" placeholder="0.00" />
+      <AppInput
+        v-model="form.prixUnitaire"
+        label="Prix unitaire HT (FCFA)"
+        type="number"
+        placeholder="0"
+      />
       <AppInput v-model="form.seuilAlerte" label="Seuil d'alerte" type="number" placeholder="5" />
     </div>
 
