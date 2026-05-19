@@ -27,6 +27,8 @@ const meta = computed(() => {
 watch(route, () => {
   sidebarOpen.value = false
 })
+
+onMounted(() => demanderPermissionBureau())
 </script>
 
 <template>

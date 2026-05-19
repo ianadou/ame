@@ -5,6 +5,7 @@ const route = useRoute()
 const commandeId = route.params.id as string
 
 const { updateCommande, deleteCommande } = useCommandes()
+const notifications = useNotifications()
 
 const actionError = ref<string | null>(null)
 const busy = ref(false)
@@ -56,8 +57,20 @@ async function changeStatut(statut: string) {
   try {
     await updateCommande(commandeId, { statut })
     await refresh()
+    const cref = commande.value?.reference ?? ''
+    if (statut === 'recue') {
+      notifications.success(
+        `Commande ${cref} reçue`,
+        'Mouvements d’entrée créés, stock mis à jour.',
+      )
+    } else if (statut === 'envoyee') {
+      notifications.info(`Commande ${cref} envoyée`, undefined, { desktop: false })
+    } else if (statut === 'annulee') {
+      notifications.warning(`Commande ${cref} annulée`)
+    }
   } catch (e: unknown) {
     actionError.value = e instanceof Error ? e.message : 'Action impossible'
+    notifications.danger('Action impossible', actionError.value ?? undefined)
   } finally {
     busy.value = false
   }
