@@ -43,6 +43,28 @@ export const createChantierSchema = z.object({
 
 export const updateChantierSchema = createChantierSchema.partial()
 
+export const ligneCommandeSchema = z.object({
+  articleId: z.string().uuid(),
+  quantite: z.number().int().positive(),
+  prixUnitaire: z.number().positive().optional(),
+})
+
+export const createCommandeSchema = z.object({
+  fournisseurId: z.string().uuid(),
+  dateCommande: z.string().optional(),
+  dateLivraisonPrevue: z.string().optional(),
+  notes: z.string().optional(),
+  lignes: z.array(ligneCommandeSchema).min(1),
+})
+
+export const updateCommandeSchema = z.object({
+  statut: z.enum(['brouillon', 'envoyee', 'recue', 'annulee']).optional(),
+  dateCommande: z.string().optional(),
+  dateLivraisonPrevue: z.string().optional(),
+  notes: z.string().optional(),
+  lignes: z.array(ligneCommandeSchema).min(1).optional(),
+})
+
 export const createMouvementSchema = z.object({
   articleId: z.string().uuid(),
   type: z.enum(['entree', 'sortie']),
