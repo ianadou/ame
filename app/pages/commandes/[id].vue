@@ -80,11 +80,18 @@ async function handleDelete() {
   actionError.value = null
   busy.value = true
   try {
+    const cref = commande.value?.reference ?? 'Commande'
     await deleteCommande(commandeId)
+    notifications.success('Commande supprimée', cref)
     await navigateTo('/commandes')
   } catch (e: unknown) {
-    actionError.value =
-      e instanceof Error ? e.message : 'Suppression impossible (commande non brouillon).'
+    const msg =
+      e && typeof e === 'object' && 'data' in e
+        ? ((e as { data?: { message?: string } }).data?.message ??
+          'Suppression impossible (commande non brouillon).')
+        : 'Suppression impossible (commande non brouillon).'
+    actionError.value = msg
+    notifications.danger('Suppression impossible', msg)
   } finally {
     busy.value = false
   }

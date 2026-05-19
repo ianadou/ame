@@ -5,6 +5,7 @@ const route = useRoute()
 const fournisseurId = route.params.id as string
 
 const { updateFournisseur, deleteFournisseur } = useFournisseurs()
+const notifications = useNotifications()
 
 const showEditModal = ref(false)
 const deleting = ref(false)
@@ -52,16 +53,25 @@ async function handleEdit(data: Record<string, unknown>) {
   await updateFournisseur(fournisseurId, data)
   showEditModal.value = false
   await refresh()
+  notifications.success('Fournisseur mis à jour', fournisseur.value?.nom)
 }
 
 async function handleDelete() {
   deleteError.value = null
   deleting.value = true
   try {
+    const nom = fournisseur.value?.nom ?? 'Fournisseur'
     await deleteFournisseur(fournisseurId)
+    notifications.success('Fournisseur supprimé', nom)
     await navigateTo('/fournisseurs')
   } catch (e: unknown) {
-    deleteError.value = e instanceof Error ? e.message : 'Suppression impossible (commandes liées).'
+    const msg =
+      e && typeof e === 'object' && 'data' in e
+        ? ((e as { data?: { message?: string } }).data?.message ??
+          'Suppression impossible (commandes liées).')
+        : 'Suppression impossible (commandes liées).'
+    deleteError.value = msg
+    notifications.danger('Suppression impossible', msg)
   } finally {
     deleting.value = false
   }
