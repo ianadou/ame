@@ -75,6 +75,11 @@ export const createMouvementSchema = z.object({
   motif: z.string().optional(),
 })
 
+export const updateParametresSchema = z.object({
+  utilisateurPrenom: z.string().trim().min(1).max(100),
+  utilisateurNom: z.string().trim().min(1).max(100),
+})
+
 // --- Import Excel/CSV : schémas dédiés (entrées = chaînes, coercition) ---
 
 const texte = z.preprocess((v) => (typeof v === 'string' ? v.trim() : v), z.string().min(1))
