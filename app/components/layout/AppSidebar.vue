@@ -40,16 +40,8 @@ const valeurK = computed(() =>
 )
 
 const { user, editing } = useSessionUser()
-const initiales = computed(() => {
-  const p = user.value.utilisateurPrenom?.[0] ?? ''
-  const n = user.value.utilisateurNom?.[0] ?? ''
-  return (p + n).toUpperCase() || '—'
-})
-const nomComplet = computed(
-  () =>
-    `${user.value.utilisateurPrenom ?? ''} ${user.value.utilisateurNom ?? ''}`.trim() ||
-    'Utilisateur',
-)
+const initiales = computed(() => (user.value.nomEntreprise?.[0] ?? '—').toUpperCase())
+const nomComplet = computed(() => user.value.nomEntreprise?.trim() || 'Entreprise')
 </script>
 
 <template>

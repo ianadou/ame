@@ -30,10 +30,11 @@ watch(route, () => {
   sidebarOpen.value = false
 })
 
-const { load } = useSessionUser()
+const { user, load } = useSessionUser()
+const anneeCourante = new Date().getFullYear()
+const signature = computed(() => user.value.nomEntreprise?.trim() || '—')
 
 onMounted(async () => {
-  demanderPermissionBureau()
   try {
     await load()
   } catch {
@@ -77,11 +78,11 @@ onMounted(async () => {
         class="grid grid-cols-3 items-center border-t border-line bg-white px-4 py-4 text-[11.5px] text-muted lg:px-8"
       >
         <span>AME / Gestion de stock BTP / Côte d'Ivoire</span>
-        <span class="mono text-center tracking-wider2">Tous droits réservés à Eddin</span>
+        <span class="mono text-center tracking-wider2">© AME {{ anneeCourante }} — {{ signature }}</span>
         <span class="flex items-center justify-end gap-4">
           <span class="mono">v0.4.2</span>
           <span class="flex items-center gap-1.5">
-            <span class="h-1.5 w-1.5 rounded-full bg-forest" />Base à jour
+            <span class="h-1.5 w-1.5 rounded-sm bg-emerald-500" />Base à jour
           </span>
         </span>
       </footer>

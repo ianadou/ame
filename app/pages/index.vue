@@ -10,6 +10,7 @@ import {
   Users,
   ArrowUpRight as ArrowLink,
 } from 'lucide-vue-next'
+
 interface Tendance {
   nom: string
   valeur: number
@@ -48,10 +49,7 @@ interface DashboardData {
   nbAlertes: number
   nbClients: number
   derniersMouvements: DernierMouvement[]
-  topCategories: Tendance[]
   topClients: Tendance[]
-  rotationJours: number
-  couvertureJours: number
 }
 interface ArticleAlerte {
   id: string
@@ -65,9 +63,6 @@ interface ArticleAlerte {
 
 const { data: dashboard } = await useFetch<DashboardData>('/api/dashboard')
 const { data: alertes } = await useFetch<ArticleAlerte[]>('/api/alertes', { default: () => [] })
-const { data: articlesResp } = await useFetch<{
-  data: { stockActuel: number; seuilAlerte: number }[]
-}>('/api/articles?limit=500', { default: () => ({ data: [] }) })
 
 const period = ref('mois')
 const videActivite: Activite = {
@@ -84,19 +79,6 @@ const { data: activite } = await useFetch<Activite>('/api/dashboard/activite', {
   default: () => videActivite,
 })
 const data = computed(() => activite.value ?? videActivite)
-
-const sante = computed(() => {
-  const arr = articlesResp.value?.data ?? []
-  let ok = 0,
-    warn = 0,
-    low = 0
-  for (const a of arr) {
-    if (a.stockActuel <= a.seuilAlerte) low++
-    else if (a.stockActuel <= a.seuilAlerte * 1.4) warn++
-    else ok++
-  }
-  return { ok, warn, low }
-})
 
 const recent = computed(() => dashboard.value?.derniersMouvements ?? [])
 const fmt = (n: number) => Math.round(n).toLocaleString('fr-FR')
@@ -139,10 +121,6 @@ const valEvolution = computed(() =>
       <AppButton variant="secondary" @click="navigateTo('/commandes')">
         <FilePlus class="h-4 w-4" />Bon de commande
       </AppButton>
-      <div class="ml-auto flex items-center gap-2 text-[11.5px] text-muted">
-        <span class="h-1.5 w-1.5 rounded-[1px] bg-emerald-500" />
-        <span>Synchro / à l'instant</span>
-      </div>
     </div>
 
     <!-- Global KPI -->
@@ -172,7 +150,7 @@ const valEvolution = computed(() =>
         :delta="(alertes?.length ?? 0) > 0 ? '+1' : null"
         :delta-sub="(alertes?.length ?? 0) > 0 ? 'à traiter' : null"
         :spark="[0, 0, 1, 0, 2, 1, 0, 1]"
-        spark-color="#9E3A20"
+        spark-color="#EF4444"
       />
       <KpiCard
         label="Clients"
@@ -243,55 +221,30 @@ const valEvolution = computed(() =>
       />
     </div>
 
-    <!-- Charts row -->
-    <div class="grid grid-cols-1 gap-4 lg:grid-cols-12">
-      <PanelCard
-        class="lg:col-span-8"
-        :kicker="'Transactions / ' + data.label.toLowerCase()"
-        title="Entrées vs sorties"
-      >
-        <template #action>
-          <div class="flex items-center gap-4 text-[11.5px]">
-            <span class="flex items-center gap-1.5"
-              ><span class="h-2.5 w-2.5 rounded-[2px] bg-forest" />Entrées</span
-            >
-            <span class="flex items-center gap-1.5"
-              ><span class="h-2.5 w-2.5 rounded-[2px] bg-slate-600" />Sorties</span
-            >
-          </div>
-        </template>
-        <div class="px-4 pb-3 pt-5">
-          <BarChart
-            :entrees="data.series.entrees"
-            :sorties="data.series.sorties"
-            :ticks="data.ticks"
-            :height="240"
-          />
+    <!-- Entrées vs sorties (pleine largeur) -->
+    <PanelCard
+      :kicker="'Transactions / ' + data.label.toLowerCase()"
+      title="Entrées vs sorties"
+    >
+      <template #action>
+        <div class="flex items-center gap-4 text-[11.5px]">
+          <span class="flex items-center gap-1.5"
+            ><span class="h-2.5 w-2.5 rounded-[2px] bg-forest" />Entrées</span
+          >
+          <span class="flex items-center gap-1.5"
+            ><span class="h-2.5 w-2.5 rounded-[2px] bg-slate-600" />Sorties</span
+          >
         </div>
-      </PanelCard>
-
-      <PanelCard class="lg:col-span-4" kicker="Inventaire" title="Santé du stock">
-        <div class="px-5 py-6">
-          <Donut :ok="sante.ok" :warn="sante.warn" :low="sante.low" />
-        </div>
-        <div class="grid grid-cols-2 border-t border-line/70">
-          <div class="px-5 py-3">
-            <div class="text-[11px] text-muted">Rotation moy.</div>
-            <div class="display num mt-0.5 text-[20px] font-semibold">
-              {{ dashboard?.rotationJours ?? 0
-              }}<span class="ml-1 font-sans text-[12px] text-muted">jours</span>
-            </div>
-          </div>
-          <div class="border-l border-line/70 px-5 py-3">
-            <div class="text-[11px] text-muted">Couverture</div>
-            <div class="display num mt-0.5 text-[20px] font-semibold">
-              {{ dashboard?.couvertureJours ?? 0
-              }}<span class="ml-1 font-sans text-[12px] text-muted">jours</span>
-            </div>
-          </div>
-        </div>
-      </PanelCard>
-    </div>
+      </template>
+      <div class="px-4 pb-3 pt-5">
+        <BarChart
+          :entrees="data.series.entrees"
+          :sorties="data.series.sorties"
+          :ticks="data.ticks"
+          :height="240"
+        />
+      </div>
+    </PanelCard>
 
     <!-- Value evolution -->
     <PanelCard
@@ -306,17 +259,11 @@ const valEvolution = computed(() =>
       </div>
     </PanelCard>
 
-    <!-- Tops -->
-    <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
-      <PanelCard :kicker="'Classement / ' + data.label.toLowerCase()" title="Top catégories">
-        <template #action><span class="text-[11.5px] text-muted">FCFA HT</span></template>
-        <HBarList :items="dashboard?.topCategories ?? []" accent="slate" />
-      </PanelCard>
-      <PanelCard :kicker="'Ventes / ' + data.label.toLowerCase()" title="Top clients">
-        <template #action><span class="text-[11.5px] text-muted">FCFA HT</span></template>
-        <HBarList :items="dashboard?.topClients ?? []" accent="forest" />
-      </PanelCard>
-    </div>
+    <!-- Top clients (pleine largeur) -->
+    <PanelCard :kicker="'Ventes / ' + data.label.toLowerCase()" title="Top clients">
+      <template #action><span class="text-[11.5px] text-muted">FCFA HT</span></template>
+      <HBarList :items="dashboard?.topClients ?? []" accent="forest" />
+    </PanelCard>
 
     <!-- Latest + Alertes -->
     <div class="grid grid-cols-1 gap-4 lg:grid-cols-12">

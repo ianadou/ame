@@ -7,11 +7,7 @@ const notifications = useNotifications()
 const showConfirm = ref(false)
 const busy = ref(false)
 
-const nomComplet = computed(
-  () =>
-    `${user.value.utilisateurPrenom ?? ''} ${user.value.utilisateurNom ?? ''}`.trim() ||
-    'Non renseigné',
-)
+const nomEntreprise = computed(() => user.value.nomEntreprise?.trim() || 'Non renseigné')
 
 async function resetData() {
   busy.value = true
@@ -38,11 +34,11 @@ async function resetData() {
     <AppCard>
       <div class="flex items-start justify-between">
         <div>
-          <h3 class="text-sm font-semibold text-ink">Profil utilisateur</h3>
+          <h3 class="text-sm font-semibold text-ink">Nom de l'entreprise</h3>
           <p class="mt-1 text-sm text-muted">
-            Nom affiché dans l'application et la signature des documents.
+            Affiché dans le footer de l'application et la signature des documents.
           </p>
-          <p class="mt-3 text-[15px] font-medium text-ink">{{ nomComplet }}</p>
+          <p class="mt-3 text-[15px] font-medium text-ink">{{ nomEntreprise }}</p>
         </div>
         <AppButton variant="secondary" size="sm" @click="editing = true">
           <Pencil class="h-4 w-4" />
@@ -70,7 +66,7 @@ async function resetData() {
 
     <AppModal v-model:open="showConfirm" title="Effacer toutes les données ?">
       <p class="text-[13.5px] text-ink-3">
-        Toutes les données métier seront supprimées définitivement. Votre profil utilisateur est
+        Toutes les données métier seront supprimées définitivement. Le nom de votre entreprise est
         conservé. Cette action est irréversible.
       </p>
       <div class="mt-5 flex justify-end gap-3">

@@ -16,5 +16,5 @@ export default defineEventHandler(async (event) => {
     await db.insert(parametres).values({ id: 'app', ...body })
   }
 
-  return body
+  return { nomEntreprise: body.nomEntreprise }
 })

@@ -169,12 +169,12 @@ export const commandes = sqliteTable('commandes', {
     .notNull(),
 })
 
-// Paramètres applicatifs mono-ligne (id fixe 'app') : identité de
-// l'utilisateur de session (Phase 1 mono-poste, cf. archi déploiement).
+// Paramètres applicatifs mono-ligne (id fixe 'app') : nom de l'entreprise
+// affiché dans le footer et la sidebar (Phase 1 mono-poste, cf. archi
+// déploiement). Remplace l'ancien couple prénom/nom.
 export const parametres = sqliteTable('parametres', {
   id: text('id').primaryKey(),
-  utilisateurPrenom: text('utilisateur_prenom'),
-  utilisateurNom: text('utilisateur_nom'),
+  nomEntreprise: text('nom_entreprise'),
   updatedAt: text('updated_at')
     .default(sql`(datetime('now'))`)
     .notNull(),

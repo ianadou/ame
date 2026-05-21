@@ -1,27 +1,24 @@
 export interface SessionUser {
-  utilisateurPrenom: string | null
-  utilisateurNom: string | null
+  nomEntreprise: string | null
 }
 
-// Identité de l'utilisateur de session (mono-poste, Phase 1). État partagé
-// entre la modal de saisie (layout) et le chip de la sidebar via useState.
+// Identité de l'entreprise utilisée pour la signature du footer et l'avatar
+// sidebar (mono-poste, Phase 1). État partagé entre la modal de saisie au
+// premier lancement et les composants d'affichage via useState.
 export function useSessionUser() {
-  const user = useState<SessionUser>('session-user', () => ({
-    utilisateurPrenom: null,
-    utilisateurNom: null,
-  }))
+  const user = useState<SessionUser>('session-user', () => ({ nomEntreprise: null }))
   const editing = useState<boolean>('session-user-editing', () => false)
 
-  const configured = computed(() => !!user.value.utilisateurPrenom && !!user.value.utilisateurNom)
+  const configured = computed(() => !!user.value.nomEntreprise)
 
   async function load() {
     user.value = await $fetch<SessionUser>('/api/parametres')
   }
 
-  async function save(prenom: string, nom: string) {
+  async function save(nomEntreprise: string) {
     user.value = await $fetch<SessionUser>('/api/parametres', {
       method: 'PUT',
-      body: { utilisateurPrenom: prenom, utilisateurNom: nom },
+      body: { nomEntreprise },
     })
     editing.value = false
   }

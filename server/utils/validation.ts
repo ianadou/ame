@@ -115,8 +115,7 @@ export const archiverArticleSchema = z.object({
 })
 
 export const updateParametresSchema = z.object({
-  utilisateurPrenom: z.string().trim().min(1).max(100),
-  utilisateurNom: z.string().trim().min(1).max(100),
+  nomEntreprise: z.string().trim().min(1).max(200),
 })
 
 // --- Import Excel/CSV : schémas dédiés (entrées = chaînes, coercition) ---
