@@ -66,6 +66,13 @@ export function useStock() {
     await $fetch(`/api/articles/${id}`, { method: 'DELETE' })
   }
 
+  async function ajusterStock(id: string, stockPhysique: number, motif: string) {
+    return await $fetch<{ delta: number; stockApres: number }>(
+      `/api/articles/${id}/ajustement`,
+      { method: 'POST', body: { stockPhysique, motif } },
+    )
+  }
+
   return {
     articles,
     total,
@@ -75,5 +82,6 @@ export function useStock() {
     createArticle,
     updateArticle,
     deleteArticle,
+    ajusterStock,
   }
 }

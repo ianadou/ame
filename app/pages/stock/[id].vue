@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ArrowLeft, Plus } from 'lucide-vue-next'
+import { ArrowLeft, Plus, Scale } from 'lucide-vue-next'
 
 const route = useRoute()
 const articleId = route.params.id as string
 
 const showEntreeModal = ref(false)
+const showAjustementModal = ref(false)
 
 interface ArticleMouvement {
   id: string
@@ -53,6 +54,52 @@ function stockLabel(a: { stockActuel: number; seuilAlerte: number }) {
 }
 
 const notifications = useNotifications()
+const { ajusterStock } = useStock()
+
+// Ajustement de stock : champs réactifs + écart calculé en direct.
+const stockPhysique = ref<number | null>(null)
+const motifAjustement = ref('')
+const ajustementSubmitting = ref(false)
+const stockTheorique = computed(() => article.value?.stockActuel ?? 0)
+const delta = computed(() => {
+  if (stockPhysique.value === null || Number.isNaN(stockPhysique.value)) return 0
+  return stockPhysique.value - stockTheorique.value
+})
+const motifAjustementValide = computed(() => motifAjustement.value.trim().length >= 3)
+const stockPhysiqueValide = computed(
+  () => stockPhysique.value !== null && stockPhysique.value >= 0 && Number.isInteger(stockPhysique.value),
+)
+const peutAjuster = computed(
+  () => stockPhysiqueValide.value && delta.value !== 0 && motifAjustementValide.value,
+)
+
+function ouvrirAjustement() {
+  stockPhysique.value = stockTheorique.value
+  motifAjustement.value = ''
+  showAjustementModal.value = true
+}
+
+async function confirmerAjustement() {
+  if (!peutAjuster.value || ajustementSubmitting.value) return
+  ajustementSubmitting.value = true
+  try {
+    const res = await ajusterStock(articleId, stockPhysique.value!, motifAjustement.value.trim())
+    notifications.success(
+      'Stock ajusté',
+      `${res.delta > 0 ? '+' : ''}${res.delta} ${article.value?.unite ?? ''} — nouveau stock ${res.stockApres}`,
+    )
+    showAjustementModal.value = false
+    await refresh()
+  } catch (e: unknown) {
+    const msg =
+      e && typeof e === 'object' && 'data' in e
+        ? ((e as { data?: { message?: string } }).data?.message ?? 'Ajustement impossible')
+        : 'Ajustement impossible'
+    notifications.danger('Ajustement impossible', msg)
+  } finally {
+    ajustementSubmitting.value = false
+  }
+}
 
 async function handleMouvement(data: Record<string, unknown>) {
   try {
@@ -81,6 +128,20 @@ function formatDate(iso: string) {
     minute: '2-digit',
   }).format(new Date(iso))
 }
+
+// Métadonnées d'affichage par type de transaction (entrée, sortie,
+// ajustement positif/négatif). Le sens est positif sauf pour sortie
+// et ajustement_negatif → préfixe « − » dans la colonne quantité.
+function mvtMeta(type: string): { label: string; variant: 'success' | 'danger' | 'neutral' | 'info' } {
+  if (type === 'entree') return { label: 'Entrée', variant: 'success' }
+  if (type === 'sortie') return { label: 'Sortie', variant: 'neutral' }
+  if (type === 'ajustement_positif') return { label: 'Ajustement +', variant: 'info' }
+  if (type === 'ajustement_negatif') return { label: 'Ajustement −', variant: 'info' }
+  return { label: type, variant: 'neutral' }
+}
+function mvtSigne(type: string) {
+  return type === 'sortie' || type === 'ajustement_negatif' ? '−' : '+'
+}
 </script>
 
 <template>
@@ -93,11 +154,15 @@ function formatDate(iso: string) {
       <div class="flex-1">
         <div class="flex items-center gap-3">
           <h2 class="text-lg font-semibold text-ink">{{ article.nom }}</h2>
-          <AppBadge :variant="stockStatus(article)">{{ stockLabel(article) }}</AppBadge>
+          <AppBadge :variant="stockStatus(article)" solid>{{ stockLabel(article) }}</AppBadge>
         </div>
         <p class="text-sm text-muted">{{ article.reference }}</p>
       </div>
       <div class="flex gap-2">
+        <AppButton variant="ghost" size="sm" @click="ouvrirAjustement">
+          <Scale class="h-4 w-4" />
+          Ajuster le stock
+        </AppButton>
         <AppButton variant="secondary" size="sm" @click="showEntreeModal = true">
           <Plus class="h-4 w-4" />
           Entrée de stock
@@ -163,12 +228,12 @@ function formatDate(iso: string) {
             <tr v-for="mvt in article.mouvements" :key="mvt.id" class="row-hover">
               <td class="mono text-[12px] text-ink-3">{{ formatDate(mvt.createdAt) }}</td>
               <td>
-                <AppBadge :variant="mvt.type === 'entree' ? 'success' : 'neutral'">
-                  {{ mvt.type === 'entree' ? 'Entrée' : 'Sortie' }}
+                <AppBadge :variant="mvtMeta(mvt.type).variant">
+                  {{ mvtMeta(mvt.type).label }}
                 </AppBadge>
               </td>
               <td class="mono num text-right text-[14px] font-semibold">
-                {{ mvt.type === 'entree' ? '+' : '−' }}{{ mvt.quantite }}
+                {{ mvtSigne(mvt.type) }}{{ mvt.quantite }}
               </td>
               <td class="text-ink-2">{{ mvt.fournisseurNom || mvt.clientNom || '—' }}</td>
               <td class="text-[12.5px] text-muted">{{ mvt.motif || '—' }}</td>
@@ -194,6 +259,80 @@ function formatDate(iso: string) {
           <AppButton type="submit">Valider l'entrée</AppButton>
         </template>
       </MouvementForm>
+    </AppModal>
+
+    <AppModal v-model:open="showAjustementModal" title="Ajustement de stock">
+      <div class="space-y-4">
+        <p class="text-sm text-muted">
+          Réconcilie le stock théorique avec un comptage physique. Une transaction
+          d'ajustement sera inscrite au journal pour traçabilité.
+        </p>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="mb-1.5 block text-sm font-medium text-ink">Stock théorique</label>
+            <div
+              class="mono num rounded-md border border-line bg-paper-2 px-3 py-2 text-sm text-ink-2"
+            >
+              {{ stockTheorique }} {{ article.unite }}
+            </div>
+          </div>
+          <div>
+            <label class="mb-1.5 block text-sm font-medium text-ink">
+              Stock physique constaté <span class="text-rust-dark">*</span>
+            </label>
+            <input
+              v-model.number="stockPhysique"
+              type="number"
+              min="0"
+              step="1"
+              class="mono num w-full rounded-md border border-line bg-white px-3 py-2 text-sm text-ink focus:border-forest focus:outline-none focus:ring-1 focus:ring-forest/30"
+            />
+          </div>
+        </div>
+
+        <div
+          class="flex items-center justify-between rounded-md border px-3 py-2.5 text-sm"
+          :class="
+            delta > 0
+              ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+              : delta < 0
+                ? 'border-red-200 bg-rust-tint text-rust-dark'
+                : 'border-line bg-paper-2 text-muted'
+          "
+        >
+          <span class="font-medium">Écart</span>
+          <span class="mono num font-semibold">
+            <template v-if="delta > 0">+{{ delta }} {{ article.unite }}</template>
+            <template v-else-if="delta < 0">{{ delta }} {{ article.unite }}</template>
+            <template v-else>Aucun écart</template>
+          </span>
+        </div>
+
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-ink">
+            Motif <span class="text-rust-dark">*</span>
+          </label>
+          <textarea
+            v-model="motifAjustement"
+            rows="3"
+            placeholder="Ex : Inventaire trimestriel, casse non documentée, vol constaté…"
+            class="w-full rounded-md border border-line bg-white px-3 py-2 text-sm text-ink placeholder:text-ink-4 focus:border-forest focus:outline-none focus:ring-1 focus:ring-forest/30"
+          />
+          <p class="mt-1 text-xs text-muted">Minimum 3 caractères.</p>
+        </div>
+      </div>
+      <template #footer>
+        <AppButton variant="secondary" @click="showAjustementModal = false">Retour</AppButton>
+        <AppButton
+          variant="primary"
+          :loading="ajustementSubmitting"
+          :disabled="!peutAjuster"
+          @click="confirmerAjustement"
+        >
+          Confirmer l'ajustement
+        </AppButton>
+      </template>
     </AppModal>
   </div>
 </template>

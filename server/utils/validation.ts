@@ -50,6 +50,10 @@ export const ligneSortieSchema = z.object({
   quantite: z.number().int().positive(),
 })
 
+export const annulerSortieSchema = z.object({
+  motif: z.string().trim().min(3).max(500),
+})
+
 export const createSortieSchema = z.object({
   clientId: z.string().uuid(),
   dateSortie: z.string().optional(),
@@ -101,6 +105,11 @@ export const createMouvementSchema = z.object({
   fournisseurId: z.string().uuid().optional(),
   bonLivraison: z.string().optional(),
   motif: z.string().optional(),
+})
+
+export const ajustementSchema = z.object({
+  stockPhysique: z.number().int().min(0),
+  motif: z.string().trim().min(3).max(500),
 })
 
 export const updateParametresSchema = z.object({

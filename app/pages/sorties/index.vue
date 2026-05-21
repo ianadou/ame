@@ -84,9 +84,15 @@ await load()
               v-for="s in sorties"
               :key="s.id"
               class="row-hover cursor-pointer"
+              :class="s.statut === 'annule' ? 'opacity-60' : ''"
               @click="navigateTo(`/sorties/${s.id}`)"
             >
-              <td class="font-medium">{{ s.reference }}</td>
+              <td class="font-medium">
+                <div class="flex items-center gap-2">
+                  <span>{{ s.reference }}</span>
+                  <AppBadge v-if="s.statut === 'annule'" variant="danger" solid>Annulée</AppBadge>
+                </div>
+              </td>
               <td>{{ s.clientNom }}</td>
               <td class="mono text-[12.5px] text-muted">{{ formatDate(s.dateSortie) }}</td>
               <td class="text-right text-muted">{{ s.nbArticles }}</td>

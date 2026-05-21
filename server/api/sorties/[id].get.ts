@@ -20,6 +20,9 @@ export default defineEventHandler(async (event) => {
       modeReglement: sorties.modeReglement,
       statutPaiement: sorties.statutPaiement,
       notes: sorties.notes,
+      statut: sorties.statut,
+      annuleLe: sorties.annuleLe,
+      motifAnnulation: sorties.motifAnnulation,
       createdAt: sorties.createdAt,
     })
     .from(sorties)

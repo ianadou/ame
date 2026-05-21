@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import { ArrowLeft, Trash2 } from 'lucide-vue-next'
+import { ArrowLeft, Ban } from 'lucide-vue-next'
 
 const route = useRoute()
 const sortieId = route.params.id as string
 
-const { deleteSortie } = useSorties()
+const { annulerSortie } = useSorties()
 const notifications = useNotifications()
-const deleting = ref(false)
 
 interface LigneSortie {
   id: string
@@ -33,11 +32,14 @@ interface SortieDetail {
   modeReglement: string
   statutPaiement: string
   notes: string | null
+  statut: 'actif' | 'annule'
+  annuleLe: string | null
+  motifAnnulation: string | null
   createdAt: string
   lignes: LigneSortie[]
 }
 
-const { data: sortie } = await useFetch<SortieDetail>(`/api/sorties/${sortieId}`)
+const { data: sortie, refresh } = await useFetch<SortieDetail>(`/api/sorties/${sortieId}`)
 
 if (!sortie.value) {
   throw createError({ statusCode: 404, message: 'Bon de sortie introuvable' })
@@ -61,14 +63,40 @@ function formatDate(iso: string | null) {
     year: 'numeric',
   }).format(new Date(iso))
 }
+function formatDateTime(iso: string | null) {
+  if (!iso) return '—'
+  const d = new Date(iso.includes('T') ? iso : iso.replace(' ', 'T'))
+  return new Intl.DateTimeFormat('fr-FR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(d)
+}
 
-async function handleDelete() {
-  deleting.value = true
+const annule = computed(() => sortie.value?.statut === 'annule')
+
+// Modal d'annulation
+const showAnnulerModal = ref(false)
+const motif = ref('')
+const submitting = ref(false)
+const motifValide = computed(() => motif.value.trim().length >= 3)
+
+function ouvrirAnnulation() {
+  motif.value = ''
+  showAnnulerModal.value = true
+}
+
+async function confirmerAnnulation() {
+  if (!motifValide.value || submitting.value) return
+  submitting.value = true
   try {
     const ref = sortie.value?.reference ?? 'Bon'
-    await deleteSortie(sortieId)
+    await annulerSortie(sortieId, motif.value.trim())
     notifications.success('Bon de sortie annulé', `${ref} — stock restitué`)
-    await navigateTo('/sorties')
+    showAnnulerModal.value = false
+    await refresh()
   } catch (e: unknown) {
     const msg =
       e && typeof e === 'object' && 'data' in e
@@ -76,13 +104,13 @@ async function handleDelete() {
         : 'Annulation impossible'
     notifications.danger('Annulation impossible', msg)
   } finally {
-    deleting.value = false
+    submitting.value = false
   }
 }
 </script>
 
 <template>
-  <div v-if="sortie" class="space-y-6">
+  <div v-if="sortie" class="space-y-6" :class="annule ? 'opacity-70' : ''">
     <div class="flex items-center gap-4">
       <AppButton variant="ghost" size="sm" @click="navigateTo('/sorties')">
         <ArrowLeft class="h-4 w-4" />
@@ -90,7 +118,8 @@ async function handleDelete() {
       <div class="flex-1">
         <div class="flex items-center gap-3">
           <h2 class="text-lg font-semibold text-ink">{{ sortie.reference }}</h2>
-          <AppBadge :variant="paiementMeta[sortie.statutPaiement]?.variant ?? 'neutral'">
+          <AppBadge v-if="annule" variant="danger" solid>Annulée</AppBadge>
+          <AppBadge v-else :variant="paiementMeta[sortie.statutPaiement]?.variant ?? 'neutral'">
             {{ paiementMeta[sortie.statutPaiement]?.label ?? sortie.statutPaiement }}
           </AppBadge>
         </div>
@@ -102,11 +131,21 @@ async function handleDelete() {
           <span v-if="sortie.objet"> · {{ sortie.objet }}</span>
         </p>
       </div>
-      <AppButton variant="ghost" size="sm" :disabled="deleting" @click="handleDelete">
-        <Trash2 class="h-4 w-4" />
-        Annuler le bon
+      <AppButton v-if="!annule" variant="ghost" size="sm" @click="ouvrirAnnulation">
+        <Ban class="h-4 w-4" />
+        Annuler ce bon
       </AppButton>
     </div>
+
+    <AppCard v-if="annule" class="border-l-4 border-rust">
+      <p class="text-sm font-semibold text-rust-dark">
+        Bon annulé le {{ formatDateTime(sortie.annuleLe) }}
+      </p>
+      <p class="mt-1 text-sm text-ink-2">Motif : {{ sortie.motifAnnulation }}</p>
+      <p class="mt-2 text-xs text-muted">
+        Le stock a été restitué et une transaction d'entrée a été enregistrée pour chaque ligne.
+      </p>
+    </AppCard>
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-4">
       <AppCard>
@@ -182,5 +221,37 @@ async function handleDelete() {
         </table>
       </AppCard>
     </div>
+
+    <AppModal v-model:open="showAnnulerModal" title="Annuler ce bon de sortie">
+      <div class="space-y-3">
+        <p class="text-sm text-muted">
+          L'annulation va restituer le stock article par article et enregistrer une transaction
+          d'entrée pour chaque ligne. Cette action est définitive.
+        </p>
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-ink">
+            Motif de l'annulation <span class="text-rust-dark">*</span>
+          </label>
+          <textarea
+            v-model="motif"
+            rows="3"
+            placeholder="Ex : Erreur de saisie, retour client, livraison annulée…"
+            class="w-full rounded-md border border-line bg-white px-3 py-2 text-sm text-ink placeholder:text-ink-4 focus:border-forest focus:outline-none focus:ring-1 focus:ring-forest/30"
+          />
+          <p class="mt-1 text-xs text-muted">Minimum 3 caractères.</p>
+        </div>
+      </div>
+      <template #footer>
+        <AppButton variant="secondary" @click="showAnnulerModal = false">Retour</AppButton>
+        <AppButton
+          variant="primary"
+          :loading="submitting"
+          :disabled="!motifValide"
+          @click="confirmerAnnulation"
+        >
+          Confirmer l'annulation
+        </AppButton>
+      </template>
+    </AppModal>
   </div>
 </template>

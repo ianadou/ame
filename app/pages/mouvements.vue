@@ -32,7 +32,20 @@ const showEntreeModal = ref(false)
 const typeOptions = [
   { value: 'entree', label: 'Entrées' },
   { value: 'sortie', label: 'Sorties' },
+  { value: 'ajustement_positif', label: 'Ajustements +' },
+  { value: 'ajustement_negatif', label: 'Ajustements −' },
 ]
+
+function mvtMeta(type: string): { label: string; variant: 'success' | 'danger' | 'neutral' | 'info' } {
+  if (type === 'entree') return { label: 'Entrée', variant: 'success' }
+  if (type === 'sortie') return { label: 'Sortie', variant: 'neutral' }
+  if (type === 'ajustement_positif') return { label: 'Ajustement +', variant: 'info' }
+  if (type === 'ajustement_negatif') return { label: 'Ajustement −', variant: 'info' }
+  return { label: type, variant: 'neutral' }
+}
+function mvtSigne(type: string) {
+  return type === 'sortie' || type === 'ajustement_negatif' ? '−' : '+'
+}
 
 const queryParams = computed(() => ({
   type: typeFilter.value || undefined,
@@ -111,8 +124,8 @@ function formatDate(iso: string) {
             <tr v-for="mvt in mouvements" :key="mvt.id" class="row-hover">
               <td class="mono text-[12px] text-ink-3">{{ formatDate(mvt.createdAt) }}</td>
               <td>
-                <AppBadge :variant="mvt.type === 'entree' ? 'success' : 'neutral'">
-                  {{ mvt.type === 'entree' ? 'Entrée' : 'Sortie' }}
+                <AppBadge :variant="mvtMeta(mvt.type).variant">
+                  {{ mvtMeta(mvt.type).label }}
                 </AppBadge>
               </td>
               <td>
@@ -120,7 +133,7 @@ function formatDate(iso: string) {
                 — {{ mvt.articleNom }}
               </td>
               <td class="mono num text-right text-[14px] font-semibold">
-                {{ mvt.type === 'entree' ? '+' : '−' }}{{ mvt.quantite }}
+                {{ mvtSigne(mvt.type) }}{{ mvt.quantite }}
               </td>
               <td class="text-ink-2">{{ mvt.fournisseurNom || mvt.clientNom || '—' }}</td>
               <td class="mono text-[12px] text-muted">

@@ -29,6 +29,20 @@
       "when": 1779384700000,
       "tag": "0003_contraintes_check",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1779836400000,
+      "tag": "0004_sortie_annulation",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1779836500000,
+      "tag": "0005_ajustement_stock",
+      "breakpoints": true
     }
   ]
 }

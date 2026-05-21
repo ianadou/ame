@@ -81,6 +81,9 @@ export const sorties = sqliteTable(
     statutPaiement: text('statut_paiement').notNull().default('paye'),
     montantPaye: real('montant_paye').notNull().default(0),
     notes: text('notes'),
+    statut: text('statut').notNull().default('actif'),
+    annuleLe: text('annule_le'),
+    motifAnnulation: text('motif_annulation'),
     createdAt: text('created_at')
       .default(sql`(datetime('now'))`)
       .notNull(),
@@ -88,6 +91,11 @@ export const sorties = sqliteTable(
   (t) => [
     check('sorties_montant_total_positif', sql`${t.montantTotal} >= 0`),
     check('sorties_montant_paye_positif', sql`${t.montantPaye} >= 0`),
+    check('sorties_statut_valide', sql`${t.statut} IN ('actif','annule')`),
+    check(
+      'sorties_annulation_coherente',
+      sql`(${t.statut} = 'actif' AND ${t.annuleLe} IS NULL AND ${t.motifAnnulation} IS NULL) OR (${t.statut} = 'annule' AND ${t.annuleLe} IS NOT NULL AND ${t.motifAnnulation} IS NOT NULL)`,
+    ),
   ],
 )
 
@@ -131,7 +139,13 @@ export const mouvements = sqliteTable(
       .default(sql`(datetime('now'))`)
       .notNull(),
   },
-  (t) => [check('mouvements_quantite_positive', sql`${t.quantite} > 0`)],
+  (t) => [
+    check('mouvements_quantite_positive', sql`${t.quantite} > 0`),
+    check(
+      'mouvements_type_valide',
+      sql`${t.type} IN ('entree','sortie','ajustement_positif','ajustement_negatif')`,
+    ),
+  ],
 )
 
 export const commandes = sqliteTable('commandes', {
