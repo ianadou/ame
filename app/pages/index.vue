@@ -140,7 +140,7 @@ const valEvolution = computed(() =>
         <FilePlus class="h-4 w-4" />Bon de commande
       </AppButton>
       <div class="ml-auto flex items-center gap-2 text-[11.5px] text-muted">
-        <span class="pulse-dot h-1.5 w-1.5 rounded-full bg-forest" />
+        <span class="h-1.5 w-1.5 rounded-[1px] bg-emerald-500" />
         <span>Synchro / à l'instant</span>
       </div>
     </div>
@@ -253,10 +253,10 @@ const valEvolution = computed(() =>
         <template #action>
           <div class="flex items-center gap-4 text-[11.5px]">
             <span class="flex items-center gap-1.5"
-              ><span class="h-2.5 w-2.5 rounded-sm bg-forest" />Entrées</span
+              ><span class="h-2.5 w-2.5 rounded-[2px] bg-forest" />Entrées</span
             >
             <span class="flex items-center gap-1.5"
-              ><span class="h-2.5 w-2.5 rounded-sm bg-slate-600" />Sorties</span
+              ><span class="h-2.5 w-2.5 rounded-[2px] bg-slate-600" />Sorties</span
             >
           </div>
         </template>
@@ -366,7 +366,7 @@ const valEvolution = computed(() =>
       <PanelCard class="lg:col-span-5" title="Articles en alerte">
         <template #kicker>
           <span class="inline-flex items-center gap-1.5 text-rust-dark">
-            <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-rust" />
+            <span class="h-1.5 w-1.5 rounded-[1px] bg-rust" />
             <span>{{ alertes?.length ?? 0 }} en seuil critique / réappro nécessaire</span>
           </span>
         </template>

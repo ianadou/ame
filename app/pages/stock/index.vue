@@ -74,7 +74,7 @@ onMounted(async () => {
   try {
     const a = await $fetch<unknown[]>('/api/alertes')
     if (a.length > 0) {
-      notifications.warning(
+      notifications.danger(
         `${a.length} article${a.length > 1 ? 's' : ''} en alerte de stock bas`,
         'Réapprovisionnement conseillé.',
       )
@@ -154,7 +154,7 @@ onMounted(async () => {
               </td>
               <td class="text-muted">{{ article.unite }}</td>
               <td>
-                <AppBadge :variant="stockStatus(article)">{{ stockLabel(article) }}</AppBadge>
+                <AppBadge :variant="stockStatus(article)" solid>{{ stockLabel(article) }}</AppBadge>
               </td>
             </tr>
           </tbody>

@@ -22,7 +22,7 @@ const d = computed(() => {
           cy="58"
           :r="d.r"
           fill="none"
-          stroke="#2E5A3C"
+          stroke="#10B981"
           stroke-width="12"
           :stroke-dasharray="`${d.sOk} ${d.c - d.sOk}`"
         />
@@ -41,7 +41,7 @@ const d = computed(() => {
           cy="58"
           :r="d.r"
           fill="none"
-          stroke="#9E3A20"
+          stroke="#EF4444"
           stroke-width="12"
           :stroke-dasharray="`${d.sLow} ${d.c - d.sLow}`"
           :stroke-dashoffset="-(d.sOk + d.sWarn)"
@@ -63,17 +63,17 @@ const d = computed(() => {
     </svg>
     <div class="space-y-2 text-[12.5px]">
       <div class="flex items-center gap-2.5">
-        <span class="h-2.5 w-2.5 rounded-full bg-forest" />
+        <span class="h-2.5 w-2.5 rounded-[2px] bg-emerald-500" />
         <span class="mono num w-5 text-right font-semibold text-ink">{{ ok }}</span>
         <span class="text-muted">en stock</span>
       </div>
       <div class="flex items-center gap-2.5">
-        <span class="h-2.5 w-2.5 rounded-full bg-ochre" />
+        <span class="h-2.5 w-2.5 rounded-[2px] bg-amber-500" />
         <span class="mono num w-5 text-right font-semibold text-ink">{{ warn }}</span>
         <span class="text-muted">limite</span>
       </div>
       <div class="flex items-center gap-2.5">
-        <span class="h-2.5 w-2.5 rounded-full bg-rust" />
+        <span class="h-2.5 w-2.5 rounded-[2px] bg-rust" />
         <span class="mono num w-5 text-right font-semibold text-ink">{{ low }}</span>
         <span class="text-muted">stock bas</span>
       </div>

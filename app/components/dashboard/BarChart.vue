@@ -71,7 +71,7 @@ const chart = computed(() => {
     >
       <g v-for="(b, i) in chart.bars" :key="i">
         <template v-if="!b.projected">
-          <rect :x="b.eX" :y="chart.innerH - b.eH" :width="b.barW" :height="b.eH" fill="#2E5A3C" />
+          <rect :x="b.eX" :y="chart.innerH - b.eH" :width="b.barW" :height="b.eH" fill="#10B981" />
           <rect :x="b.sX" :y="chart.innerH - b.sH" :width="b.barW" :height="b.sH" fill="#475569" />
         </template>
         <template v-else>

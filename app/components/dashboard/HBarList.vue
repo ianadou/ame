@@ -7,7 +7,7 @@ const props = withDefaults(
   { accent: 'ochre' },
 )
 
-const colorMap = { ochre: '#D9871A', forest: '#2E5A3C', slate: '#475569' }
+const colorMap = { ochre: '#D9871A', forest: '#10B981', slate: '#475569' }
 const accentColor = computed(() => colorMap[props.accent])
 const max = computed(() => Math.max(...props.items.map((i) => i.valeur), 1))
 
