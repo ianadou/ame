@@ -43,7 +43,7 @@ await loadClients()
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div class="flex flex-1 flex-col gap-3 sm:flex-row">
         <div class="w-full sm:w-64">
-          <AppSearchInput v-model="search" placeholder="Rechercher nom, contact, tél, ville..." />
+          <AppSearchInput v-model="search" placeholder="Rechercher nom, téléphone, ville..." />
         </div>
         <AppSelect v-model="typeFilter" :options="typeOptions" placeholder="Tous les types" />
       </div>
@@ -70,7 +70,6 @@ await loadClients()
             <tr>
               <th>Nom</th>
               <th>Type</th>
-              <th>Contact</th>
               <th>Téléphone</th>
               <th>Ville</th>
             </tr>
@@ -88,7 +87,6 @@ await loadClients()
                   {{ client.type === 'entreprise' ? 'Entreprise' : 'Particulier' }}
                 </AppBadge>
               </td>
-              <td class="text-muted">{{ client.contact ?? '—' }}</td>
               <td class="mono text-[12.5px] text-muted">{{ client.telephone ?? '—' }}</td>
               <td class="text-muted">{{ client.ville ?? '—' }}</td>
             </tr>
@@ -96,7 +94,7 @@ await loadClients()
         </table>
       </div>
 
-      <TableSkeleton v-if="loading" :cols="5" />
+      <TableSkeleton v-if="loading" :cols="4" />
 
       <AppEmptyState
         v-if="!loading && clients.length === 0"

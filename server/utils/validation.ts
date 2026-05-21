@@ -23,7 +23,6 @@ export const updateArticleSchema = createArticleSchema.partial()
 
 export const createFournisseurSchema = z.object({
   nom: z.string().min(1).max(200),
-  contact: z.string().max(200).optional(),
   telephone: z.string().max(50).optional(),
   email: z.string().email().max(200).optional(),
   adresse: z.string().max(500).optional(),
@@ -35,7 +34,6 @@ export const updateFournisseurSchema = createFournisseurSchema.partial()
 export const createClientSchema = z.object({
   nom: z.string().min(1).max(200),
   type: z.enum(['entreprise', 'particulier']).default('entreprise'),
-  contact: z.string().max(200).optional(),
   telephone: z.string().max(50).optional(),
   email: z.string().email().max(200).optional(),
   adresse: z.string().max(500).optional(),
@@ -112,6 +110,10 @@ export const ajustementSchema = z.object({
   motif: z.string().trim().min(3).max(500),
 })
 
+export const archiverArticleSchema = z.object({
+  motif: z.string().trim().min(3).max(500),
+})
+
 export const updateParametresSchema = z.object({
   utilisateurPrenom: z.string().trim().min(1).max(100),
   utilisateurNom: z.string().trim().min(1).max(100),
@@ -157,7 +159,6 @@ export const importCategorieSchema = z.object({
 
 export const importFournisseurSchema = z.object({
   nom: texte,
-  contact: texteOpt,
   telephone: texteOpt,
   email: z.preprocess(
     (v) => (typeof v === 'string' && v.trim() === '' ? undefined : v),
@@ -173,7 +174,6 @@ export const importClientSchema = z.object({
     (v) => (typeof v === 'string' && v.trim() !== '' ? v.trim() : 'entreprise'),
     z.enum(['entreprise', 'particulier']),
   ),
-  contact: texteOpt,
   telephone: texteOpt,
   email: z.preprocess(
     (v) => (typeof v === 'string' && v.trim() === '' ? undefined : v),

@@ -395,17 +395,15 @@ const CONFIGS: Record<EntiteImport, EntiteConfig> = {
     schema: importFournisseurSchema,
     colonnes: [
       { champ: 'nom', alias: ['nom', 'fournisseur', 'raison sociale'], obligatoire: true },
-      { champ: 'contact', alias: ['contact', 'interlocuteur'] },
       { champ: 'telephone', alias: ['telephone', 'téléphone', 'tel', 'tél'] },
       { champ: 'email', alias: ['email', 'mail', 'courriel'] },
       { champ: 'adresse', alias: ['adresse'] },
       { champ: 'notes', alias: ['notes', 'remarque', 'remarques'] },
     ],
     modele: {
-      entetes: ['nom', 'contact', 'telephone', 'email', 'adresse', 'notes'],
+      entetes: ['nom', 'telephone', 'email', 'adresse', 'notes'],
       exemple: [
         'Matériaux BTP CI',
-        'Koffi Kouamé',
         '07 07 07 07 07',
         'contact@fournisseur.ci',
         'Cocody Riviera 3, Abidjan',
@@ -423,7 +421,6 @@ const CONFIGS: Record<EntiteImport, EntiteConfig> = {
     colonnes: [
       { champ: 'nom', alias: ['nom', 'client', 'raison sociale'], obligatoire: true },
       { champ: 'type', alias: ['type', 'categorie', 'catégorie'] },
-      { champ: 'contact', alias: ['contact', 'interlocuteur'] },
       { champ: 'telephone', alias: ['telephone', 'téléphone', 'tel', 'tél'] },
       { champ: 'email', alias: ['email', 'mail', 'courriel'] },
       { champ: 'adresse', alias: ['adresse', 'lieu'] },
@@ -431,11 +428,10 @@ const CONFIGS: Record<EntiteImport, EntiteConfig> = {
       { champ: 'notes', alias: ['notes', 'remarque', 'remarques'] },
     ],
     modele: {
-      entetes: ['nom', 'type', 'contact', 'telephone', 'email', 'adresse', 'ville', 'notes'],
+      entetes: ['nom', 'type', 'telephone', 'email', 'adresse', 'ville', 'notes'],
       exemple: [
         'Entreprise Kouassi BTP',
         'entreprise',
-        'Kouassi Yao',
         '07 07 07 07 07',
         'contact@client.ci',
         'Cocody Riviera 3',

@@ -32,7 +32,7 @@ await loadFournisseurs()
     <!-- Filters bar -->
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div class="w-full sm:w-72">
-        <AppSearchInput v-model="search" placeholder="Rechercher par nom, contact ou email..." />
+        <AppSearchInput v-model="search" placeholder="Rechercher par nom, téléphone ou email..." />
       </div>
       <div class="flex gap-2">
         <AppButton variant="secondary" @click="showExportModal = true">
@@ -57,7 +57,6 @@ await loadFournisseurs()
           <thead>
             <tr>
               <th>Nom</th>
-              <th>Contact</th>
               <th>Téléphone</th>
               <th>Email</th>
             </tr>
@@ -70,7 +69,6 @@ await loadFournisseurs()
               @click="navigateTo(`/fournisseurs/${fournisseur.id}`)"
             >
               <td class="font-medium">{{ fournisseur.nom }}</td>
-              <td>{{ fournisseur.contact ?? '—' }}</td>
               <td class="mono text-[12.5px] text-muted">{{ fournisseur.telephone ?? '—' }}</td>
               <td class="mono text-[12.5px] text-ink-3">{{ fournisseur.email ?? '—' }}</td>
             </tr>
@@ -78,7 +76,7 @@ await loadFournisseurs()
         </table>
       </div>
 
-      <TableSkeleton v-if="loading" :cols="4" />
+      <TableSkeleton v-if="loading" :cols="3" />
 
       <AppEmptyState
         v-if="!loading && fournisseurs.length === 0"

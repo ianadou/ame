@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { ArrowLeft, Plus, Scale } from 'lucide-vue-next'
+import { ArrowLeft, Plus, Scale, Archive, ArchiveRestore } from 'lucide-vue-next'
 
 const route = useRoute()
 const articleId = route.params.id as string
 
 const showEntreeModal = ref(false)
 const showAjustementModal = ref(false)
+const showArchiverModal = ref(false)
 
 interface ArticleMouvement {
   id: string
@@ -30,6 +31,9 @@ interface ArticleDetail {
   seuilAlerte: number
   emplacement: string | null
   notes: string | null
+  statut: 'actif' | 'archive'
+  archiveLe: string | null
+  motifArchivage: string | null
   createdAt: string
   updatedAt: string
   mouvements: ArticleMouvement[]
@@ -54,7 +58,53 @@ function stockLabel(a: { stockActuel: number; seuilAlerte: number }) {
 }
 
 const notifications = useNotifications()
-const { ajusterStock } = useStock()
+const { ajusterStock, archiverArticle, restaurerArticle } = useStock()
+
+const archive = computed(() => article.value?.statut === 'archive')
+
+// Archivage (soft-delete) : modal avec motif obligatoire min 3, action
+// inverse (restaurer) sans motif puisque c'est un retour neutre à l'actif.
+const motifArchivage = ref('')
+const archivageSubmitting = ref(false)
+const motifArchivageValide = computed(() => motifArchivage.value.trim().length >= 3)
+
+function ouvrirArchivage() {
+  motifArchivage.value = ''
+  showArchiverModal.value = true
+}
+
+async function confirmerArchivage() {
+  if (!motifArchivageValide.value || archivageSubmitting.value) return
+  archivageSubmitting.value = true
+  try {
+    await archiverArticle(articleId, motifArchivage.value.trim())
+    notifications.success('Article archivé', article.value?.reference ?? '')
+    showArchiverModal.value = false
+    await refresh()
+  } catch (e: unknown) {
+    const msg =
+      e && typeof e === 'object' && 'data' in e
+        ? ((e as { data?: { message?: string } }).data?.message ?? 'Archivage impossible')
+        : 'Archivage impossible'
+    notifications.danger('Archivage impossible', msg)
+  } finally {
+    archivageSubmitting.value = false
+  }
+}
+
+async function confirmerRestauration() {
+  try {
+    await restaurerArticle(articleId)
+    notifications.success('Article restauré', article.value?.reference ?? '')
+    await refresh()
+  } catch (e: unknown) {
+    const msg =
+      e && typeof e === 'object' && 'data' in e
+        ? ((e as { data?: { message?: string } }).data?.message ?? 'Restauration impossible')
+        : 'Restauration impossible'
+    notifications.danger('Restauration impossible', msg)
+  }
+}
 
 // Ajustement de stock : champs réactifs + écart calculé en direct.
 const stockPhysique = ref<number | null>(null)
@@ -128,6 +178,17 @@ function formatDate(iso: string) {
     minute: '2-digit',
   }).format(new Date(iso))
 }
+function formatDateTime(iso: string | null) {
+  if (!iso) return '—'
+  const d = new Date(iso.includes('T') ? iso : iso.replace(' ', 'T'))
+  return new Intl.DateTimeFormat('fr-FR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(d)
+}
 
 // Métadonnées d'affichage par type de transaction (entrée, sortie,
 // ajustement positif/négatif). Le sens est positif sauf pour sortie
@@ -145,7 +206,7 @@ function mvtSigne(type: string) {
 </script>
 
 <template>
-  <div v-if="article" class="space-y-6">
+  <div v-if="article" class="space-y-6" :class="archive ? 'opacity-80' : ''">
     <!-- Header -->
     <div class="flex items-center gap-4">
       <AppButton variant="ghost" size="sm" @click="navigateTo('/stock')">
@@ -154,21 +215,43 @@ function mvtSigne(type: string) {
       <div class="flex-1">
         <div class="flex items-center gap-3">
           <h2 class="text-lg font-semibold text-ink">{{ article.nom }}</h2>
-          <AppBadge :variant="stockStatus(article)" solid>{{ stockLabel(article) }}</AppBadge>
+          <AppBadge v-if="archive" variant="danger" solid>Archivé</AppBadge>
+          <AppBadge v-else :variant="stockStatus(article)" solid>{{ stockLabel(article) }}</AppBadge>
         </div>
         <p class="text-sm text-muted">{{ article.reference }}</p>
       </div>
       <div class="flex gap-2">
-        <AppButton variant="ghost" size="sm" @click="ouvrirAjustement">
-          <Scale class="h-4 w-4" />
-          Ajuster le stock
-        </AppButton>
-        <AppButton variant="secondary" size="sm" @click="showEntreeModal = true">
-          <Plus class="h-4 w-4" />
-          Entrée de stock
+        <template v-if="!archive">
+          <AppButton variant="ghost" size="sm" @click="ouvrirAjustement">
+            <Scale class="h-4 w-4" />
+            Ajuster le stock
+          </AppButton>
+          <AppButton variant="secondary" size="sm" @click="showEntreeModal = true">
+            <Plus class="h-4 w-4" />
+            Entrée de stock
+          </AppButton>
+          <AppButton variant="ghost" size="sm" @click="ouvrirArchivage">
+            <Archive class="h-4 w-4" />
+            Archiver
+          </AppButton>
+        </template>
+        <AppButton v-else variant="secondary" size="sm" @click="confirmerRestauration">
+          <ArchiveRestore class="h-4 w-4" />
+          Restaurer
         </AppButton>
       </div>
     </div>
+
+    <AppCard v-if="archive" class="border-l-4 border-rust">
+      <p class="text-sm font-semibold text-rust-dark">
+        Article archivé le {{ formatDateTime(article.archiveLe) }}
+      </p>
+      <p class="mt-1 text-sm text-ink-2">Motif : {{ article.motifArchivage }}</p>
+      <p class="mt-2 text-xs text-muted">
+        L'article n'apparaît plus dans les sélecteurs de nouveaux bons, commandes ou ajustements.
+        Son historique de transactions reste consultable.
+      </p>
+    </AppCard>
 
     <!-- Info cards -->
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -259,6 +342,38 @@ function mvtSigne(type: string) {
           <AppButton type="submit">Valider l'entrée</AppButton>
         </template>
       </MouvementForm>
+    </AppModal>
+
+    <AppModal v-model:open="showArchiverModal" title="Archiver cet article">
+      <div class="space-y-3">
+        <p class="text-sm text-muted">
+          L'article sera retiré des sélecteurs de nouveaux bons, commandes et ajustements.
+          Son historique de transactions reste préservé et il peut être restauré à tout moment.
+        </p>
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-ink">
+            Motif de l'archivage <span class="text-rust-dark">*</span>
+          </label>
+          <textarea
+            v-model="motifArchivage"
+            rows="3"
+            placeholder="Ex : Fin de série, fournisseur arrêté, remplacé par une nouvelle référence…"
+            class="w-full rounded-md border border-line bg-white px-3 py-2 text-sm text-ink placeholder:text-ink-4 focus:border-forest focus:outline-none focus:ring-1 focus:ring-forest/30"
+          />
+          <p class="mt-1 text-xs text-muted">Minimum 3 caractères.</p>
+        </div>
+      </div>
+      <template #footer>
+        <AppButton variant="secondary" @click="showArchiverModal = false">Retour</AppButton>
+        <AppButton
+          variant="primary"
+          :loading="archivageSubmitting"
+          :disabled="!motifArchivageValide"
+          @click="confirmerArchivage"
+        >
+          Confirmer l'archivage
+        </AppButton>
+      </template>
     </AppModal>
 
     <AppModal v-model:open="showAjustementModal" title="Ajustement de stock">

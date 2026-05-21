@@ -32,7 +32,6 @@ export async function seedDemo() {
     {
       id: generateId(),
       nom: 'Matériaux BTP CI',
-      contact: 'Koffi Kouamé',
       telephone: '07 07 07 07 07',
       email: 'contact@materiauxbtp.ci',
       adresse: 'Yopougon Zone Industrielle',
@@ -41,7 +40,6 @@ export async function seedDemo() {
     {
       id: generateId(),
       nom: 'Quincaillerie du Plateau',
-      contact: 'Awa Touré',
       telephone: '05 05 05 05 05',
       email: null,
       adresse: 'Plateau, Avenue Chardy',
@@ -50,7 +48,6 @@ export async function seedDemo() {
     {
       id: generateId(),
       nom: 'Électro Distribution CI',
-      contact: 'Yao N’Guessan',
       telephone: '01 01 01 01 01',
       email: 'ventes@electrodist.ci',
       adresse: 'Marcory Zone 4',
@@ -64,7 +61,6 @@ export async function seedDemo() {
       id: generateId(),
       nom: 'Entreprise Kouassi BTP',
       type: 'entreprise',
-      contact: 'Kouassi Yao',
       telephone: '07 11 22 33 44',
       email: 'kouassi@btp.ci',
       adresse: 'Cocody Riviera 3',
@@ -75,7 +71,6 @@ export async function seedDemo() {
       id: generateId(),
       nom: 'SCI Les Palmiers',
       type: 'entreprise',
-      contact: 'Aya Diabaté',
       telephone: '05 55 66 77 88',
       email: null,
       adresse: 'Bingerville',
@@ -86,7 +81,6 @@ export async function seedDemo() {
       id: generateId(),
       nom: 'Traoré Ibrahim',
       type: 'particulier',
-      contact: null,
       telephone: '01 23 45 67 89',
       email: null,
       adresse: 'Abobo Baoulé',

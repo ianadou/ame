@@ -2,7 +2,6 @@
 interface ClientFormData {
   nom: string
   type: string
-  contact: string
   telephone: string
   email: string
   adresse: string
@@ -21,7 +20,6 @@ const emit = defineEmits<{
 const form = reactive<ClientFormData>({
   nom: props.initial?.nom ?? '',
   type: props.initial?.type ?? 'entreprise',
-  contact: props.initial?.contact ?? '',
   telephone: props.initial?.telephone ?? '',
   email: props.initial?.email ?? '',
   adresse: props.initial?.adresse ?? '',
@@ -41,7 +39,6 @@ function handleSubmit() {
     nom: form.nom.trim(),
     type: form.type,
   }
-  if (form.contact) data.contact = form.contact
   if (form.telephone) data.telephone = form.telephone
   if (form.email) data.email = form.email
   if (form.adresse) data.adresse = form.adresse
@@ -64,11 +61,9 @@ function handleSubmit() {
     </div>
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-      <AppInput v-model="form.contact" label="Contact" placeholder="Kouassi Yao" />
       <AppInput v-model="form.telephone" label="Téléphone" placeholder="07 07 07 07 07" />
+      <AppInput v-model="form.email" label="Email" type="email" placeholder="contact@client.ci" />
     </div>
-
-    <AppInput v-model="form.email" label="Email" type="email" placeholder="contact@client.ci" />
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <AppInput v-model="form.adresse" label="Adresse" placeholder="Cocody Riviera 3" />

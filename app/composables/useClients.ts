@@ -2,7 +2,6 @@ export interface Client {
   id: string
   nom: string
   type: string
-  contact: string | null
   telephone: string | null
   email: string | null
   adresse: string | null

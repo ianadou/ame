@@ -31,7 +31,6 @@ interface EntreeLiee {
 interface FournisseurDetail {
   id: string
   nom: string
-  contact: string | null
   telephone: string | null
   email: string | null
   adresse: string | null
@@ -103,7 +102,7 @@ function formatDate(iso: string | null) {
       </AppButton>
       <div class="flex-1">
         <h2 class="text-lg font-semibold text-ink">{{ fournisseur.nom }}</h2>
-        <p class="text-sm text-muted">{{ fournisseur.contact ?? 'Aucun contact renseigné' }}</p>
+        <p class="text-sm text-muted">{{ fournisseur.telephone ?? 'Aucun téléphone renseigné' }}</p>
       </div>
       <div class="flex gap-2">
         <AppButton variant="secondary" size="sm" @click="showEditModal = true">
@@ -230,7 +229,6 @@ function formatDate(iso: string | null) {
       <FournisseurForm
         :initial="{
           nom: fournisseur.nom,
-          contact: fournisseur.contact ?? '',
           telephone: fournisseur.telephone ?? '',
           email: fournisseur.email ?? '',
           adresse: fournisseur.adresse ?? '',

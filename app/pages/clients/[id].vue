@@ -26,7 +26,6 @@ interface ClientDetail {
   id: string
   nom: string
   type: string
-  contact: string | null
   telephone: string | null
   email: string | null
   adresse: string | null
@@ -106,7 +105,7 @@ async function handleDelete() {
         </div>
         <p class="text-sm text-muted">
           {{
-            [client.contact, client.telephone, client.ville].filter(Boolean).join(' · ') ||
+            [client.telephone, client.ville].filter(Boolean).join(' · ') ||
             'Aucune coordonnée'
           }}
         </p>
@@ -219,7 +218,6 @@ async function handleDelete() {
         :initial="{
           nom: client.nom,
           type: client.type,
-          contact: client.contact ?? '',
           telephone: client.telephone ?? '',
           email: client.email ?? '',
           adresse: client.adresse ?? '',
