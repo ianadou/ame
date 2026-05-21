@@ -28,6 +28,7 @@ const dateDebut = ref('')
 const dateFin = ref('')
 const currentPage = ref(1)
 const showEntreeModal = ref(false)
+const selectedMvtId = ref<string | null>(null)
 
 const typeOptions = [
   { value: 'entree', label: 'Entrées' },
@@ -121,7 +122,12 @@ function formatDate(iso: string) {
             </tr>
           </thead>
           <tbody>
-            <tr v-for="mvt in mouvements" :key="mvt.id" class="row-hover">
+            <tr
+              v-for="mvt in mouvements"
+              :key="mvt.id"
+              class="row-hover cursor-pointer"
+              @click="selectedMvtId = mvt.id"
+            >
               <td class="mono text-[12px] text-ink-3">{{ formatDate(mvt.createdAt) }}</td>
               <td>
                 <AppBadge :variant="mvtMeta(mvt.type).variant">
@@ -141,6 +147,7 @@ function formatDate(iso: string) {
                   v-if="mvt.sortieId"
                   :to="`/sorties/${mvt.sortieId}`"
                   class="hover:text-ink"
+                  @click.stop
                 >
                   {{ mvt.sortieReference }}
                 </NuxtLink>
@@ -196,5 +203,7 @@ function formatDate(iso: string) {
         </template>
       </MouvementForm>
     </AppModal>
+
+    <MouvementDetailModal :id="selectedMvtId" @close="selectedMvtId = null" />
   </div>
 </template>

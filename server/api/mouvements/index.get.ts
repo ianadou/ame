@@ -19,7 +19,14 @@ export default defineEventHandler(async (event) => {
   if (articleId) conditions.push(eq(mouvements.articleId, articleId))
   if (clientId) conditions.push(eq(sorties.clientId, clientId))
   if (fournisseurId) conditions.push(eq(mouvements.fournisseurId, fournisseurId))
-  if (type === 'entree' || type === 'sortie') conditions.push(eq(mouvements.type, type))
+  if (
+    type === 'entree' ||
+    type === 'sortie' ||
+    type === 'ajustement_positif' ||
+    type === 'ajustement_negatif'
+  ) {
+    conditions.push(eq(mouvements.type, type))
+  }
   if (dateDebut) conditions.push(gte(mouvements.createdAt, dateDebut))
   if (dateFin) conditions.push(lte(mouvements.createdAt, dateFin + 'T23:59:59'))
 
