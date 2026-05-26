@@ -97,13 +97,15 @@ async function jeuDonnees(entite: EntiteExport, opts: Options): Promise<Jeu> {
   if (entite === 'fournisseurs') {
     const rows = await db.select().from(fournisseurs).orderBy(asc(fournisseurs.nom))
     return {
-      entetes: ['nom', 'contact', 'telephone', 'email', 'adresse', 'notes'],
+      entetes: ['nom', 'telephone', 'email', 'adresse', 'ville', 'boite postale', 'ncc', 'notes'],
       lignes: rows.map((r) => [
         r.nom,
-        r.contact ?? '',
         r.telephone ?? '',
         r.email ?? '',
         r.adresse ?? '',
+        r.ville ?? '',
+        r.boitePostale ?? '',
+        r.ncc ?? '',
         r.notes ?? '',
       ]),
     }
@@ -112,15 +114,26 @@ async function jeuDonnees(entite: EntiteExport, opts: Options): Promise<Jeu> {
   if (entite === 'clients') {
     const rows = await db.select().from(clients).orderBy(asc(clients.nom))
     return {
-      entetes: ['nom', 'type', 'contact', 'telephone', 'email', 'adresse', 'ville', 'notes'],
+      entetes: [
+        'nom',
+        'type',
+        'telephone',
+        'email',
+        'adresse',
+        'ville',
+        'boite postale',
+        'ncc',
+        'notes',
+      ],
       lignes: rows.map((r) => [
         r.nom,
         r.type,
-        r.contact ?? '',
         r.telephone ?? '',
         r.email ?? '',
         r.adresse ?? '',
         r.ville ?? '',
+        r.boitePostale ?? '',
+        r.ncc ?? '',
         r.notes ?? '',
       ]),
     }

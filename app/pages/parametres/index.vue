@@ -1,17 +1,34 @@
 <script setup lang="ts">
 import { Pencil, AlertTriangle } from 'lucide-vue-next'
+import type { RegimeTva } from '~/composables/useSessionUser'
 
-const { user, editing } = useSessionUser()
+const { user, editing, saveRegimeTva } = useSessionUser()
 const notifications = useNotifications()
 
 const showConfirm = ref(false)
 const busy = ref(false)
 
-const nomComplet = computed(
-  () =>
-    `${user.value.utilisateurPrenom ?? ''} ${user.value.utilisateurNom ?? ''}`.trim() ||
-    'Non renseigné',
-)
+const nomEntreprise = computed(() => user.value.nomEntreprise?.trim() || 'Non renseigné')
+
+const tvaSubmitting = ref(false)
+async function handleTvaSubmit(regime: RegimeTva, taux: number) {
+  tvaSubmitting.value = true
+  try {
+    await saveRegimeTva(regime, taux)
+    notifications.success(
+      'Régime fiscal enregistré',
+      regime === 'assujetti' ? `Assujetti à la TVA · taux ${taux} %` : 'Non assujetti à la TVA',
+    )
+  } catch (e: unknown) {
+    const msg =
+      e && typeof e === 'object' && 'data' in e
+        ? ((e as { data?: { message?: string } }).data?.message ?? 'Enregistrement impossible')
+        : 'Enregistrement impossible'
+    notifications.danger('Enregistrement impossible', msg)
+  } finally {
+    tvaSubmitting.value = false
+  }
+}
 
 async function resetData() {
   busy.value = true
@@ -38,17 +55,29 @@ async function resetData() {
     <AppCard>
       <div class="flex items-start justify-between">
         <div>
-          <h3 class="text-sm font-semibold text-ink">Profil utilisateur</h3>
+          <h3 class="text-sm font-semibold text-ink">Nom de l'entreprise</h3>
           <p class="mt-1 text-sm text-muted">
-            Nom affiché dans l'application et la signature des documents.
+            Affiché dans le footer de l'application et la signature des documents.
           </p>
-          <p class="mt-3 text-[15px] font-medium text-ink">{{ nomComplet }}</p>
+          <p class="mt-3 text-[15px] font-medium text-ink">{{ nomEntreprise }}</p>
         </div>
         <AppButton variant="secondary" size="sm" @click="editing = true">
           <Pencil class="h-4 w-4" />
           Modifier
         </AppButton>
       </div>
+    </AppCard>
+
+    <AppCard>
+      <h3 class="text-sm font-semibold text-ink">Régime fiscal</h3>
+      <RegimeTvaForm
+        class="mt-4"
+        :regime="user.regimeTva"
+        :taux="user.tauxTva"
+        :submitting="tvaSubmitting"
+        @submit="handleTvaSubmit"
+        @cancel="() => null"
+      />
     </AppCard>
 
     <AppCard>
@@ -70,7 +99,7 @@ async function resetData() {
 
     <AppModal v-model:open="showConfirm" title="Effacer toutes les données ?">
       <p class="text-[13.5px] text-ink-3">
-        Toutes les données métier seront supprimées définitivement. Votre profil utilisateur est
+        Toutes les données métier seront supprimées définitivement. Le nom de votre entreprise est
         conservé. Cette action est irréversible.
       </p>
       <div class="mt-5 flex justify-end gap-3">

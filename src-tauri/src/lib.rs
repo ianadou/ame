@@ -20,6 +20,15 @@ fn log_line(log_path: &PathBuf, line: &str) {
     }
 }
 
+/// Tauri résout les ressources sous Windows en chemin « extended-length »
+/// (préfixe `\\?\`) qui interdit les `/`. Drizzle concatène ensuite
+/// `${dir}/meta/_journal.json` → ENOENT, migrations sautées, toutes les
+/// tables manquent. On normalise donc côté Rust avant de transmettre au
+/// sidecar Node. No-op sur les autres OS.
+fn strip_windows_extended_prefix(p: String) -> String {
+    p.strip_prefix(r"\\?\").map(|s| s.to_string()).unwrap_or(p)
+}
+
 /// Démarre le serveur Nitro empaqueté (`.output/server/index.mjs`) via le
 /// binaire `bun` embarqué en sidecar, puis ouvre la fenêtre principale sur
 /// `http://127.0.0.1:PORT` une fois le serveur prêt.
@@ -34,7 +43,7 @@ pub fn run() {
             let server_entry = app
                 .path()
                 .resolve("output/server/index.mjs", tauri::path::BaseDirectory::Resource)?;
-            let server_entry = server_entry.to_string_lossy().to_string();
+            let server_entry = strip_windows_extended_prefix(server_entry.to_string_lossy().to_string());
 
             // Dossier données par-utilisateur, inscriptible (ex. Windows
             // %APPDATA%\ci.ame.desktop, Linux ~/.local/share/ci.ame.desktop).
@@ -56,7 +65,7 @@ pub fn run() {
             let migrations_dir = app
                 .path()
                 .resolve("migrations", tauri::path::BaseDirectory::Resource)?;
-            let migrations_dir = migrations_dir.to_string_lossy().to_string();
+            let migrations_dir = strip_windows_extended_prefix(migrations_dir.to_string_lossy().to_string());
 
             log_line(&log_path, &format!("server_entry  = {server_entry}"));
             log_line(&log_path, &format!("db_file       = {db_file}"));

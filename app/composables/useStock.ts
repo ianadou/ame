@@ -2,6 +2,7 @@ interface ArticleFilters {
   search?: string
   categorie?: string
   alerte?: boolean
+  inclureArchives?: boolean
   page?: number
   limit?: number
 }
@@ -17,6 +18,7 @@ interface ArticleListItem {
   stockActuel: number
   seuilAlerte: number
   emplacement: string | null
+  statut: 'actif' | 'archive'
 }
 
 interface ArticlesResponse {
@@ -41,6 +43,7 @@ export function useStock() {
       if (filters.search) params.set('search', filters.search)
       if (filters.categorie) params.set('categorie', filters.categorie)
       if (filters.alerte) params.set('alerte', 'true')
+      if (filters.inclureArchives) params.set('inclureArchives', '1')
       if (filters.page) params.set('page', String(filters.page))
       if (filters.limit) params.set('limit', String(filters.limit))
 
@@ -62,8 +65,19 @@ export function useStock() {
     await $fetch(`/api/articles/${id}`, { method: 'PUT', body: data })
   }
 
-  async function deleteArticle(id: string) {
-    await $fetch(`/api/articles/${id}`, { method: 'DELETE' })
+  async function archiverArticle(id: string, motif: string) {
+    await $fetch(`/api/articles/${id}/archiver`, { method: 'POST', body: { motif } })
+  }
+
+  async function restaurerArticle(id: string) {
+    await $fetch(`/api/articles/${id}/restaurer`, { method: 'POST' })
+  }
+
+  async function ajusterStock(id: string, stockPhysique: number, motif: string) {
+    return await $fetch<{ delta: number; stockApres: number }>(
+      `/api/articles/${id}/ajustement`,
+      { method: 'POST', body: { stockPhysique, motif } },
+    )
   }
 
   return {
@@ -74,6 +88,8 @@ export function useStock() {
     fetchArticles,
     createArticle,
     updateArticle,
-    deleteArticle,
+    archiverArticle,
+    restaurerArticle,
+    ajusterStock,
   }
 }

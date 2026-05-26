@@ -4,25 +4,32 @@ import { Menu } from 'lucide-vue-next'
 defineProps<{ title: string; kicker?: string; crumb?: string }>()
 defineEmits<{ toggleSidebar: [] }>()
 
-const now = new Date()
-const jours = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi']
-const mois = [
-  'Janvier',
-  'Février',
-  'Mars',
-  'Avril',
-  'Mai',
-  'Juin',
-  'Juillet',
-  'Août',
-  'Septembre',
-  'Octobre',
-  'Novembre',
-  'Décembre',
-]
-const p2 = (n: number) => String(n).padStart(2, '0')
-const jour = jours[now.getDay()]
-const dateStr = `${p2(now.getDate())} ${mois[now.getMonth()]} ${now.getFullYear()} / ${p2(now.getHours())}:${p2(now.getMinutes())}`
+// Horloge réactive — Intl utilise le fuseau du système d'exploitation
+// (l'heure affichée correspond donc à la zone du PC : Abidjan en CI,
+// Paris en France, etc.). Tick à la minute.
+const now = ref(new Date())
+let timerId: ReturnType<typeof setInterval> | null = null
+
+onMounted(() => {
+  timerId = setInterval(() => {
+    now.value = new Date()
+  }, 30_000)
+})
+onBeforeUnmount(() => {
+  if (timerId) clearInterval(timerId)
+})
+
+const fmtJour = new Intl.DateTimeFormat('fr-FR', { weekday: 'long' })
+const fmtDate = new Intl.DateTimeFormat('fr-FR', {
+  day: '2-digit',
+  month: 'long',
+  year: 'numeric',
+})
+const fmtHeure = new Intl.DateTimeFormat('fr-FR', { hour: '2-digit', minute: '2-digit' })
+
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
+const jour = computed(() => cap(fmtJour.format(now.value)))
+const dateStr = computed(() => `${fmtDate.format(now.value)} / ${fmtHeure.format(now.value)}`)
 </script>
 
 <template>

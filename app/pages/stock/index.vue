@@ -7,6 +7,7 @@ const { articles, total, loading, fetchArticles, createArticle } = useStock()
 const search = ref('')
 const categorieFilter = ref('')
 const alerteOnly = ref(false)
+const voirArchives = ref(false)
 const currentPage = ref(1)
 const showCreateModal = ref(false)
 const showImportModal = ref(false)
@@ -31,6 +32,7 @@ async function loadArticles() {
     search: search.value || undefined,
     categorie: categorieFilter.value || undefined,
     alerte: alerteOnly.value || undefined,
+    inclureArchives: voirArchives.value || undefined,
     page: currentPage.value,
   })
 }
@@ -42,7 +44,7 @@ watch(search, () => {
   debouncedSearch()
 })
 
-watch([categorieFilter, alerteOnly], () => {
+watch([categorieFilter, alerteOnly, voirArchives], () => {
   currentPage.value = 1
   loadArticles()
 })
@@ -74,7 +76,7 @@ onMounted(async () => {
   try {
     const a = await $fetch<unknown[]>('/api/alertes')
     if (a.length > 0) {
-      notifications.warning(
+      notifications.danger(
         `${a.length} article${a.length > 1 ? 's' : ''} en alerte de stock bas`,
         'Réapprovisionnement conseillé.',
       )
@@ -102,6 +104,13 @@ onMounted(async () => {
           <input v-model="alerteOnly" type="checkbox" class="rounded border-slate-300" />
           Alertes uniquement
         </label>
+        <AppButton
+          :variant="voirArchives ? 'secondary' : 'ghost'"
+          size="sm"
+          @click="voirArchives = !voirArchives"
+        >
+          {{ voirArchives ? 'Masquer archivés' : 'Voir archivés' }}
+        </AppButton>
       </div>
       <div class="flex gap-2">
         <AppButton variant="secondary" @click="showExportModal = true">
@@ -126,11 +135,11 @@ onMounted(async () => {
           <thead>
             <tr>
               <th class="w-[120px]">Réf.</th>
-              <th>Nom</th>
-              <th>Catégorie</th>
-              <th class="text-right">Stock</th>
-              <th>Unité</th>
-              <th>Statut</th>
+              <th class="w-[420px]">Nom</th>
+              <th class="w-[220px] !pl-8">Catégorie</th>
+              <th class="w-[100px] !text-right">Stock</th>
+              <th class="w-[120px] !pl-12">Unité</th>
+              <th class="w-[140px] !pl-6">Statut</th>
             </tr>
           </thead>
           <tbody v-if="!loading && articles.length > 0">
@@ -138,23 +147,40 @@ onMounted(async () => {
               v-for="article in articles"
               :key="article.id"
               class="row-hover cursor-pointer"
+              :class="article.statut === 'archive' ? 'opacity-60' : ''"
               @click="navigateTo(`/stock/${article.id}`)"
             >
-              <td class="mono font-medium text-ink-2">{{ article.reference }}</td>
-              <td class="font-medium">{{ article.nom }}</td>
-              <td class="text-muted">{{ article.categorieNom ?? '—' }}</td>
+              <td class="mono font-medium text-ink-2">
+                <div class="flex items-center gap-2">
+                  <span>{{ article.reference }}</span>
+                  <AppBadge v-if="article.statut === 'archive'" variant="danger" solid>
+                    Archivé
+                  </AppBadge>
+                </div>
+              </td>
+              <td class="truncate font-medium">{{ article.nom }}</td>
+              <td class="!pl-8 text-muted">{{ article.categorieNom ?? '' }}</td>
               <td
                 class="mono num text-right text-[14px] font-semibold"
                 :class="{
-                  'text-rust-dark': stockStatus(article) === 'danger',
-                  'text-ochre-dark': stockStatus(article) === 'warning',
+                  'text-rust-dark':
+                    article.statut === 'actif' && stockStatus(article) === 'danger',
+                  'text-ochre-dark':
+                    article.statut === 'actif' && stockStatus(article) === 'warning',
                 }"
               >
                 {{ article.stockActuel }}
               </td>
-              <td class="text-muted">{{ article.unite }}</td>
-              <td>
-                <AppBadge :variant="stockStatus(article)">{{ stockLabel(article) }}</AppBadge>
+              <td class="!pl-12 text-muted">{{ article.unite }}</td>
+              <td class="!pl-6">
+                <AppBadge
+                  v-if="article.statut === 'actif'"
+                  :variant="stockStatus(article)"
+                  solid
+                >
+                  {{ stockLabel(article) }}
+                </AppBadge>
+                <AppBadge v-else variant="neutral">Archivé</AppBadge>
               </td>
             </tr>
           </tbody>

@@ -21,7 +21,7 @@ const navigation = [
   { name: 'Dashboard', to: '/', icon: LayoutDashboard },
   { name: 'Stock', to: '/stock', icon: Package },
   { name: 'Catégories', to: '/categories', icon: Tags },
-  { name: 'Bons de sortie', to: '/sorties', icon: PackageMinus },
+  { name: 'Ventes', to: '/sorties', icon: PackageMinus },
   { name: 'Transactions', to: '/mouvements', icon: ArrowLeftRight },
   { name: 'Commandes', to: '/commandes', icon: ShoppingCart },
   { name: 'Fournisseurs', to: '/fournisseurs', icon: Truck },
@@ -40,16 +40,8 @@ const valeurK = computed(() =>
 )
 
 const { user, editing } = useSessionUser()
-const initiales = computed(() => {
-  const p = user.value.utilisateurPrenom?.[0] ?? ''
-  const n = user.value.utilisateurNom?.[0] ?? ''
-  return (p + n).toUpperCase() || '—'
-})
-const nomComplet = computed(
-  () =>
-    `${user.value.utilisateurPrenom ?? ''} ${user.value.utilisateurNom ?? ''}`.trim() ||
-    'Utilisateur',
-)
+const initiales = computed(() => (user.value.nomEntreprise?.[0] ?? 'A').toUpperCase())
+const nomComplet = computed(() => user.value.nomEntreprise?.trim() || 'Entreprise')
 </script>
 
 <template>
@@ -88,7 +80,7 @@ const nomComplet = computed(
         <span>{{ item.name }}</span>
         <span
           v-if="item.to === '/stock' && nbAlertes > 0"
-          class="ml-auto inline-flex items-center rounded bg-rust px-1.5 py-px text-[10.5px] font-semibold text-white"
+          class="ml-auto inline-flex items-center rounded-full bg-rust px-2 py-px text-[10.5px] font-semibold text-white"
         >
           {{ nbAlertes }}
         </span>

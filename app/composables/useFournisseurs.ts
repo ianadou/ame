@@ -1,10 +1,12 @@
 export interface Fournisseur {
   id: string
   nom: string
-  contact: string | null
   telephone: string | null
   email: string | null
   adresse: string | null
+  ville: string | null
+  boitePostale: string | null
+  ncc: string | null
   notes: string | null
   createdAt: string
 }

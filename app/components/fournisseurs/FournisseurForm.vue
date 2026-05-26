@@ -1,10 +1,12 @@
 <script setup lang="ts">
 interface FournisseurFormData {
   nom: string
-  contact: string
   telephone: string
   email: string
   adresse: string
+  ville: string
+  boitePostale: string
+  ncc: string
   notes: string
 }
 
@@ -18,10 +20,12 @@ const emit = defineEmits<{
 
 const form = reactive<FournisseurFormData>({
   nom: props.initial?.nom ?? '',
-  contact: props.initial?.contact ?? '',
   telephone: props.initial?.telephone ?? '',
   email: props.initial?.email ?? '',
   adresse: props.initial?.adresse ?? '',
+  ville: props.initial?.ville ?? '',
+  boitePostale: props.initial?.boitePostale ?? '',
+  ncc: props.initial?.ncc ?? '',
   notes: props.initial?.notes ?? '',
 })
 
@@ -29,10 +33,12 @@ function handleSubmit() {
   const data: Record<string, unknown> = {
     nom: form.nom,
   }
-  if (form.contact) data.contact = form.contact
   if (form.telephone) data.telephone = form.telephone
   if (form.email) data.email = form.email
   if (form.adresse) data.adresse = form.adresse
+  if (form.ville) data.ville = form.ville
+  if (form.boitePostale) data.boitePostale = form.boitePostale
+  if (form.ncc) data.ncc = form.ncc
   if (form.notes) data.notes = form.notes
 
   emit('submit', data)
@@ -44,18 +50,28 @@ function handleSubmit() {
     <AppInput v-model="form.nom" label="Nom" placeholder="Matériaux BTP SARL" />
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-      <AppInput v-model="form.contact" label="Contact" placeholder="Koffi Kouamé" />
       <AppInput v-model="form.telephone" label="Téléphone" placeholder="07 07 07 07 07" />
+      <AppInput
+        v-model="form.email"
+        label="Email"
+        type="email"
+        placeholder="contact@fournisseur.ci"
+      />
     </div>
 
-    <AppInput
-      v-model="form.email"
-      label="Email"
-      type="email"
-      placeholder="contact@fournisseur.ci"
-    />
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <AppInput v-model="form.adresse" label="Adresse" placeholder="Cocody Riviera 3" />
+      <AppInput v-model="form.ville" label="Ville / Commune" placeholder="Abidjan" />
+    </div>
 
-    <AppInput v-model="form.adresse" label="Adresse" placeholder="Cocody Riviera 3, Abidjan" />
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <AppInput
+        v-model="form.boitePostale"
+        label="Boîte postale"
+        placeholder="01 BP 1234 Abidjan 01"
+      />
+      <AppInput v-model="form.ncc" label="NCC" placeholder="CI-2023-1234567 X" />
+    </div>
 
     <div>
       <label class="mb-1 block text-sm font-medium text-slate-700">Notes</label>

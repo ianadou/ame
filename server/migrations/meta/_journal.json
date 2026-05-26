@@ -29,6 +29,55 @@
       "when": 1779384700000,
       "tag": "0003_contraintes_check",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1779836400000,
+      "tag": "0004_sortie_annulation",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1779836500000,
+      "tag": "0005_ajustement_stock",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1779836600000,
+      "tag": "0006_article_archivage",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1779836700000,
+      "tag": "0007_drop_contact",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1779836800000,
+      "tag": "0008_nom_entreprise",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1779836900000,
+      "tag": "0009_tva",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1779837000000,
+      "tag": "0010_ncc_bp_ville",
+      "breakpoints": true
     }
   ]
 }

@@ -12,7 +12,7 @@ export default defineEventHandler(async (event) => {
   if (search) {
     const like = '%' + search + '%'
     conditions.push(
-      sql`(${clients.nom} LIKE ${like} OR ${clients.contact} LIKE ${like} OR ${clients.telephone} LIKE ${like} OR ${clients.ville} LIKE ${like})`,
+      sql`(${clients.nom} LIKE ${like} OR ${clients.telephone} LIKE ${like} OR ${clients.ville} LIKE ${like})`,
     )
   }
 

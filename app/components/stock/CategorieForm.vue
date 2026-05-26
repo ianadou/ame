@@ -42,7 +42,7 @@ function handleSubmit() {
       v-model="form.parentId"
       label="Catégorie parente (optionnel)"
       :options="parentOptions"
-      placeholder="Aucune — catégorie racine"
+      placeholder="Aucune (catégorie racine)"
     />
 
     <div>

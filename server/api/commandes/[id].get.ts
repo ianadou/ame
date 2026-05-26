@@ -15,6 +15,7 @@ export default defineEventHandler(async (event) => {
       dateCommande: commandes.dateCommande,
       dateLivraisonPrevue: commandes.dateLivraisonPrevue,
       notes: commandes.notes,
+      tauxTvaApplique: commandes.tauxTvaApplique,
       createdAt: commandes.createdAt,
     })
     .from(commandes)

@@ -16,5 +16,10 @@ export default defineEventHandler(async (event) => {
     await db.insert(parametres).values({ id: 'app', ...body })
   }
 
-  return body
+  const [row] = await db.select().from(parametres).where(eq(parametres.id, 'app'))
+  return {
+    nomEntreprise: row?.nomEntreprise ?? null,
+    regimeTva: row?.regimeTva ?? 'non_assujetti',
+    tauxTva: row?.tauxTva ?? 18,
+  }
 })

@@ -9,7 +9,11 @@ import {
   AlertTriangle,
   Users,
   ArrowUpRight as ArrowLink,
+  Receipt,
+  Pencil,
 } from 'lucide-vue-next'
+import type { RegimeTva } from '~/composables/useSessionUser'
+
 interface Tendance {
   nom: string
   valeur: number
@@ -48,10 +52,7 @@ interface DashboardData {
   nbAlertes: number
   nbClients: number
   derniersMouvements: DernierMouvement[]
-  topCategories: Tendance[]
   topClients: Tendance[]
-  rotationJours: number
-  couvertureJours: number
 }
 interface ArticleAlerte {
   id: string
@@ -65,9 +66,6 @@ interface ArticleAlerte {
 
 const { data: dashboard } = await useFetch<DashboardData>('/api/dashboard')
 const { data: alertes } = await useFetch<ArticleAlerte[]>('/api/alertes', { default: () => [] })
-const { data: articlesResp } = await useFetch<{
-  data: { stockActuel: number; seuilAlerte: number }[]
-}>('/api/articles?limit=500', { default: () => ({ data: [] }) })
 
 const period = ref('mois')
 const videActivite: Activite = {
@@ -84,19 +82,6 @@ const { data: activite } = await useFetch<Activite>('/api/dashboard/activite', {
   default: () => videActivite,
 })
 const data = computed(() => activite.value ?? videActivite)
-
-const sante = computed(() => {
-  const arr = articlesResp.value?.data ?? []
-  let ok = 0,
-    warn = 0,
-    low = 0
-  for (const a of arr) {
-    if (a.stockActuel <= a.seuilAlerte) low++
-    else if (a.stockActuel <= a.seuilAlerte * 1.4) warn++
-    else ok++
-  }
-  return { ok, warn, low }
-})
 
 const recent = computed(() => dashboard.value?.derniersMouvements ?? [])
 const fmt = (n: number) => Math.round(n).toLocaleString('fr-FR')
@@ -121,6 +106,36 @@ const valEvolution = computed(() =>
     return e == null ? null : e * 4200 + (s ?? 0) * 5800
   }),
 )
+
+// Régime fiscal — affichage + édition rapide depuis le dashboard.
+const { user, saveRegimeTva } = useSessionUser()
+const notifications = useNotifications()
+const showTvaModal = ref(false)
+const tvaSubmitting = ref(false)
+const regimeLabel = computed(() =>
+  user.value.regimeTva === 'assujetti'
+    ? `Assujetti TVA ${user.value.tauxTva} %`
+    : 'Non assujetti à la TVA',
+)
+async function handleTvaSubmit(regime: RegimeTva, taux: number) {
+  tvaSubmitting.value = true
+  try {
+    await saveRegimeTva(regime, taux)
+    notifications.success(
+      'Régime fiscal enregistré',
+      regime === 'assujetti' ? `Assujetti TVA ${taux} %` : 'Non assujetti',
+    )
+    showTvaModal.value = false
+  } catch (e: unknown) {
+    const msg =
+      e && typeof e === 'object' && 'data' in e
+        ? ((e as { data?: { message?: string } }).data?.message ?? 'Enregistrement impossible')
+        : 'Enregistrement impossible'
+    notifications.danger('Enregistrement impossible', msg)
+  } finally {
+    tvaSubmitting.value = false
+  }
+}
 </script>
 
 <template>
@@ -131,18 +146,25 @@ const valEvolution = computed(() =>
         <Plus class="h-4 w-4" />Nouvel article
       </AppButton>
       <AppButton variant="secondary" @click="navigateTo('/mouvements')">
-        <ArrowDownLeft class="h-4 w-4" />Entrée stock
+        <ArrowDownLeft class="h-4 w-4" />Approvisionnement
       </AppButton>
-      <AppButton variant="secondary" @click="navigateTo('/mouvements')">
-        <ArrowUpRight class="h-4 w-4" />Sortie stock
+      <AppButton variant="secondary" @click="navigateTo('/sorties/nouveau')">
+        <ArrowUpRight class="h-4 w-4" />Nouvelle vente
       </AppButton>
       <AppButton variant="secondary" @click="navigateTo('/commandes')">
         <FilePlus class="h-4 w-4" />Bon de commande
       </AppButton>
-      <div class="ml-auto flex items-center gap-2 text-[11.5px] text-muted">
-        <span class="pulse-dot h-1.5 w-1.5 rounded-full bg-forest" />
-        <span>Synchro / à l'instant</span>
-      </div>
+
+      <button
+        class="ml-auto flex items-center gap-2 rounded-md border border-line bg-white px-3 py-1.5 text-[12.5px] text-ink-2 transition-colors hover:bg-paper-2"
+        title="Modifier le régime fiscal"
+        @click="showTvaModal = true"
+      >
+        <Receipt class="h-3.5 w-3.5 text-ink-3" />
+        <span class="text-muted">Régime fiscal :</span>
+        <span class="font-medium text-ink">{{ regimeLabel }}</span>
+        <Pencil class="h-3 w-3 text-ink-4" />
+      </button>
     </div>
 
     <!-- Global KPI -->
@@ -172,7 +194,7 @@ const valEvolution = computed(() =>
         :delta="(alertes?.length ?? 0) > 0 ? '+1' : null"
         :delta-sub="(alertes?.length ?? 0) > 0 ? 'à traiter' : null"
         :spark="[0, 0, 1, 0, 2, 1, 0, 1]"
-        spark-color="#9E3A20"
+        spark-color="#EF4444"
       />
       <KpiCard
         label="Clients"
@@ -208,7 +230,7 @@ const valEvolution = computed(() =>
         spark-color="#0F172A"
       />
       <KpiCard
-        label="Entrées"
+        label="Approvisionnements"
         :value="fmt(data.kpi.entrees)"
         :delta="data.delta.entrees"
         :delta-sub="data.deltaSub"
@@ -216,7 +238,7 @@ const valEvolution = computed(() =>
         spark-color="#10B981"
       />
       <KpiCard
-        label="Sorties"
+        label="Ventes"
         :value="fmt(data.kpi.sorties)"
         :delta="data.delta.sorties"
         :delta-sub="data.deltaSub"
@@ -224,7 +246,7 @@ const valEvolution = computed(() =>
         spark-color="#475569"
       />
       <KpiCard
-        label="Valeur entrante"
+        label="Valeur achetée"
         :value="fmt(data.kpi.valEntree / 1000)"
         unit="K FCFA"
         :delta="data.delta.valEntree"
@@ -233,7 +255,7 @@ const valEvolution = computed(() =>
         spark-color="#10B981"
       />
       <KpiCard
-        label="Valeur sortante"
+        label="Valeur vendue"
         :value="fmt(data.kpi.valSortie / 1000)"
         unit="K FCFA"
         :delta="data.delta.valSortie"
@@ -243,55 +265,30 @@ const valEvolution = computed(() =>
       />
     </div>
 
-    <!-- Charts row -->
-    <div class="grid grid-cols-1 gap-4 lg:grid-cols-12">
-      <PanelCard
-        class="lg:col-span-8"
-        :kicker="'Transactions / ' + data.label.toLowerCase()"
-        title="Entrées vs sorties"
-      >
-        <template #action>
-          <div class="flex items-center gap-4 text-[11.5px]">
-            <span class="flex items-center gap-1.5"
-              ><span class="h-2.5 w-2.5 rounded-sm bg-forest" />Entrées</span
-            >
-            <span class="flex items-center gap-1.5"
-              ><span class="h-2.5 w-2.5 rounded-sm bg-slate-600" />Sorties</span
-            >
-          </div>
-        </template>
-        <div class="px-4 pb-3 pt-5">
-          <BarChart
-            :entrees="data.series.entrees"
-            :sorties="data.series.sorties"
-            :ticks="data.ticks"
-            :height="240"
-          />
+    <!-- Approvisionnements vs ventes (pleine largeur) -->
+    <PanelCard
+      :kicker="'Transactions / ' + data.label.toLowerCase()"
+      title="Approvisionnements vs ventes"
+    >
+      <template #action>
+        <div class="flex items-center gap-4 text-[11.5px]">
+          <span class="flex items-center gap-1.5"
+            ><span class="h-2.5 w-2.5 rounded-[2px] bg-forest" />Approvisionnements</span
+          >
+          <span class="flex items-center gap-1.5"
+            ><span class="h-2.5 w-2.5 rounded-[2px] bg-slate-600" />Ventes</span
+          >
         </div>
-      </PanelCard>
-
-      <PanelCard class="lg:col-span-4" kicker="Inventaire" title="Santé du stock">
-        <div class="px-5 py-6">
-          <Donut :ok="sante.ok" :warn="sante.warn" :low="sante.low" />
-        </div>
-        <div class="grid grid-cols-2 border-t border-line/70">
-          <div class="px-5 py-3">
-            <div class="text-[11px] text-muted">Rotation moy.</div>
-            <div class="display num mt-0.5 text-[20px] font-semibold">
-              {{ dashboard?.rotationJours ?? 0
-              }}<span class="ml-1 font-sans text-[12px] text-muted">jours</span>
-            </div>
-          </div>
-          <div class="border-l border-line/70 px-5 py-3">
-            <div class="text-[11px] text-muted">Couverture</div>
-            <div class="display num mt-0.5 text-[20px] font-semibold">
-              {{ dashboard?.couvertureJours ?? 0
-              }}<span class="ml-1 font-sans text-[12px] text-muted">jours</span>
-            </div>
-          </div>
-        </div>
-      </PanelCard>
-    </div>
+      </template>
+      <div class="px-4 pb-3 pt-5">
+        <BarChart
+          :entrees="data.series.entrees"
+          :sorties="data.series.sorties"
+          :ticks="data.ticks"
+          :height="240"
+        />
+      </div>
+    </PanelCard>
 
     <!-- Value evolution -->
     <PanelCard
@@ -306,17 +303,11 @@ const valEvolution = computed(() =>
       </div>
     </PanelCard>
 
-    <!-- Tops -->
-    <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
-      <PanelCard :kicker="'Classement / ' + data.label.toLowerCase()" title="Top catégories">
-        <template #action><span class="text-[11.5px] text-muted">FCFA HT</span></template>
-        <HBarList :items="dashboard?.topCategories ?? []" accent="slate" />
-      </PanelCard>
-      <PanelCard :kicker="'Ventes / ' + data.label.toLowerCase()" title="Top clients">
-        <template #action><span class="text-[11.5px] text-muted">FCFA HT</span></template>
-        <HBarList :items="dashboard?.topClients ?? []" accent="forest" />
-      </PanelCard>
-    </div>
+    <!-- Top clients (pleine largeur) -->
+    <PanelCard :kicker="'Ventes / ' + data.label.toLowerCase()" title="Top clients">
+      <template #action><span class="text-[11.5px] text-muted">FCFA HT</span></template>
+      <HBarList :items="dashboard?.topClients ?? []" accent="forest" />
+    </PanelCard>
 
     <!-- Latest + Alertes -->
     <div class="grid grid-cols-1 gap-4 lg:grid-cols-12">
@@ -342,7 +333,7 @@ const valEvolution = computed(() =>
             >
               <td class="w-[88px] py-2.5 pl-5 pr-2">
                 <AppBadge :variant="m.type === 'entree' ? 'success' : 'neutral'">
-                  {{ m.type === 'entree' ? 'Entrée' : 'Sortie' }}
+                  {{ m.type === 'entree' ? 'Approvisionnement' : 'Vente' }}
                 </AppBadge>
               </td>
               <td class="mono w-[80px] px-2 py-2.5 text-[12px] text-ink-2">
@@ -350,7 +341,7 @@ const valEvolution = computed(() =>
               </td>
               <td class="truncate px-2 py-2.5 text-[13px] text-ink">{{ m.articleNom }}</td>
               <td class="w-[140px] truncate px-2 py-2.5 text-[12.5px] text-muted">
-                {{ m.fournisseurNom || m.clientNom || '—' }}
+                {{ m.fournisseurNom || m.clientNom || '' }}
               </td>
               <td class="mono num w-[58px] px-2 py-2.5 text-right text-[13.5px] font-semibold">
                 {{ m.type === 'entree' ? '+' : '−' }}{{ m.quantite }}
@@ -366,7 +357,7 @@ const valEvolution = computed(() =>
       <PanelCard class="lg:col-span-5" title="Articles en alerte">
         <template #kicker>
           <span class="inline-flex items-center gap-1.5 text-rust-dark">
-            <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-rust" />
+            <span class="h-1.5 w-1.5 rounded-[1px] bg-rust" />
             <span>{{ alertes?.length ?? 0 }} en seuil critique / réappro nécessaire</span>
           </span>
         </template>
@@ -382,7 +373,7 @@ const valEvolution = computed(() =>
             <div class="mono w-[68px] shrink-0 text-[11px] text-ink-3">{{ a.reference }}</div>
             <div class="min-w-0 flex-1">
               <div class="truncate text-[13px] font-medium text-ink">{{ a.nom }}</div>
-              <div class="mt-0.5 text-[11px] text-muted">{{ a.categorieNom ?? '—' }}</div>
+              <div class="mt-0.5 text-[11px] text-muted">{{ a.categorieNom ?? '' }}</div>
             </div>
             <div class="w-[110px]">
               <div class="flex items-baseline justify-end gap-1">
@@ -407,10 +398,20 @@ const valEvolution = computed(() =>
             v-if="(alertes?.length ?? 0) === 0"
             class="px-5 py-10 text-center text-[13px] text-muted"
           >
-            Aucune alerte — tout est au-dessus du seuil.
+            Aucune alerte, tout est au-dessus du seuil.
           </div>
         </div>
       </PanelCard>
     </div>
+
+    <AppModal v-model:open="showTvaModal" title="Régime fiscal">
+      <RegimeTvaForm
+        :regime="user.regimeTva"
+        :taux="user.tauxTva"
+        :submitting="tvaSubmitting"
+        @submit="handleTvaSubmit"
+        @cancel="showTvaModal = false"
+      />
+    </AppModal>
   </div>
 </template>

@@ -31,7 +31,7 @@ const articleOptions = computed(() => {
   if (!articlesResult.value?.data) return []
   return articlesResult.value.data.map((a: { id: string; reference: string; nom: string }) => ({
     value: a.id,
-    label: `${a.reference} — ${a.nom}`,
+    label: `${a.reference} · ${a.nom}`,
   }))
 })
 

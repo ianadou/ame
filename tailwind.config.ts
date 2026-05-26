@@ -30,8 +30,8 @@ export default {
           light: '#F0A93C',
           tint: '#FBEACB',
         },
-        forest: { DEFAULT: '#2E5A3C', dark: '#1F3F2A', light: '#4A7C59', tint: '#D8E5DC' },
-        rust: { DEFAULT: '#9E3A20', dark: '#7A2C18', tint: '#F0DDD5' },
+        forest: { DEFAULT: '#10B981', dark: '#047857', light: '#34D399', tint: '#D1FAE5' },
+        rust: { DEFAULT: '#EF4444', dark: '#B91C1C', tint: '#FEE2E2' },
         success: {
           light: colors.emerald[50],
           DEFAULT: colors.emerald[600],

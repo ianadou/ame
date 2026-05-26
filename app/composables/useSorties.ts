@@ -9,6 +9,7 @@ export interface SortieListe {
   montantPaye: number
   modeReglement: string
   statutPaiement: string
+  statut: 'actif' | 'annule'
   createdAt: string
   nbArticles: number
 }
@@ -46,9 +47,12 @@ export function useSorties() {
     })
   }
 
-  async function deleteSortie(id: string) {
-    await $fetch(`/api/sorties/${id}`, { method: 'DELETE' })
+  async function annulerSortie(id: string, motif: string) {
+    await $fetch(`/api/sorties/${id}/annuler`, {
+      method: 'POST',
+      body: { motif },
+    })
   }
 
-  return { sorties, loading, error, fetchSorties, createSortie, deleteSortie }
+  return { sorties, loading, error, fetchSorties, createSortie, annulerSortie }
 }

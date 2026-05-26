@@ -18,6 +18,9 @@ export default defineEventHandler(async (event) => {
       seuilAlerte: articles.seuilAlerte,
       emplacement: articles.emplacement,
       notes: articles.notes,
+      statut: articles.statut,
+      archiveLe: articles.archiveLe,
+      motifArchivage: articles.motifArchivage,
       createdAt: articles.createdAt,
       updatedAt: articles.updatedAt,
     })

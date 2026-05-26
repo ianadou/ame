@@ -83,7 +83,6 @@ async function seed() {
   const fournisseursData = Array.from({ length: 8 }, () => ({
     id: id(),
     nom: `${faker.company.name()} CI`,
-    contact: faker.person.fullName(),
     telephone: telephoneIvoirien(),
     email: faker.internet.email({ provider: 'orange.ci' }),
     adresse: adresseIvoirienne(),
@@ -100,7 +99,6 @@ async function seed() {
       id: id(),
       nom: type === 'entreprise' ? `${faker.company.name()} BTP` : faker.person.fullName(),
       type,
-      contact: type === 'entreprise' ? faker.person.fullName() : null,
       telephone: telephoneIvoirien(),
       email:
         faker.helpers.maybe(() => faker.internet.email({ provider: 'orange.ci' }), {

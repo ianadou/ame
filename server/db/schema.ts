@@ -24,6 +24,9 @@ export const articles = sqliteTable(
     seuilAlerte: integer('seuil_alerte').notNull().default(5),
     emplacement: text('emplacement'),
     notes: text('notes'),
+    statut: text('statut').notNull().default('actif'),
+    archiveLe: text('archive_le'),
+    motifArchivage: text('motif_archivage'),
     createdAt: text('created_at')
       .default(sql`(datetime('now'))`)
       .notNull(),
@@ -35,16 +38,23 @@ export const articles = sqliteTable(
     check('articles_prix_positif', sql`${t.prixUnitaire} IS NULL OR ${t.prixUnitaire} > 0`),
     check('articles_stock_positif', sql`${t.stockActuel} >= 0`),
     check('articles_seuil_positif', sql`${t.seuilAlerte} >= 0`),
+    check('articles_statut_valide', sql`${t.statut} IN ('actif','archive')`),
+    check(
+      'articles_archivage_coherent',
+      sql`(${t.statut} = 'actif' AND ${t.archiveLe} IS NULL AND ${t.motifArchivage} IS NULL) OR (${t.statut} = 'archive' AND ${t.archiveLe} IS NOT NULL AND ${t.motifArchivage} IS NOT NULL)`,
+    ),
   ],
 )
 
 export const fournisseurs = sqliteTable('fournisseurs', {
   id: text('id').primaryKey(),
   nom: text('nom').notNull(),
-  contact: text('contact'),
   telephone: text('telephone'),
   email: text('email'),
   adresse: text('adresse'),
+  ville: text('ville'),
+  boitePostale: text('boite_postale'),
+  ncc: text('ncc'),
   notes: text('notes'),
   createdAt: text('created_at')
     .default(sql`(datetime('now'))`)
@@ -55,11 +65,12 @@ export const clients = sqliteTable('clients', {
   id: text('id').primaryKey(),
   nom: text('nom').notNull(),
   type: text('type').notNull().default('entreprise'),
-  contact: text('contact'),
   telephone: text('telephone'),
   email: text('email'),
   adresse: text('adresse'),
   ville: text('ville'),
+  boitePostale: text('boite_postale'),
+  ncc: text('ncc'),
   notes: text('notes'),
   createdAt: text('created_at')
     .default(sql`(datetime('now'))`)
@@ -81,6 +92,10 @@ export const sorties = sqliteTable(
     statutPaiement: text('statut_paiement').notNull().default('paye'),
     montantPaye: real('montant_paye').notNull().default(0),
     notes: text('notes'),
+    statut: text('statut').notNull().default('actif'),
+    annuleLe: text('annule_le'),
+    motifAnnulation: text('motif_annulation'),
+    tauxTvaApplique: real('taux_tva_applique'),
     createdAt: text('created_at')
       .default(sql`(datetime('now'))`)
       .notNull(),
@@ -88,6 +103,15 @@ export const sorties = sqliteTable(
   (t) => [
     check('sorties_montant_total_positif', sql`${t.montantTotal} >= 0`),
     check('sorties_montant_paye_positif', sql`${t.montantPaye} >= 0`),
+    check('sorties_statut_valide', sql`${t.statut} IN ('actif','annule')`),
+    check(
+      'sorties_annulation_coherente',
+      sql`(${t.statut} = 'actif' AND ${t.annuleLe} IS NULL AND ${t.motifAnnulation} IS NULL) OR (${t.statut} = 'annule' AND ${t.annuleLe} IS NOT NULL AND ${t.motifAnnulation} IS NOT NULL)`,
+    ),
+    check(
+      'sorties_taux_tva_plage',
+      sql`${t.tauxTvaApplique} IS NULL OR (${t.tauxTvaApplique} >= 0 AND ${t.tauxTvaApplique} <= 30)`,
+    ),
   ],
 )
 
@@ -131,34 +155,62 @@ export const mouvements = sqliteTable(
       .default(sql`(datetime('now'))`)
       .notNull(),
   },
-  (t) => [check('mouvements_quantite_positive', sql`${t.quantite} > 0`)],
+  (t) => [
+    check('mouvements_quantite_positive', sql`${t.quantite} > 0`),
+    check(
+      'mouvements_type_valide',
+      sql`${t.type} IN ('entree','sortie','ajustement_positif','ajustement_negatif')`,
+    ),
+  ],
 )
 
-export const commandes = sqliteTable('commandes', {
-  id: text('id').primaryKey(),
-  reference: text('reference').notNull().unique(),
-  fournisseurId: text('fournisseur_id')
-    .references(() => fournisseurs.id, { onDelete: 'restrict' })
-    .notNull(),
-  statut: text('statut').notNull().default('brouillon'),
-  dateCommande: text('date_commande'),
-  dateLivraisonPrevue: text('date_livraison_prevue'),
-  notes: text('notes'),
-  createdAt: text('created_at')
-    .default(sql`(datetime('now'))`)
-    .notNull(),
-})
+export const commandes = sqliteTable(
+  'commandes',
+  {
+    id: text('id').primaryKey(),
+    reference: text('reference').notNull().unique(),
+    fournisseurId: text('fournisseur_id')
+      .references(() => fournisseurs.id, { onDelete: 'restrict' })
+      .notNull(),
+    statut: text('statut').notNull().default('brouillon'),
+    dateCommande: text('date_commande'),
+    dateLivraisonPrevue: text('date_livraison_prevue'),
+    notes: text('notes'),
+    tauxTvaApplique: real('taux_tva_applique'),
+    createdAt: text('created_at')
+      .default(sql`(datetime('now'))`)
+      .notNull(),
+  },
+  (t) => [
+    check(
+      'commandes_taux_tva_plage',
+      sql`${t.tauxTvaApplique} IS NULL OR (${t.tauxTvaApplique} >= 0 AND ${t.tauxTvaApplique} <= 30)`,
+    ),
+  ],
+)
 
-// Paramètres applicatifs mono-ligne (id fixe 'app') : identité de
-// l'utilisateur de session (Phase 1 mono-poste, cf. archi déploiement).
-export const parametres = sqliteTable('parametres', {
-  id: text('id').primaryKey(),
-  utilisateurPrenom: text('utilisateur_prenom'),
-  utilisateurNom: text('utilisateur_nom'),
-  updatedAt: text('updated_at')
-    .default(sql`(datetime('now'))`)
-    .notNull(),
-})
+// Paramètres applicatifs mono-ligne (id fixe 'app') : nom de l'entreprise
+// affiché dans le footer et la sidebar (Phase 1 mono-poste, cf. archi
+// déploiement). Régime TVA = configuration fiscale par défaut appliquée
+// aux nouveaux bons de sortie et commandes ; le taux est figé sur chaque
+// bon à sa création pour que les anciens documents restent cohérents si
+// le régime change ensuite.
+export const parametres = sqliteTable(
+  'parametres',
+  {
+    id: text('id').primaryKey(),
+    nomEntreprise: text('nom_entreprise'),
+    regimeTva: text('regime_tva').notNull().default('non_assujetti'),
+    tauxTva: real('taux_tva').notNull().default(18),
+    updatedAt: text('updated_at')
+      .default(sql`(datetime('now'))`)
+      .notNull(),
+  },
+  (t) => [
+    check('parametres_regime_tva_valide', sql`${t.regimeTva} IN ('assujetti','non_assujetti')`),
+    check('parametres_taux_tva_plage', sql`${t.tauxTva} >= 0 AND ${t.tauxTva} <= 30`),
+  ],
+)
 
 export const lignesCommande = sqliteTable(
   'lignes_commande',

@@ -48,7 +48,7 @@ async function handleCreate(data: Record<string, unknown>) {
 }
 
 function formatDate(iso: string | null) {
-  if (!iso) return '—'
+  if (!iso) return ''
   return new Intl.DateTimeFormat('fr-FR', {
     day: '2-digit',
     month: '2-digit',
@@ -90,7 +90,7 @@ await loadCommandes()
               <th class="w-[200px]">Référence</th>
               <th>Fournisseur</th>
               <th>Statut</th>
-              <th class="text-right">Total estimé</th>
+              <th class="text-center">Total estimé</th>
               <th>Livraison prévue</th>
             </tr>
           </thead>
@@ -102,13 +102,13 @@ await loadCommandes()
               @click="navigateTo(`/commandes/${commande.id}`)"
             >
               <td class="mono font-medium text-ink-2">{{ commande.reference }}</td>
-              <td>{{ commande.fournisseurNom ?? '—' }}</td>
+              <td>{{ commande.fournisseurNom ?? '' }}</td>
               <td>
                 <AppBadge :variant="statutMeta[commande.statut]?.variant ?? 'neutral'">
                   {{ statutMeta[commande.statut]?.label ?? commande.statut }}
                 </AppBadge>
               </td>
-              <td class="mono num text-right font-semibold">
+              <td class="mono num text-center font-semibold">
                 {{ formatMontant(commande.total) }}
               </td>
               <td class="mono text-[12.5px] text-muted">

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 const { user, editing, configured, save } = useSessionUser()
 
-const prenom = ref('')
 const nom = ref('')
 const saving = ref(false)
 const erreur = ref<string | null>(null)
@@ -15,22 +14,21 @@ watch(
   visible,
   (v) => {
     if (v) {
-      prenom.value = user.value.utilisateurPrenom ?? ''
-      nom.value = user.value.utilisateurNom ?? ''
+      nom.value = user.value.nomEntreprise ?? ''
       erreur.value = null
     }
   },
   { immediate: true },
 )
 
-const peutValider = computed(() => prenom.value.trim() !== '' && nom.value.trim() !== '')
+const peutValider = computed(() => nom.value.trim() !== '')
 
 async function valider() {
   if (!peutValider.value || saving.value) return
   saving.value = true
   erreur.value = null
   try {
-    await save(prenom.value.trim(), nom.value.trim())
+    await save(nom.value.trim())
   } catch (e: unknown) {
     erreur.value = e instanceof Error ? e.message : 'Enregistrement impossible'
   } finally {
@@ -54,20 +52,23 @@ function fermer() {
         >
           <div class="border-b border-line px-6 py-4">
             <h2 class="text-[18px] font-semibold leading-none text-ink">
-              {{ configured ? 'Modifier mon profil' : 'Bienvenue sur AME' }}
+              {{ configured ? 'Modifier mon entreprise' : 'Bienvenue sur AME' }}
             </h2>
             <p class="mt-1.5 text-[12.5px] text-muted">
               {{
                 configured
-                  ? 'Mettez à jour votre identité.'
-                  : 'Renseignez votre identité pour commencer.'
+                  ? 'Mettez à jour le nom de votre entreprise.'
+                  : 'Renseignez le nom de votre entreprise pour commencer.'
               }}
             </p>
           </div>
 
           <div class="space-y-4 p-6">
-            <AppInput v-model="prenom" label="Prénom" placeholder="Votre prénom" />
-            <AppInput v-model="nom" label="Nom" placeholder="Votre nom" />
+            <AppInput
+              v-model="nom"
+              label="Nom de votre entreprise"
+              placeholder="Quincaillerie du Plateau"
+            />
             <p v-if="erreur" class="text-[12px] text-rust-dark">{{ erreur }}</p>
           </div>
 

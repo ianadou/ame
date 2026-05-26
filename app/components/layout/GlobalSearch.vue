@@ -42,10 +42,10 @@ const run = useDebounceFn(async () => {
       $fetch<{
         data: { id: string; reference: string; nom: string; categorieNom: string | null }[]
       }>(`/api/articles?search=${encodeURIComponent(q)}&limit=6`),
-      $fetch<{ id: string; nom: string; contact: string | null }[]>(
+      $fetch<{ id: string; nom: string; telephone: string | null }[]>(
         `/api/fournisseurs?search=${encodeURIComponent(q)}`,
       ),
-      $fetch<{ id: string; nom: string; ville: string | null; contact: string | null }[]>(
+      $fetch<{ id: string; nom: string; ville: string | null; telephone: string | null }[]>(
         `/api/clients?search=${encodeURIComponent(q)}`,
       ),
     ])
@@ -54,7 +54,7 @@ const run = useDebounceFn(async () => {
       out.push({
         type: 'article',
         id: a.id,
-        titre: `${a.reference} — ${a.nom}`,
+        titre: `${a.reference} · ${a.nom}`,
         sous: a.categorieNom ?? 'Sans catégorie',
         to: `/stock/${a.id}`,
       })
@@ -63,7 +63,7 @@ const run = useDebounceFn(async () => {
         type: 'fournisseur',
         id: f.id,
         titre: f.nom,
-        sous: f.contact ?? '—',
+        sous: f.telephone ?? '',
         to: `/fournisseurs/${f.id}`,
       })
     for (const c of (clis ?? []).slice(0, 5))
@@ -71,7 +71,7 @@ const run = useDebounceFn(async () => {
         type: 'client',
         id: c.id,
         titre: c.nom,
-        sous: c.ville ?? c.contact ?? '—',
+        sous: c.ville ?? c.telephone ?? '',
         to: `/clients/${c.id}`,
       })
     results.value = out

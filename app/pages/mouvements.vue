@@ -28,11 +28,25 @@ const dateDebut = ref('')
 const dateFin = ref('')
 const currentPage = ref(1)
 const showEntreeModal = ref(false)
+const selectedMvtId = ref<string | null>(null)
 
 const typeOptions = [
-  { value: 'entree', label: 'Entrées' },
-  { value: 'sortie', label: 'Sorties' },
+  { value: 'entree', label: 'Approvisionnements' },
+  { value: 'sortie', label: 'Ventes' },
+  { value: 'ajustement_positif', label: 'Ajustements +' },
+  { value: 'ajustement_negatif', label: 'Ajustements −' },
 ]
+
+function mvtMeta(type: string): { label: string; variant: 'success' | 'danger' | 'neutral' | 'info' } {
+  if (type === 'entree') return { label: 'Approvisionnement', variant: 'success' }
+  if (type === 'sortie') return { label: 'Vente', variant: 'neutral' }
+  if (type === 'ajustement_positif') return { label: 'Ajustement +', variant: 'info' }
+  if (type === 'ajustement_negatif') return { label: 'Ajustement −', variant: 'info' }
+  return { label: type, variant: 'neutral' }
+}
+function mvtSigne(type: string) {
+  return type === 'sortie' || type === 'ajustement_negatif' ? '−' : '+'
+}
 
 const queryParams = computed(() => ({
   type: typeFilter.value || undefined,
@@ -87,7 +101,7 @@ function formatDate(iso: string) {
         </AppButton>
         <AppButton variant="secondary" @click="navigateTo('/sorties/nouveau')">
           <Minus class="h-4 w-4" />
-          Bon de sortie
+          Bon de vente
         </AppButton>
       </div>
     </div>
@@ -101,39 +115,45 @@ function formatDate(iso: string) {
               <th class="w-[120px]">Date</th>
               <th class="w-[100px]">Type</th>
               <th>Article</th>
-              <th class="text-right">Qté</th>
+              <th class="text-center">Qté</th>
               <th>Fournisseur / Client</th>
               <th>Bon</th>
               <th>Motif</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="mvt in mouvements" :key="mvt.id" class="row-hover">
+            <tr
+              v-for="mvt in mouvements"
+              :key="mvt.id"
+              class="row-hover cursor-pointer"
+              @click="selectedMvtId = mvt.id"
+            >
               <td class="mono text-[12px] text-ink-3">{{ formatDate(mvt.createdAt) }}</td>
               <td>
-                <AppBadge :variant="mvt.type === 'entree' ? 'success' : 'neutral'">
-                  {{ mvt.type === 'entree' ? 'Entrée' : 'Sortie' }}
+                <AppBadge :variant="mvtMeta(mvt.type).variant">
+                  {{ mvtMeta(mvt.type).label }}
                 </AppBadge>
               </td>
               <td>
                 <span class="mono font-medium text-ink-2">{{ mvt.articleReference }}</span>
-                — {{ mvt.articleNom }}
+                · {{ mvt.articleNom }}
               </td>
-              <td class="mono num text-right text-[14px] font-semibold">
-                {{ mvt.type === 'entree' ? '+' : '−' }}{{ mvt.quantite }}
+              <td class="mono num text-center text-[14px] font-semibold">
+                {{ mvtSigne(mvt.type) }}{{ mvt.quantite }}
               </td>
-              <td class="text-ink-2">{{ mvt.fournisseurNom || mvt.clientNom || '—' }}</td>
+              <td class="text-ink-2">{{ mvt.fournisseurNom || mvt.clientNom || '' }}</td>
               <td class="mono text-[12px] text-muted">
                 <NuxtLink
                   v-if="mvt.sortieId"
                   :to="`/sorties/${mvt.sortieId}`"
                   class="hover:text-ink"
+                  @click.stop
                 >
                   {{ mvt.sortieReference }}
                 </NuxtLink>
-                <span v-else>{{ mvt.bonLivraison || '—' }}</span>
+                <span v-else>{{ mvt.bonLivraison || '' }}</span>
               </td>
-              <td class="text-[12.5px] text-muted">{{ mvt.motif || '—' }}</td>
+              <td class="text-[12.5px] text-muted">{{ mvt.motif || '' }}</td>
             </tr>
           </tbody>
         </table>
@@ -175,7 +195,7 @@ function formatDate(iso: string) {
     </AppCard>
 
     <!-- Mouvement modals -->
-    <AppModal v-model:open="showEntreeModal" title="Nouvelle entrée de stock">
+    <AppModal v-model:open="showEntreeModal" title="Nouvelle approvisionnement">
       <MouvementForm @submit="handleMouvement">
         <template #actions>
           <AppButton variant="secondary" @click="showEntreeModal = false">Annuler</AppButton>
@@ -183,5 +203,7 @@ function formatDate(iso: string) {
         </template>
       </MouvementForm>
     </AppModal>
+
+    <MouvementDetailModal :id="selectedMvtId" @close="selectedMvtId = null" />
   </div>
 </template>

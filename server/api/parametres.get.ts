@@ -5,7 +5,8 @@ import { parametres } from '../db/schema'
 export default defineEventHandler(async () => {
   const [row] = await db.select().from(parametres).where(eq(parametres.id, 'app'))
   return {
-    utilisateurPrenom: row?.utilisateurPrenom ?? null,
-    utilisateurNom: row?.utilisateurNom ?? null,
+    nomEntreprise: row?.nomEntreprise ?? null,
+    regimeTva: row?.regimeTva ?? 'non_assujetti',
+    tauxTva: row?.tauxTva ?? 18,
   }
 })

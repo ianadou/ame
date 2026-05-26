@@ -32,6 +32,7 @@ interface CommandeDetail {
   dateCommande: string | null
   dateLivraisonPrevue: string | null
   notes: string | null
+  tauxTvaApplique: number | null
   createdAt: string
   lignes: LigneCommande[]
   total: number
@@ -108,7 +109,7 @@ async function handleReception() {
     showReception.value = false
     await refresh()
     notifications.success(
-      `Réception enregistrée — ${commande.value?.reference ?? ''}`,
+      `Réception enregistrée · ${commande.value?.reference ?? ''}`,
       'Stock mis à jour, entrées créées.',
     )
   } catch (e: unknown) {
@@ -145,7 +146,7 @@ async function handleDelete() {
 }
 
 function formatDate(iso: string | null) {
-  if (!iso) return '—'
+  if (!iso) return ''
   return new Intl.DateTimeFormat('fr-FR', {
     day: '2-digit',
     month: '2-digit',
@@ -154,8 +155,18 @@ function formatDate(iso: string | null) {
 }
 
 function formatMontant(montant: number) {
-  return `${montant.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} FCFA`
+  return `${Math.round(montant).toLocaleString('fr-FR')} FCFA`
 }
+
+// Détail TVA si la commande a été créée alors que le régime était
+// assujetti : Total HT (= commande.total) / TVA (taux × HT) / Total TTC.
+const tva = computed(() => {
+  if (!commande.value || commande.value.tauxTvaApplique == null) return null
+  const taux = commande.value.tauxTvaApplique
+  const ht = commande.value.total
+  const montantTva = ht * (taux / 100)
+  return { taux, ht, montantTva, ttc: ht + montantTva }
+})
 </script>
 
 <template>
@@ -172,7 +183,7 @@ function formatMontant(montant: number) {
             {{ statutMeta[commande.statut]?.label ?? commande.statut }}
           </AppBadge>
         </div>
-        <p class="text-sm text-muted">{{ commande.fournisseurNom ?? '—' }}</p>
+        <p class="text-sm text-muted">{{ commande.fournisseurNom ?? '' }}</p>
       </div>
       <div class="flex gap-2">
         <AppButton
@@ -239,10 +250,30 @@ function formatMontant(montant: number) {
         <p class="text-lg font-semibold text-ink">{{ commande.lignes.length }}</p>
       </AppCard>
       <AppCard>
-        <p class="text-sm text-muted">Total estimé</p>
-        <p class="text-lg font-semibold text-ink">{{ formatMontant(commande.total) }}</p>
+        <p class="text-sm text-muted">{{ tva ? 'Total TTC estimé' : 'Total estimé' }}</p>
+        <p class="text-lg font-semibold text-ink">
+          {{ formatMontant(tva ? tva.ttc : commande.total) }}
+        </p>
       </AppCard>
     </div>
+
+    <AppCard v-if="tva">
+      <h3 class="mb-3 text-sm font-semibold text-ink">Détail TVA</h3>
+      <dl class="space-y-2 text-sm">
+        <div class="flex justify-between">
+          <dt class="text-muted">Total HT</dt>
+          <dd class="mono num font-medium text-ink">{{ formatMontant(tva.ht) }}</dd>
+        </div>
+        <div class="flex justify-between">
+          <dt class="text-muted">TVA ({{ tva.taux }} %)</dt>
+          <dd class="mono num font-medium text-ink">{{ formatMontant(tva.montantTva) }}</dd>
+        </div>
+        <div class="flex justify-between border-t border-line pt-2">
+          <dt class="font-medium text-ink">Total TTC</dt>
+          <dd class="mono num font-semibold text-ink">{{ formatMontant(tva.ttc) }}</dd>
+        </div>
+      </dl>
+    </AppCard>
 
     <!-- Notes -->
     <AppCard v-if="commande.notes">
@@ -263,31 +294,31 @@ function formatMontant(montant: number) {
             <tr>
               <th>Référence</th>
               <th>Article</th>
-              <th class="text-right">Commandé</th>
-              <th class="text-right">Reçu</th>
-              <th class="text-right">Reste</th>
-              <th class="text-right">Prix unitaire</th>
-              <th class="text-right">Sous-total</th>
+              <th class="text-center">Commandé</th>
+              <th class="text-center">Reçu</th>
+              <th class="text-center">Reste</th>
+              <th class="text-center">Prix unitaire</th>
+              <th class="text-center">Sous-total</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="ligne in commande.lignes" :key="ligne.id" class="border-b border-line/60">
               <td class="px-4 py-3 text-sm font-medium text-ink">{{ ligne.reference }}</td>
               <td class="px-4 py-3 text-sm text-ink-2">{{ ligne.nom }}</td>
-              <td class="px-4 py-3 text-right text-sm text-ink">
+              <td class="px-4 py-3 text-center text-sm text-ink">
                 {{ ligne.quantite }} {{ ligne.unite }}
               </td>
-              <td class="px-4 py-3 text-right text-sm text-ink-2">{{ ligne.quantiteRecue }}</td>
+              <td class="px-4 py-3 text-center text-sm text-ink-2">{{ ligne.quantiteRecue }}</td>
               <td
-                class="px-4 py-3 text-right text-sm font-medium"
+                class="px-4 py-3 text-center text-sm font-medium"
                 :class="reste(ligne) > 0 ? 'text-rust-dark' : 'text-ink-3'"
               >
                 {{ reste(ligne) }}
               </td>
-              <td class="px-4 py-3 text-right text-sm text-muted">
-                {{ ligne.prixUnitaire ? formatMontant(ligne.prixUnitaire) : '—' }}
+              <td class="px-4 py-3 text-center text-sm text-muted">
+                {{ ligne.prixUnitaire ? formatMontant(ligne.prixUnitaire) : '' }}
               </td>
-              <td class="px-4 py-3 text-right text-sm font-medium text-ink">
+              <td class="px-4 py-3 text-center text-sm font-medium text-ink">
                 {{ formatMontant(ligne.quantite * (ligne.prixUnitaire ?? 0)) }}
               </td>
             </tr>
@@ -309,16 +340,16 @@ function formatMontant(montant: number) {
             <thead>
               <tr>
                 <th>Article</th>
-                <th class="text-right">Reste</th>
-                <th class="text-right">Quantité reçue</th>
+                <th class="text-center">Reste</th>
+                <th class="text-center">Quantité reçue</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="ligne in commande.lignes" :key="ligne.id" class="border-b border-line/60">
                 <td class="px-4 py-2 text-sm text-ink-2">
-                  {{ ligne.reference }} — {{ ligne.nom }}
+                  {{ ligne.reference }} · {{ ligne.nom }}
                 </td>
-                <td class="px-4 py-2 text-right text-sm text-muted">{{ reste(ligne) }}</td>
+                <td class="px-4 py-2 text-center text-sm text-muted">{{ reste(ligne) }}</td>
                 <td class="px-4 py-2">
                   <AppInput
                     v-model="recu[ligne.id]"

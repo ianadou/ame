@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm'
 import { db } from '../../db'
-import { commandes, lignesCommande, fournisseurs } from '../../db/schema'
+import { commandes, lignesCommande, fournisseurs, parametres } from '../../db/schema'
 import { createCommandeSchema } from '../../utils/validation'
 import { generateId, generateCommandeReference } from '../../utils/helpers'
 
@@ -15,6 +15,11 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, message: 'Fournisseur introuvable' })
   }
 
+  // Fige le taux TVA selon le régime actuel (cf. /sorties POST).
+  const [param] = await db.select().from(parametres).where(eq(parametres.id, 'app'))
+  const tauxTvaApplique =
+    param?.regimeTva === 'assujetti' ? (param?.tauxTva ?? 18) : null
+
   const commandeId = generateId()
   const commande = {
     id: commandeId,
@@ -24,6 +29,7 @@ export default defineEventHandler(async (event) => {
     dateCommande: body.dateCommande ?? null,
     dateLivraisonPrevue: body.dateLivraisonPrevue ?? null,
     notes: body.notes ?? null,
+    tauxTvaApplique,
   }
 
   const lignes = body.lignes.map((ligne) => ({

@@ -68,7 +68,7 @@ function heure(ts: number) {
             :key="n.id"
             class="flex items-start gap-3 border-b border-line/60 px-4 py-3 last:border-0 hover:bg-paper-2"
           >
-            <span class="mt-1.5 h-2 w-2 shrink-0 rounded-full" :class="dot[n.variant]" />
+            <span class="mt-1.5 h-2 w-2 shrink-0 rounded-[2px]" :class="dot[n.variant]" />
             <div class="min-w-0 flex-1">
               <div class="text-[12.5px] font-medium leading-snug text-ink">{{ n.title }}</div>
               <div v-if="n.message" class="mt-0.5 text-[11.5px] leading-snug text-muted">
