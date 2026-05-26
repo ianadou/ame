@@ -54,7 +54,7 @@ const run = useDebounceFn(async () => {
       out.push({
         type: 'article',
         id: a.id,
-        titre: `${a.reference} — ${a.nom}`,
+        titre: `${a.reference} · ${a.nom}`,
         sous: a.categorieNom ?? 'Sans catégorie',
         to: `/stock/${a.id}`,
       })
@@ -63,7 +63,7 @@ const run = useDebounceFn(async () => {
         type: 'fournisseur',
         id: f.id,
         titre: f.nom,
-        sous: f.telephone ?? '—',
+        sous: f.telephone ?? '',
         to: `/fournisseurs/${f.id}`,
       })
     for (const c of (clis ?? []).slice(0, 5))
@@ -71,7 +71,7 @@ const run = useDebounceFn(async () => {
         type: 'client',
         id: c.id,
         titre: c.nom,
-        sous: c.ville ?? c.telephone ?? '—',
+        sous: c.ville ?? c.telephone ?? '',
         to: `/clients/${c.id}`,
       })
     results.value = out

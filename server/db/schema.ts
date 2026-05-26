@@ -52,6 +52,9 @@ export const fournisseurs = sqliteTable('fournisseurs', {
   telephone: text('telephone'),
   email: text('email'),
   adresse: text('adresse'),
+  ville: text('ville'),
+  boitePostale: text('boite_postale'),
+  ncc: text('ncc'),
   notes: text('notes'),
   createdAt: text('created_at')
     .default(sql`(datetime('now'))`)
@@ -66,6 +69,8 @@ export const clients = sqliteTable('clients', {
   email: text('email'),
   adresse: text('adresse'),
   ville: text('ville'),
+  boitePostale: text('boite_postale'),
+  ncc: text('ncc'),
   notes: text('notes'),
   createdAt: text('created_at')
     .default(sql`(datetime('now'))`)
@@ -90,6 +95,7 @@ export const sorties = sqliteTable(
     statut: text('statut').notNull().default('actif'),
     annuleLe: text('annule_le'),
     motifAnnulation: text('motif_annulation'),
+    tauxTvaApplique: real('taux_tva_applique'),
     createdAt: text('created_at')
       .default(sql`(datetime('now'))`)
       .notNull(),
@@ -101,6 +107,10 @@ export const sorties = sqliteTable(
     check(
       'sorties_annulation_coherente',
       sql`(${t.statut} = 'actif' AND ${t.annuleLe} IS NULL AND ${t.motifAnnulation} IS NULL) OR (${t.statut} = 'annule' AND ${t.annuleLe} IS NOT NULL AND ${t.motifAnnulation} IS NOT NULL)`,
+    ),
+    check(
+      'sorties_taux_tva_plage',
+      sql`${t.tauxTvaApplique} IS NULL OR (${t.tauxTvaApplique} >= 0 AND ${t.tauxTvaApplique} <= 30)`,
     ),
   ],
 )
@@ -154,31 +164,53 @@ export const mouvements = sqliteTable(
   ],
 )
 
-export const commandes = sqliteTable('commandes', {
-  id: text('id').primaryKey(),
-  reference: text('reference').notNull().unique(),
-  fournisseurId: text('fournisseur_id')
-    .references(() => fournisseurs.id, { onDelete: 'restrict' })
-    .notNull(),
-  statut: text('statut').notNull().default('brouillon'),
-  dateCommande: text('date_commande'),
-  dateLivraisonPrevue: text('date_livraison_prevue'),
-  notes: text('notes'),
-  createdAt: text('created_at')
-    .default(sql`(datetime('now'))`)
-    .notNull(),
-})
+export const commandes = sqliteTable(
+  'commandes',
+  {
+    id: text('id').primaryKey(),
+    reference: text('reference').notNull().unique(),
+    fournisseurId: text('fournisseur_id')
+      .references(() => fournisseurs.id, { onDelete: 'restrict' })
+      .notNull(),
+    statut: text('statut').notNull().default('brouillon'),
+    dateCommande: text('date_commande'),
+    dateLivraisonPrevue: text('date_livraison_prevue'),
+    notes: text('notes'),
+    tauxTvaApplique: real('taux_tva_applique'),
+    createdAt: text('created_at')
+      .default(sql`(datetime('now'))`)
+      .notNull(),
+  },
+  (t) => [
+    check(
+      'commandes_taux_tva_plage',
+      sql`${t.tauxTvaApplique} IS NULL OR (${t.tauxTvaApplique} >= 0 AND ${t.tauxTvaApplique} <= 30)`,
+    ),
+  ],
+)
 
 // Paramètres applicatifs mono-ligne (id fixe 'app') : nom de l'entreprise
 // affiché dans le footer et la sidebar (Phase 1 mono-poste, cf. archi
-// déploiement). Remplace l'ancien couple prénom/nom.
-export const parametres = sqliteTable('parametres', {
-  id: text('id').primaryKey(),
-  nomEntreprise: text('nom_entreprise'),
-  updatedAt: text('updated_at')
-    .default(sql`(datetime('now'))`)
-    .notNull(),
-})
+// déploiement). Régime TVA = configuration fiscale par défaut appliquée
+// aux nouveaux bons de sortie et commandes ; le taux est figé sur chaque
+// bon à sa création pour que les anciens documents restent cohérents si
+// le régime change ensuite.
+export const parametres = sqliteTable(
+  'parametres',
+  {
+    id: text('id').primaryKey(),
+    nomEntreprise: text('nom_entreprise'),
+    regimeTva: text('regime_tva').notNull().default('non_assujetti'),
+    tauxTva: real('taux_tva').notNull().default(18),
+    updatedAt: text('updated_at')
+      .default(sql`(datetime('now'))`)
+      .notNull(),
+  },
+  (t) => [
+    check('parametres_regime_tva_valide', sql`${t.regimeTva} IN ('assujetti','non_assujetti')`),
+    check('parametres_taux_tva_plage', sql`${t.tauxTva} >= 0 AND ${t.tauxTva} <= 30`),
+  ],
+)
 
 export const lignesCommande = sqliteTable(
   'lignes_commande',

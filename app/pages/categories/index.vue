@@ -92,7 +92,7 @@ await fetchCategories()
               <td class="font-medium" :class="{ 'pl-8 font-normal text-ink-3': row.isChild }">
                 <span v-if="row.isChild" class="text-muted">↳ </span>{{ row.cat.nom }}
               </td>
-              <td class="text-muted">{{ row.cat.description ?? '—' }}</td>
+              <td class="text-muted">{{ row.cat.description ?? '' }}</td>
               <td>
                 <div class="flex justify-end gap-1">
                   <button

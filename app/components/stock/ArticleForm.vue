@@ -32,6 +32,11 @@ const form = reactive<ArticleFormData>({
 const { categories, fetchCategories, createCategorie } = useCategories()
 await fetchCategories()
 
+const { assujettiTva } = useSessionUser()
+const prixLabel = computed(() =>
+  assujettiTva.value ? 'Prix unitaire HT (FCFA)' : 'Prix unitaire (FCFA)',
+)
+
 const categoryOptions = computed(() => {
   const opts: { value: string; label: string }[] = []
   for (const cat of categories.value) {
@@ -111,7 +116,7 @@ function handleSubmit() {
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <AppInput
         v-model="form.prixUnitaire"
-        label="Prix unitaire HT (FCFA)"
+        :label="prixLabel"
         type="number"
         placeholder="0"
       />

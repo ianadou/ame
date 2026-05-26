@@ -9,7 +9,10 @@ import {
   AlertTriangle,
   Users,
   ArrowUpRight as ArrowLink,
+  Receipt,
+  Pencil,
 } from 'lucide-vue-next'
+import type { RegimeTva } from '~/composables/useSessionUser'
 
 interface Tendance {
   nom: string
@@ -103,6 +106,36 @@ const valEvolution = computed(() =>
     return e == null ? null : e * 4200 + (s ?? 0) * 5800
   }),
 )
+
+// Régime fiscal — affichage + édition rapide depuis le dashboard.
+const { user, saveRegimeTva } = useSessionUser()
+const notifications = useNotifications()
+const showTvaModal = ref(false)
+const tvaSubmitting = ref(false)
+const regimeLabel = computed(() =>
+  user.value.regimeTva === 'assujetti'
+    ? `Assujetti TVA ${user.value.tauxTva} %`
+    : 'Non assujetti à la TVA',
+)
+async function handleTvaSubmit(regime: RegimeTva, taux: number) {
+  tvaSubmitting.value = true
+  try {
+    await saveRegimeTva(regime, taux)
+    notifications.success(
+      'Régime fiscal enregistré',
+      regime === 'assujetti' ? `Assujetti TVA ${taux} %` : 'Non assujetti',
+    )
+    showTvaModal.value = false
+  } catch (e: unknown) {
+    const msg =
+      e && typeof e === 'object' && 'data' in e
+        ? ((e as { data?: { message?: string } }).data?.message ?? 'Enregistrement impossible')
+        : 'Enregistrement impossible'
+    notifications.danger('Enregistrement impossible', msg)
+  } finally {
+    tvaSubmitting.value = false
+  }
+}
 </script>
 
 <template>
@@ -113,14 +146,25 @@ const valEvolution = computed(() =>
         <Plus class="h-4 w-4" />Nouvel article
       </AppButton>
       <AppButton variant="secondary" @click="navigateTo('/mouvements')">
-        <ArrowDownLeft class="h-4 w-4" />Entrée stock
+        <ArrowDownLeft class="h-4 w-4" />Approvisionnement
       </AppButton>
-      <AppButton variant="secondary" @click="navigateTo('/mouvements')">
-        <ArrowUpRight class="h-4 w-4" />Sortie stock
+      <AppButton variant="secondary" @click="navigateTo('/sorties/nouveau')">
+        <ArrowUpRight class="h-4 w-4" />Nouvelle vente
       </AppButton>
       <AppButton variant="secondary" @click="navigateTo('/commandes')">
         <FilePlus class="h-4 w-4" />Bon de commande
       </AppButton>
+
+      <button
+        class="ml-auto flex items-center gap-2 rounded-md border border-line bg-white px-3 py-1.5 text-[12.5px] text-ink-2 transition-colors hover:bg-paper-2"
+        title="Modifier le régime fiscal"
+        @click="showTvaModal = true"
+      >
+        <Receipt class="h-3.5 w-3.5 text-ink-3" />
+        <span class="text-muted">Régime fiscal :</span>
+        <span class="font-medium text-ink">{{ regimeLabel }}</span>
+        <Pencil class="h-3 w-3 text-ink-4" />
+      </button>
     </div>
 
     <!-- Global KPI -->
@@ -186,7 +230,7 @@ const valEvolution = computed(() =>
         spark-color="#0F172A"
       />
       <KpiCard
-        label="Entrées"
+        label="Approvisionnements"
         :value="fmt(data.kpi.entrees)"
         :delta="data.delta.entrees"
         :delta-sub="data.deltaSub"
@@ -194,7 +238,7 @@ const valEvolution = computed(() =>
         spark-color="#10B981"
       />
       <KpiCard
-        label="Sorties"
+        label="Ventes"
         :value="fmt(data.kpi.sorties)"
         :delta="data.delta.sorties"
         :delta-sub="data.deltaSub"
@@ -202,7 +246,7 @@ const valEvolution = computed(() =>
         spark-color="#475569"
       />
       <KpiCard
-        label="Valeur entrante"
+        label="Valeur achetée"
         :value="fmt(data.kpi.valEntree / 1000)"
         unit="K FCFA"
         :delta="data.delta.valEntree"
@@ -211,7 +255,7 @@ const valEvolution = computed(() =>
         spark-color="#10B981"
       />
       <KpiCard
-        label="Valeur sortante"
+        label="Valeur vendue"
         :value="fmt(data.kpi.valSortie / 1000)"
         unit="K FCFA"
         :delta="data.delta.valSortie"
@@ -221,18 +265,18 @@ const valEvolution = computed(() =>
       />
     </div>
 
-    <!-- Entrées vs sorties (pleine largeur) -->
+    <!-- Approvisionnements vs ventes (pleine largeur) -->
     <PanelCard
       :kicker="'Transactions / ' + data.label.toLowerCase()"
-      title="Entrées vs sorties"
+      title="Approvisionnements vs ventes"
     >
       <template #action>
         <div class="flex items-center gap-4 text-[11.5px]">
           <span class="flex items-center gap-1.5"
-            ><span class="h-2.5 w-2.5 rounded-[2px] bg-forest" />Entrées</span
+            ><span class="h-2.5 w-2.5 rounded-[2px] bg-forest" />Approvisionnements</span
           >
           <span class="flex items-center gap-1.5"
-            ><span class="h-2.5 w-2.5 rounded-[2px] bg-slate-600" />Sorties</span
+            ><span class="h-2.5 w-2.5 rounded-[2px] bg-slate-600" />Ventes</span
           >
         </div>
       </template>
@@ -289,7 +333,7 @@ const valEvolution = computed(() =>
             >
               <td class="w-[88px] py-2.5 pl-5 pr-2">
                 <AppBadge :variant="m.type === 'entree' ? 'success' : 'neutral'">
-                  {{ m.type === 'entree' ? 'Entrée' : 'Sortie' }}
+                  {{ m.type === 'entree' ? 'Approvisionnement' : 'Vente' }}
                 </AppBadge>
               </td>
               <td class="mono w-[80px] px-2 py-2.5 text-[12px] text-ink-2">
@@ -297,7 +341,7 @@ const valEvolution = computed(() =>
               </td>
               <td class="truncate px-2 py-2.5 text-[13px] text-ink">{{ m.articleNom }}</td>
               <td class="w-[140px] truncate px-2 py-2.5 text-[12.5px] text-muted">
-                {{ m.fournisseurNom || m.clientNom || '—' }}
+                {{ m.fournisseurNom || m.clientNom || '' }}
               </td>
               <td class="mono num w-[58px] px-2 py-2.5 text-right text-[13.5px] font-semibold">
                 {{ m.type === 'entree' ? '+' : '−' }}{{ m.quantite }}
@@ -329,7 +373,7 @@ const valEvolution = computed(() =>
             <div class="mono w-[68px] shrink-0 text-[11px] text-ink-3">{{ a.reference }}</div>
             <div class="min-w-0 flex-1">
               <div class="truncate text-[13px] font-medium text-ink">{{ a.nom }}</div>
-              <div class="mt-0.5 text-[11px] text-muted">{{ a.categorieNom ?? '—' }}</div>
+              <div class="mt-0.5 text-[11px] text-muted">{{ a.categorieNom ?? '' }}</div>
             </div>
             <div class="w-[110px]">
               <div class="flex items-baseline justify-end gap-1">
@@ -354,10 +398,20 @@ const valEvolution = computed(() =>
             v-if="(alertes?.length ?? 0) === 0"
             class="px-5 py-10 text-center text-[13px] text-muted"
           >
-            Aucune alerte — tout est au-dessus du seuil.
+            Aucune alerte, tout est au-dessus du seuil.
           </div>
         </div>
       </PanelCard>
     </div>
+
+    <AppModal v-model:open="showTvaModal" title="Régime fiscal">
+      <RegimeTvaForm
+        :regime="user.regimeTva"
+        :taux="user.tauxTva"
+        :submitting="tvaSubmitting"
+        @submit="handleTvaSubmit"
+        @cancel="showTvaModal = false"
+      />
+    </AppModal>
   </div>
 </template>

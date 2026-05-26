@@ -135,11 +135,11 @@ onMounted(async () => {
           <thead>
             <tr>
               <th class="w-[120px]">Réf.</th>
-              <th>Nom</th>
-              <th>Catégorie</th>
-              <th class="text-right">Stock</th>
-              <th>Unité</th>
-              <th>Statut</th>
+              <th class="w-[420px]">Nom</th>
+              <th class="w-[220px] !pl-8">Catégorie</th>
+              <th class="w-[100px] !text-right">Stock</th>
+              <th class="w-[120px] !pl-12">Unité</th>
+              <th class="w-[140px] !pl-6">Statut</th>
             </tr>
           </thead>
           <tbody v-if="!loading && articles.length > 0">
@@ -158,8 +158,8 @@ onMounted(async () => {
                   </AppBadge>
                 </div>
               </td>
-              <td class="font-medium">{{ article.nom }}</td>
-              <td class="text-muted">{{ article.categorieNom ?? '—' }}</td>
+              <td class="truncate font-medium">{{ article.nom }}</td>
+              <td class="!pl-8 text-muted">{{ article.categorieNom ?? '' }}</td>
               <td
                 class="mono num text-right text-[14px] font-semibold"
                 :class="{
@@ -171,8 +171,8 @@ onMounted(async () => {
               >
                 {{ article.stockActuel }}
               </td>
-              <td class="text-muted">{{ article.unite }}</td>
-              <td>
+              <td class="!pl-12 text-muted">{{ article.unite }}</td>
+              <td class="!pl-6">
                 <AppBadge
                   v-if="article.statut === 'actif'"
                   :variant="stockStatus(article)"
@@ -180,7 +180,7 @@ onMounted(async () => {
                 >
                   {{ stockLabel(article) }}
                 </AppBadge>
-                <span v-else class="text-[12px] text-muted">—</span>
+                <AppBadge v-else variant="neutral">Archivé</AppBadge>
               </td>
             </tr>
           </tbody>

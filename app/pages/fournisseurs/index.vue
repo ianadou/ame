@@ -59,6 +59,9 @@ await loadFournisseurs()
               <th>Nom</th>
               <th>Téléphone</th>
               <th>Email</th>
+              <th>Adresse</th>
+              <th>Ville</th>
+              <th>NCC</th>
             </tr>
           </thead>
           <tbody v-if="!loading && fournisseurs.length > 0">
@@ -69,14 +72,17 @@ await loadFournisseurs()
               @click="navigateTo(`/fournisseurs/${fournisseur.id}`)"
             >
               <td class="font-medium">{{ fournisseur.nom }}</td>
-              <td class="mono text-[12.5px] text-muted">{{ fournisseur.telephone ?? '—' }}</td>
-              <td class="mono text-[12.5px] text-ink-3">{{ fournisseur.email ?? '—' }}</td>
+              <td class="mono text-[12.5px] text-muted">{{ fournisseur.telephone ?? '' }}</td>
+              <td class="mono text-[12.5px] text-ink-3">{{ fournisseur.email ?? '' }}</td>
+              <td class="text-muted">{{ fournisseur.adresse ?? '' }}</td>
+              <td class="text-muted">{{ fournisseur.ville ?? '' }}</td>
+              <td class="mono text-[12px] text-ink-3">{{ fournisseur.ncc ?? '' }}</td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <TableSkeleton v-if="loading" :cols="3" />
+      <TableSkeleton v-if="loading" :cols="6" />
 
       <AppEmptyState
         v-if="!loading && fournisseurs.length === 0"

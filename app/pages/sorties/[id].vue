@@ -35,6 +35,7 @@ interface SortieDetail {
   statut: 'actif' | 'annule'
   annuleLe: string | null
   motifAnnulation: string | null
+  tauxTvaApplique: number | null
   createdAt: string
   lignes: LigneSortie[]
 }
@@ -42,7 +43,7 @@ interface SortieDetail {
 const { data: sortie, refresh } = await useFetch<SortieDetail>(`/api/sorties/${sortieId}`)
 
 if (!sortie.value) {
-  throw createError({ statusCode: 404, message: 'Bon de sortie introuvable' })
+  throw createError({ statusCode: 404, message: 'Bon de vente introuvable' })
 }
 
 const paiementMeta: Record<string, { label: string; variant: 'success' | 'warning' | 'neutral' }> =
@@ -56,7 +57,7 @@ function fcfa(n: number) {
   return new Intl.NumberFormat('fr-FR').format(Math.round(n)) + ' FCFA'
 }
 function formatDate(iso: string | null) {
-  if (!iso) return '—'
+  if (!iso) return ''
   return new Intl.DateTimeFormat('fr-FR', {
     day: '2-digit',
     month: '2-digit',
@@ -64,7 +65,7 @@ function formatDate(iso: string | null) {
   }).format(new Date(iso))
 }
 function formatDateTime(iso: string | null) {
-  if (!iso) return '—'
+  if (!iso) return ''
   const d = new Date(iso.includes('T') ? iso : iso.replace(' ', 'T'))
   return new Intl.DateTimeFormat('fr-FR', {
     day: '2-digit',
@@ -76,6 +77,18 @@ function formatDateTime(iso: string | null) {
 }
 
 const annule = computed(() => sortie.value?.statut === 'annule')
+
+// Si le bon a été émis avec un taux TVA figé (régime assujetti à
+// l'époque), on affiche Total HT / TVA / Total TTC ; sinon une seule
+// ligne « Total » sans mention TVA. Le montantTotal stocké est interprété
+// comme HT côté assujetti, sinon comme net (TTC = HT, pas de TVA).
+const tva = computed(() => {
+  if (!sortie.value || sortie.value.tauxTvaApplique == null) return null
+  const taux = sortie.value.tauxTvaApplique
+  const ht = sortie.value.montantTotal
+  const montantTva = ht * (taux / 100)
+  return { taux, ht, montantTva, ttc: ht + montantTva }
+})
 
 // Modal d'annulation
 const showAnnulerModal = ref(false)
@@ -94,7 +107,7 @@ async function confirmerAnnulation() {
   try {
     const ref = sortie.value?.reference ?? 'Bon'
     await annulerSortie(sortieId, motif.value.trim())
-    notifications.success('Bon de sortie annulé', `${ref} — stock restitué`)
+    notifications.success('Vente annulée', `${ref}, stock restitué`)
     showAnnulerModal.value = false
     await refresh()
   } catch (e: unknown) {
@@ -149,8 +162,10 @@ async function confirmerAnnulation() {
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-4">
       <AppCard>
-        <p class="text-sm text-muted">Montant total</p>
-        <p class="text-lg font-semibold text-ink">{{ fcfa(sortie.montantTotal) }}</p>
+        <p class="text-sm text-muted">{{ tva ? 'Total TTC' : 'Montant total' }}</p>
+        <p class="text-lg font-semibold text-ink">
+          {{ fcfa(tva ? tva.ttc : sortie.montantTotal) }}
+        </p>
       </AppCard>
       <AppCard>
         <p class="text-sm text-muted">Payé</p>
@@ -160,9 +175,9 @@ async function confirmerAnnulation() {
         <p class="text-sm text-muted">Reste à payer</p>
         <p
           class="text-lg font-semibold"
-          :class="sortie.montantTotal - sortie.montantPaye > 0 ? 'text-rust-dark' : 'text-ink'"
+          :class="(tva ? tva.ttc : sortie.montantTotal) - sortie.montantPaye > 0 ? 'text-rust-dark' : 'text-ink'"
         >
-          {{ fcfa(sortie.montantTotal - sortie.montantPaye) }}
+          {{ fcfa((tva ? tva.ttc : sortie.montantTotal) - sortie.montantPaye) }}
         </p>
       </AppCard>
       <AppCard>
@@ -172,6 +187,24 @@ async function confirmerAnnulation() {
         </p>
       </AppCard>
     </div>
+
+    <AppCard v-if="tva">
+      <h3 class="mb-3 text-sm font-semibold text-ink">Détail TVA</h3>
+      <dl class="space-y-2 text-sm">
+        <div class="flex justify-between">
+          <dt class="text-muted">Total HT</dt>
+          <dd class="mono num font-medium text-ink">{{ fcfa(tva.ht) }}</dd>
+        </div>
+        <div class="flex justify-between">
+          <dt class="text-muted">TVA ({{ tva.taux }} %)</dt>
+          <dd class="mono num font-medium text-ink">{{ fcfa(tva.montantTva) }}</dd>
+        </div>
+        <div class="flex justify-between border-t border-line pt-2">
+          <dt class="font-medium text-ink">Total TTC</dt>
+          <dd class="mono num font-semibold text-ink">{{ fcfa(tva.ttc) }}</dd>
+        </div>
+      </dl>
+    </AppCard>
 
     <AppCard v-if="sortie.notes || sortie.clientTelephone">
       <dl class="grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -198,31 +231,31 @@ async function confirmerAnnulation() {
             <tr>
               <th>Référence</th>
               <th>Article</th>
-              <th class="text-right">Quantité</th>
-              <th class="text-right">Prix unitaire</th>
-              <th class="text-right">Sous-total</th>
-              <th class="text-right">Stock restant</th>
+              <th class="text-center">Quantité</th>
+              <th class="text-center">Prix unitaire</th>
+              <th class="text-center">Sous-total</th>
+              <th class="text-center">Stock restant</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="l in sortie.lignes" :key="l.id" class="border-b border-line/60">
               <td class="px-4 py-3 text-sm font-medium text-ink">{{ l.articleReference }}</td>
               <td class="px-4 py-3 text-sm text-ink-2">{{ l.articleNom }}</td>
-              <td class="px-4 py-3 text-right text-sm text-ink-2">
+              <td class="px-4 py-3 text-center text-sm text-ink-2">
                 {{ l.quantite }} {{ l.unite }}
               </td>
-              <td class="px-4 py-3 text-right text-sm text-muted">{{ fcfa(l.prixUnitaire) }}</td>
-              <td class="px-4 py-3 text-right text-sm font-medium text-ink">
+              <td class="px-4 py-3 text-center text-sm text-muted">{{ fcfa(l.prixUnitaire) }}</td>
+              <td class="px-4 py-3 text-center text-sm font-medium text-ink">
                 {{ fcfa(l.prixUnitaire * l.quantite) }}
               </td>
-              <td class="px-4 py-3 text-right text-sm text-muted">{{ l.stockApres }}</td>
+              <td class="px-4 py-3 text-center text-sm text-muted">{{ l.stockApres }}</td>
             </tr>
           </tbody>
         </table>
       </AppCard>
     </div>
 
-    <AppModal v-model:open="showAnnulerModal" title="Annuler ce bon de sortie">
+    <AppModal v-model:open="showAnnulerModal" title="Annuler ce bon de vente">
       <div class="space-y-3">
         <p class="text-sm text-muted">
           L'annulation va restituer le stock article par article et enregistrer une transaction

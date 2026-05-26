@@ -31,7 +31,7 @@ const articleOptions = computed(() => {
   if (!articlesResult.value?.data) return []
   return articlesResult.value.data.map((a: { id: string; reference: string; nom: string }) => ({
     value: a.id,
-    label: `${a.reference} — ${a.nom}`,
+    label: `${a.reference} · ${a.nom}`,
   }))
 })
 
@@ -41,6 +41,19 @@ const total = computed(() =>
     0,
   ),
 )
+
+const { user, assujettiTva } = useSessionUser()
+const tvaPreview = computed(() => {
+  if (!assujettiTva.value) return null
+  const taux = user.value.tauxTva
+  const ht = total.value
+  const montantTva = ht * (taux / 100)
+  return { taux, ht, montantTva, ttc: ht + montantTva }
+})
+
+function fmt(n: number) {
+  return Math.round(n).toLocaleString('fr-FR')
+}
 
 function addLigne() {
   lignes.push({ articleId: '', quantite: '', prixUnitaire: '' })
@@ -111,7 +124,11 @@ function handleSubmit() {
             <AppInput v-model="ligne.quantite" type="number" placeholder="Qté" />
           </div>
           <div class="col-span-3">
-            <AppInput v-model="ligne.prixUnitaire" type="number" placeholder="Prix FCFA" />
+            <AppInput
+              v-model="ligne.prixUnitaire"
+              type="number"
+              :placeholder="assujettiTva ? 'Prix HT FCFA' : 'Prix FCFA'"
+            />
           </div>
           <div class="col-span-1 flex justify-center pb-1">
             <button
@@ -125,9 +142,19 @@ function handleSubmit() {
           </div>
         </div>
       </div>
-      <p class="mt-3 text-right text-sm font-medium text-slate-900">
-        Total estimé : {{ total.toLocaleString('fr-FR', { maximumFractionDigits: 0 }) }} FCFA
-      </p>
+      <div class="mt-3 space-y-1 text-right text-sm">
+        <p v-if="tvaPreview" class="text-muted">
+          Total HT : <span class="mono num text-ink-2">{{ fmt(tvaPreview.ht) }} FCFA</span>
+        </p>
+        <p v-if="tvaPreview" class="text-muted">
+          TVA ({{ tvaPreview.taux }} %) :
+          <span class="mono num text-ink-2">{{ fmt(tvaPreview.montantTva) }} FCFA</span>
+        </p>
+        <p class="font-medium text-slate-900">
+          {{ tvaPreview ? 'Total TTC estimé' : 'Total estimé' }} :
+          <span class="mono num">{{ fmt(tvaPreview ? tvaPreview.ttc : total) }} FCFA</span>
+        </p>
+      </div>
     </div>
 
     <div>

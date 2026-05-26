@@ -60,8 +60,8 @@ watch(
 )
 
 function mvtMeta(type: string): { label: string; variant: 'success' | 'neutral' | 'info' } {
-  if (type === 'entree') return { label: 'Entrée', variant: 'success' }
-  if (type === 'sortie') return { label: 'Sortie', variant: 'neutral' }
+  if (type === 'entree') return { label: 'Approvisionnement', variant: 'success' }
+  if (type === 'sortie') return { label: 'Vente', variant: 'neutral' }
   if (type === 'ajustement_positif') return { label: 'Ajustement +', variant: 'info' }
   if (type === 'ajustement_negatif') return { label: 'Ajustement −', variant: 'info' }
   return { label: type, variant: 'neutral' }
@@ -132,7 +132,7 @@ function formatDateTime(iso: string) {
       </div>
 
       <div v-if="detail.sortie" class="rounded-md border border-line px-3 py-2.5">
-        <p class="text-[11px] uppercase tracking-wider text-muted">Bon de sortie</p>
+        <p class="text-[11px] uppercase tracking-wider text-muted">Bon de vente</p>
         <NuxtLink
           :to="`/sorties/${detail.sortie.id}`"
           class="mt-1 inline-block text-sm font-medium text-ink hover:text-forest"

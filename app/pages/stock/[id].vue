@@ -59,6 +59,7 @@ function stockLabel(a: { stockActuel: number; seuilAlerte: number }) {
 
 const notifications = useNotifications()
 const { ajusterStock, archiverArticle, restaurerArticle } = useStock()
+const { assujettiTva } = useSessionUser()
 
 const archive = computed(() => article.value?.statut === 'archive')
 
@@ -136,7 +137,7 @@ async function confirmerAjustement() {
     const res = await ajusterStock(articleId, stockPhysique.value!, motifAjustement.value.trim())
     notifications.success(
       'Stock ajusté',
-      `${res.delta > 0 ? '+' : ''}${res.delta} ${article.value?.unite ?? ''} — nouveau stock ${res.stockApres}`,
+      `${res.delta > 0 ? '+' : ''}${res.delta} ${article.value?.unite ?? ''}, nouveau stock ${res.stockApres}`,
     )
     showAjustementModal.value = false
     await refresh()
@@ -179,7 +180,7 @@ function formatDate(iso: string) {
   }).format(new Date(iso))
 }
 function formatDateTime(iso: string | null) {
-  if (!iso) return '—'
+  if (!iso) return ''
   const d = new Date(iso.includes('T') ? iso : iso.replace(' ', 'T'))
   return new Intl.DateTimeFormat('fr-FR', {
     day: '2-digit',
@@ -194,8 +195,8 @@ function formatDateTime(iso: string | null) {
 // ajustement positif/négatif). Le sens est positif sauf pour sortie
 // et ajustement_negatif → préfixe « − » dans la colonne quantité.
 function mvtMeta(type: string): { label: string; variant: 'success' | 'danger' | 'neutral' | 'info' } {
-  if (type === 'entree') return { label: 'Entrée', variant: 'success' }
-  if (type === 'sortie') return { label: 'Sortie', variant: 'neutral' }
+  if (type === 'entree') return { label: 'Approvisionnement', variant: 'success' }
+  if (type === 'sortie') return { label: 'Vente', variant: 'neutral' }
   if (type === 'ajustement_positif') return { label: 'Ajustement +', variant: 'info' }
   if (type === 'ajustement_negatif') return { label: 'Ajustement −', variant: 'info' }
   return { label: type, variant: 'neutral' }
@@ -228,7 +229,7 @@ function mvtSigne(type: string) {
           </AppButton>
           <AppButton variant="secondary" size="sm" @click="showEntreeModal = true">
             <Plus class="h-4 w-4" />
-            Entrée de stock
+            Approvisionnement
           </AppButton>
           <AppButton variant="ghost" size="sm" @click="ouvrirArchivage">
             <Archive class="h-4 w-4" />
@@ -264,18 +265,18 @@ function mvtSigne(type: string) {
         <p class="text-lg font-semibold text-ink">{{ article.seuilAlerte }} {{ article.unite }}</p>
       </AppCard>
       <AppCard>
-        <p class="text-sm text-muted">Prix unitaire HT</p>
+        <p class="text-sm text-muted">{{ assujettiTva ? 'Prix unitaire HT' : 'Prix unitaire' }}</p>
         <p class="text-lg font-semibold text-ink">
           {{
             article.prixUnitaire
               ? `${article.prixUnitaire.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} FCFA`
-              : '—'
+              : ''
           }}
         </p>
       </AppCard>
       <AppCard>
         <p class="text-sm text-muted">Catégorie</p>
-        <p class="text-lg font-semibold text-ink">{{ article.categorieNom ?? '—' }}</p>
+        <p class="text-lg font-semibold text-ink">{{ article.categorieNom ?? '' }}</p>
       </AppCard>
     </div>
 
@@ -301,8 +302,8 @@ function mvtSigne(type: string) {
           <thead>
             <tr>
               <th class="w-[140px]">Date</th>
-              <th class="w-[100px]">Type</th>
-              <th class="text-right">Qté</th>
+              <th class="w-[140px]">Type</th>
+              <th class="text-center">Qté</th>
               <th>Origine / Destination</th>
               <th>Motif</th>
             </tr>
@@ -315,11 +316,11 @@ function mvtSigne(type: string) {
                   {{ mvtMeta(mvt.type).label }}
                 </AppBadge>
               </td>
-              <td class="mono num text-right text-[14px] font-semibold">
+              <td class="mono num text-center text-[14px] font-semibold">
                 {{ mvtSigne(mvt.type) }}{{ mvt.quantite }}
               </td>
-              <td class="text-ink-2">{{ mvt.fournisseurNom || mvt.clientNom || '—' }}</td>
-              <td class="text-[12.5px] text-muted">{{ mvt.motif || '—' }}</td>
+              <td class="text-ink-2">{{ mvt.fournisseurNom || mvt.clientNom || '' }}</td>
+              <td class="text-[12.5px] text-muted">{{ mvt.motif || '' }}</td>
             </tr>
           </tbody>
         </table>
@@ -331,10 +332,10 @@ function mvtSigne(type: string) {
       </AppCard>
     </div>
     <!-- Mouvement modals -->
-    <AppModal v-model:open="showEntreeModal" title="Entrée de stock">
+    <AppModal v-model:open="showEntreeModal" title="Approvisionnement">
       <MouvementForm
         :article-id="article.id"
-        :article-label="`${article.reference} — ${article.nom}`"
+        :article-label="`${article.reference} · ${article.nom}`"
         @submit="handleMouvement"
       >
         <template #actions>

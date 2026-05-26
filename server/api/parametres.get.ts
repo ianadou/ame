@@ -6,5 +6,7 @@ export default defineEventHandler(async () => {
   const [row] = await db.select().from(parametres).where(eq(parametres.id, 'app'))
   return {
     nomEntreprise: row?.nomEntreprise ?? null,
+    regimeTva: row?.regimeTva ?? 'non_assujetti',
+    tauxTva: row?.tauxTva ?? 18,
   }
 })

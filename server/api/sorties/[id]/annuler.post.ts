@@ -51,7 +51,7 @@ export default defineEventHandler(async (event) => {
         type: 'entree',
         quantite: ligne.quantite,
         sortieId: id,
-        motif: `Annulation bon de sortie ${sortie.reference} — ${body.motif}`,
+        motif: `Annulation bon de sortie ${sortie.reference} · ${body.motif}`,
       })
     }
   })

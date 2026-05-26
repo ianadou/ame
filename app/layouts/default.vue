@@ -7,7 +7,7 @@ const PAGE_META: Record<string, { title: string; kicker: string; crumb: string }
   '/stock': { title: 'Stock', kicker: 'Inventaire articles', crumb: 'Catalogue' },
   '/mouvements': {
     title: 'Transactions',
-    kicker: 'Historique entrées/sorties',
+    kicker: 'Historique approvisionnements et ventes',
     crumb: 'Journal',
   },
   '/commandes': {
@@ -17,7 +17,7 @@ const PAGE_META: Record<string, { title: string; kicker: string; crumb: string }
   },
   '/fournisseurs': { title: 'Fournisseurs', kicker: 'Carnet fournisseurs', crumb: 'Partenaires' },
   '/clients': { title: 'Clients', kicker: 'Carnet clients', crumb: 'Ventes' },
-  '/sorties': { title: 'Bons de sortie', kicker: 'Sorties de stock clients', crumb: 'Ventes' },
+  '/sorties': { title: 'Ventes', kicker: 'Ventes aux clients', crumb: 'Ventes' },
   '/parametres': { title: 'Réglages', kicker: 'Profil et données', crumb: 'Configuration' },
 }
 
@@ -32,7 +32,7 @@ watch(route, () => {
 
 const { user, load } = useSessionUser()
 const anneeCourante = new Date().getFullYear()
-const signature = computed(() => user.value.nomEntreprise?.trim() || '—')
+const signature = computed(() => user.value.nomEntreprise?.trim() || 'AME')
 
 onMounted(async () => {
   try {
@@ -78,7 +78,7 @@ onMounted(async () => {
         class="grid grid-cols-3 items-center border-t border-line bg-white px-4 py-4 text-[11.5px] text-muted lg:px-8"
       >
         <span>AME / Gestion de stock BTP / Côte d'Ivoire</span>
-        <span class="mono text-center tracking-wider2">© AME {{ anneeCourante }} — {{ signature }}</span>
+        <span class="mono text-center tracking-wider2">© AME {{ anneeCourante }} · {{ signature }}</span>
         <span class="flex items-center justify-end gap-4">
           <span class="mono">v0.4.2</span>
           <span class="flex items-center gap-1.5">

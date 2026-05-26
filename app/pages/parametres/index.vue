@@ -1,13 +1,34 @@
 <script setup lang="ts">
 import { Pencil, AlertTriangle } from 'lucide-vue-next'
+import type { RegimeTva } from '~/composables/useSessionUser'
 
-const { user, editing } = useSessionUser()
+const { user, editing, saveRegimeTva } = useSessionUser()
 const notifications = useNotifications()
 
 const showConfirm = ref(false)
 const busy = ref(false)
 
 const nomEntreprise = computed(() => user.value.nomEntreprise?.trim() || 'Non renseigné')
+
+const tvaSubmitting = ref(false)
+async function handleTvaSubmit(regime: RegimeTva, taux: number) {
+  tvaSubmitting.value = true
+  try {
+    await saveRegimeTva(regime, taux)
+    notifications.success(
+      'Régime fiscal enregistré',
+      regime === 'assujetti' ? `Assujetti à la TVA · taux ${taux} %` : 'Non assujetti à la TVA',
+    )
+  } catch (e: unknown) {
+    const msg =
+      e && typeof e === 'object' && 'data' in e
+        ? ((e as { data?: { message?: string } }).data?.message ?? 'Enregistrement impossible')
+        : 'Enregistrement impossible'
+    notifications.danger('Enregistrement impossible', msg)
+  } finally {
+    tvaSubmitting.value = false
+  }
+}
 
 async function resetData() {
   busy.value = true
@@ -45,6 +66,18 @@ async function resetData() {
           Modifier
         </AppButton>
       </div>
+    </AppCard>
+
+    <AppCard>
+      <h3 class="text-sm font-semibold text-ink">Régime fiscal</h3>
+      <RegimeTvaForm
+        class="mt-4"
+        :regime="user.regimeTva"
+        :taux="user.tauxTva"
+        :submitting="tvaSubmitting"
+        @submit="handleTvaSubmit"
+        @cancel="() => null"
+      />
     </AppCard>
 
     <AppCard>

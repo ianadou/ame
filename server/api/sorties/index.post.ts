@@ -1,6 +1,6 @@
 import { eq, inArray, sql } from 'drizzle-orm'
 import { db } from '../../db'
-import { sorties, lignesSortie, clients, articles, mouvements } from '../../db/schema'
+import { sorties, lignesSortie, clients, articles, mouvements, parametres } from '../../db/schema'
 import { createSortieSchema } from '../../utils/validation'
 import { generateId, generateSortieReference } from '../../utils/helpers'
 
@@ -43,6 +43,14 @@ export default defineEventHandler(async (event) => {
     }
   }
 
+  // Fige le taux TVA appliqué selon le régime actuel : on stocke `null`
+  // pour les utilisateurs non assujettis (les bons n'afficheront aucune
+  // mention TVA), sinon le taux courant. Les anciens bons restent
+  // affichés avec leur taux d'origine même si le régime change ensuite.
+  const [param] = await db.select().from(parametres).where(eq(parametres.id, 'app'))
+  const tauxTvaApplique =
+    param?.regimeTva === 'assujetti' ? (param?.tauxTva ?? 18) : null
+
   const sortieId = generateId()
   const reference = generateSortieReference()
 
@@ -83,6 +91,7 @@ export default defineEventHandler(async (event) => {
     statutPaiement: body.statutPaiement,
     montantPaye,
     notes: body.notes ?? null,
+    tauxTvaApplique,
   }
 
   await db.transaction(async (tx) => {

@@ -21,7 +21,7 @@ const navigation = [
   { name: 'Dashboard', to: '/', icon: LayoutDashboard },
   { name: 'Stock', to: '/stock', icon: Package },
   { name: 'Catégories', to: '/categories', icon: Tags },
-  { name: 'Bons de sortie', to: '/sorties', icon: PackageMinus },
+  { name: 'Ventes', to: '/sorties', icon: PackageMinus },
   { name: 'Transactions', to: '/mouvements', icon: ArrowLeftRight },
   { name: 'Commandes', to: '/commandes', icon: ShoppingCart },
   { name: 'Fournisseurs', to: '/fournisseurs', icon: Truck },
@@ -40,7 +40,7 @@ const valeurK = computed(() =>
 )
 
 const { user, editing } = useSessionUser()
-const initiales = computed(() => (user.value.nomEntreprise?.[0] ?? '—').toUpperCase())
+const initiales = computed(() => (user.value.nomEntreprise?.[0] ?? 'A').toUpperCase())
 const nomComplet = computed(() => user.value.nomEntreprise?.trim() || 'Entreprise')
 </script>
 

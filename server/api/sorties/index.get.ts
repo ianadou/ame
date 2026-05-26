@@ -32,6 +32,7 @@ export default defineEventHandler(async (event) => {
       modeReglement: sorties.modeReglement,
       statutPaiement: sorties.statutPaiement,
       statut: sorties.statut,
+      tauxTvaApplique: sorties.tauxTvaApplique,
       createdAt: sorties.createdAt,
       nbArticles: sql<number>`count(${lignesSortie.id})`,
     })

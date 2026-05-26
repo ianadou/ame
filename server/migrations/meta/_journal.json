@@ -64,6 +64,20 @@
       "when": 1779836800000,
       "tag": "0008_nom_entreprise",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1779836900000,
+      "tag": "0009_tva",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1779837000000,
+      "tag": "0010_ncc_bp_ville",
+      "breakpoints": true
     }
   ]
 }

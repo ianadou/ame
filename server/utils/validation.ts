@@ -26,6 +26,9 @@ export const createFournisseurSchema = z.object({
   telephone: z.string().max(50).optional(),
   email: z.string().email().max(200).optional(),
   adresse: z.string().max(500).optional(),
+  ville: z.string().max(200).optional(),
+  boitePostale: z.string().max(100).optional(),
+  ncc: z.string().max(50).optional(),
   notes: z.string().optional(),
 })
 
@@ -38,6 +41,8 @@ export const createClientSchema = z.object({
   email: z.string().email().max(200).optional(),
   adresse: z.string().max(500).optional(),
   ville: z.string().max(200).optional(),
+  boitePostale: z.string().max(100).optional(),
+  ncc: z.string().max(50).optional(),
   notes: z.string().optional(),
 })
 
@@ -115,7 +120,9 @@ export const archiverArticleSchema = z.object({
 })
 
 export const updateParametresSchema = z.object({
-  nomEntreprise: z.string().trim().min(1).max(200),
+  nomEntreprise: z.string().trim().min(1).max(200).optional(),
+  regimeTva: z.enum(['assujetti', 'non_assujetti']).optional(),
+  tauxTva: z.number().min(0).max(30).optional(),
 })
 
 // --- Import Excel/CSV : schémas dédiés (entrées = chaînes, coercition) ---
@@ -164,6 +171,9 @@ export const importFournisseurSchema = z.object({
     z.string().trim().email().optional(),
   ),
   adresse: texteOpt,
+  ville: texteOpt,
+  boitePostale: texteOpt,
+  ncc: texteOpt,
   notes: texteOpt,
 })
 
@@ -180,5 +190,7 @@ export const importClientSchema = z.object({
   ),
   adresse: texteOpt,
   ville: texteOpt,
+  boitePostale: texteOpt,
+  ncc: texteOpt,
   notes: texteOpt,
 })

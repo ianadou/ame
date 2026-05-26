@@ -29,7 +29,7 @@ const clientOptions = computed(() =>
 )
 const articles = computed(() => articlesResp.value?.data ?? [])
 const articleOptions = computed(() =>
-  articles.value.map((a) => ({ value: a.id, label: `${a.reference} — ${a.nom}` })),
+  articles.value.map((a) => ({ value: a.id, label: `${a.reference} · ${a.nom}` })),
 )
 
 const form = reactive({
@@ -65,6 +65,17 @@ const total = computed(() =>
     return s + (a?.prixUnitaire ?? 0) * (Number(l.quantite) || 0)
   }, 0),
 )
+
+// Preview TVA en temps réel si l'utilisateur est assujetti — le taux
+// figé sur le bon sera celui des paramètres au moment du submit.
+const { user, assujettiTva } = useSessionUser()
+const tvaPreview = computed(() => {
+  if (!assujettiTva.value) return null
+  const taux = user.value.tauxTva
+  const ht = total.value
+  const montantTva = ht * (taux / 100)
+  return { taux, ht, montantTva, ttc: ht + montantTva }
+})
 
 function addLigne() {
   lignes.value.push({ articleId: '', quantite: '1' })
@@ -202,9 +213,23 @@ function handleSubmit() {
       />
     </div>
 
-    <div class="flex items-center justify-between border-t border-line pt-3">
-      <span class="text-[13px] text-muted">Total du bon</span>
-      <span class="text-[18px] font-semibold text-ink">{{ fcfa(total) }}</span>
+    <div class="space-y-2 border-t border-line pt-3">
+      <div v-if="tvaPreview" class="flex items-center justify-between text-[12.5px]">
+        <span class="text-muted">Total HT</span>
+        <span class="mono num font-medium text-ink-2">{{ fcfa(tvaPreview.ht) }}</span>
+      </div>
+      <div v-if="tvaPreview" class="flex items-center justify-between text-[12.5px]">
+        <span class="text-muted">TVA ({{ tvaPreview.taux }} %)</span>
+        <span class="mono num font-medium text-ink-2">{{ fcfa(tvaPreview.montantTva) }}</span>
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="text-[13px] text-muted">
+          {{ tvaPreview ? 'Total TTC' : 'Total du bon' }}
+        </span>
+        <span class="text-[18px] font-semibold text-ink">
+          {{ fcfa(tvaPreview ? tvaPreview.ttc : total) }}
+        </span>
+      </div>
     </div>
 
     <p v-if="erreur" class="rounded-md bg-rust/10 px-3 py-2 text-[12px] text-rust-dark">

@@ -30,6 +30,8 @@ interface ClientDetail {
   email: string | null
   adresse: string | null
   ville: string | null
+  boitePostale: string | null
+  ncc: string | null
   notes: string | null
   createdAt: string
   sorties: SortieHisto[]
@@ -53,7 +55,7 @@ function fcfa(n: number) {
   return new Intl.NumberFormat('fr-FR').format(Math.round(n)) + ' FCFA'
 }
 function formatDate(iso: string | null) {
-  if (!iso) return '—'
+  if (!iso) return ''
   return new Intl.DateTimeFormat('fr-FR', {
     day: '2-digit',
     month: '2-digit',
@@ -117,7 +119,7 @@ async function handleDelete() {
           @click="navigateTo(`/sorties/nouveau?client=${client.id}`)"
         >
           <Plus class="h-4 w-4" />
-          Nouveau bon de sortie
+          Nouvelle vente
         </AppButton>
         <AppButton variant="secondary" size="sm" @click="showEditModal = true">
           <Pencil class="h-4 w-4" />
@@ -136,7 +138,7 @@ async function handleDelete() {
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
       <AppCard>
-        <p class="text-sm text-muted">Bons de sortie</p>
+        <p class="text-sm text-muted">Ventes</p>
         <p class="text-lg font-semibold text-ink">{{ client.totaux.nbSorties }}</p>
       </AppCard>
       <AppCard>
@@ -194,7 +196,7 @@ async function handleDelete() {
             >
               <td class="font-medium">{{ s.reference }}</td>
               <td class="mono text-[12.5px] text-muted">{{ formatDate(s.dateSortie) }}</td>
-              <td class="text-muted">{{ s.objet ?? '—' }}</td>
+              <td class="text-muted">{{ s.objet ?? '' }}</td>
               <td class="text-right text-muted">{{ s.nbArticles }}</td>
               <td class="text-right font-medium text-ink">{{ fcfa(s.montantTotal) }}</td>
               <td>
@@ -207,8 +209,8 @@ async function handleDelete() {
         </table>
         <AppEmptyState
           v-else
-          title="Aucun bon de sortie"
-          description="Ce client n'a encore aucun bon de sortie enregistré."
+          title="Aucune vente"
+          description="Ce client n'a encore aucun bon de vente enregistré."
         />
       </AppCard>
     </div>
@@ -222,6 +224,8 @@ async function handleDelete() {
           email: client.email ?? '',
           adresse: client.adresse ?? '',
           ville: client.ville ?? '',
+          boitePostale: client.boitePostale ?? '',
+          ncc: client.ncc ?? '',
           notes: client.notes ?? '',
         }"
         @submit="handleEdit"

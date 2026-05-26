@@ -34,6 +34,9 @@ interface FournisseurDetail {
   telephone: string | null
   email: string | null
   adresse: string | null
+  ville: string | null
+  boitePostale: string | null
+  ncc: string | null
   notes: string | null
   createdAt: string
   commandes: CommandeLiee[]
@@ -84,7 +87,7 @@ function statutVariant(statut: string) {
 }
 
 function formatDate(iso: string | null) {
-  if (!iso) return '—'
+  if (!iso) return ''
   return new Intl.DateTimeFormat('fr-FR', {
     day: '2-digit',
     month: '2-digit',
@@ -124,11 +127,11 @@ function formatDate(iso: string | null) {
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <AppCard>
         <p class="text-sm text-muted">Téléphone</p>
-        <p class="text-lg font-semibold text-ink">{{ fournisseur.telephone ?? '—' }}</p>
+        <p class="text-lg font-semibold text-ink">{{ fournisseur.telephone ?? '' }}</p>
       </AppCard>
       <AppCard>
         <p class="text-sm text-muted">Email</p>
-        <p class="truncate text-lg font-semibold text-ink">{{ fournisseur.email ?? '—' }}</p>
+        <p class="truncate text-lg font-semibold text-ink">{{ fournisseur.email ?? '' }}</p>
       </AppCard>
       <AppCard>
         <p class="text-sm text-muted">Commandes</p>
@@ -208,18 +211,18 @@ function formatDate(iso: string | null) {
               class="border-b border-line/60"
             >
               <td class="px-4 py-3 text-xs text-muted">{{ formatDate(entree.createdAt) }}</td>
-              <td class="px-4 py-3 text-sm text-ink-2">{{ entree.articleNom ?? '—' }}</td>
+              <td class="px-4 py-3 text-sm text-ink-2">{{ entree.articleNom ?? '' }}</td>
               <td class="px-4 py-3 text-right text-sm font-medium text-ink">
                 {{ entree.quantite }}
               </td>
-              <td class="px-4 py-3 text-sm text-muted">{{ entree.bonLivraison ?? '—' }}</td>
+              <td class="px-4 py-3 text-sm text-muted">{{ entree.bonLivraison ?? '' }}</td>
             </tr>
           </tbody>
         </table>
         <AppEmptyState
           v-else
           title="Aucune entrée"
-          description="Aucune entrée de stock liée à ce fournisseur."
+          description="Aucune approvisionnement liée à ce fournisseur."
         />
       </AppCard>
     </div>
@@ -232,6 +235,9 @@ function formatDate(iso: string | null) {
           telephone: fournisseur.telephone ?? '',
           email: fournisseur.email ?? '',
           adresse: fournisseur.adresse ?? '',
+          ville: fournisseur.ville ?? '',
+          boitePostale: fournisseur.boitePostale ?? '',
+          ncc: fournisseur.ncc ?? '',
           notes: fournisseur.notes ?? '',
         }"
         @submit="handleEdit"

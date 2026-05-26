@@ -35,7 +35,7 @@ function fcfa(n: number) {
   return new Intl.NumberFormat('fr-FR').format(Math.round(n)) + ' FCFA'
 }
 function formatDate(iso: string | null) {
-  if (!iso) return '—'
+  if (!iso) return ''
   return new Intl.DateTimeFormat('fr-FR', {
     day: '2-digit',
     month: '2-digit',
@@ -61,7 +61,7 @@ await load()
       </div>
       <AppButton @click="navigateTo('/sorties/nouveau')">
         <Plus class="h-4 w-4" />
-        Nouveau bon de sortie
+        Nouvelle vente
       </AppButton>
     </div>
 
@@ -73,8 +73,8 @@ await load()
               <th>Référence</th>
               <th>Client</th>
               <th>Date</th>
-              <th class="text-right">Articles</th>
-              <th class="text-right">Montant</th>
+              <th class="text-center">Articles</th>
+              <th class="text-center">Montant</th>
               <th>Règlement</th>
               <th>Paiement</th>
             </tr>
@@ -95,8 +95,8 @@ await load()
               </td>
               <td>{{ s.clientNom }}</td>
               <td class="mono text-[12.5px] text-muted">{{ formatDate(s.dateSortie) }}</td>
-              <td class="text-right text-muted">{{ s.nbArticles }}</td>
-              <td class="text-right font-medium text-ink">{{ fcfa(s.montantTotal) }}</td>
+              <td class="text-center text-muted">{{ s.nbArticles }}</td>
+              <td class="text-center font-medium text-ink">{{ fcfa(s.montantTotal) }}</td>
               <td class="text-muted capitalize">{{ s.modeReglement.replace('_', ' ') }}</td>
               <td>
                 <AppBadge :variant="paiementMeta[s.statutPaiement]?.variant ?? 'neutral'">
@@ -112,13 +112,13 @@ await load()
 
       <AppEmptyState
         v-if="!loading && sorties.length === 0"
-        title="Aucun bon de sortie"
-        description="Créez un bon de sortie pour livrer des articles à un client."
+        title="Aucune vente"
+        description="Créez un bon de vente pour livrer des articles à un client."
       >
         <template #action>
           <AppButton @click="navigateTo('/sorties/nouveau')">
             <Plus class="h-4 w-4" />
-            Nouveau bon de sortie
+            Nouvelle vente
           </AppButton>
         </template>
       </AppEmptyState>

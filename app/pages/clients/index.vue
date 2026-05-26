@@ -71,7 +71,9 @@ await loadClients()
               <th>Nom</th>
               <th>Type</th>
               <th>Téléphone</th>
+              <th>Adresse</th>
               <th>Ville</th>
+              <th>NCC</th>
             </tr>
           </thead>
           <tbody v-if="!loading && clients.length > 0">
@@ -87,14 +89,16 @@ await loadClients()
                   {{ client.type === 'entreprise' ? 'Entreprise' : 'Particulier' }}
                 </AppBadge>
               </td>
-              <td class="mono text-[12.5px] text-muted">{{ client.telephone ?? '—' }}</td>
-              <td class="text-muted">{{ client.ville ?? '—' }}</td>
+              <td class="mono text-[12.5px] text-muted">{{ client.telephone ?? '' }}</td>
+              <td class="text-muted">{{ client.adresse ?? '' }}</td>
+              <td class="text-muted">{{ client.ville ?? '' }}</td>
+              <td class="mono text-[12px] text-ink-3">{{ client.ncc ?? '' }}</td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <TableSkeleton v-if="loading" :cols="4" />
+      <TableSkeleton v-if="loading" :cols="6" />
 
       <AppEmptyState
         v-if="!loading && clients.length === 0"
