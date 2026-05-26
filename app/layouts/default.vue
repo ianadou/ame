@@ -80,7 +80,7 @@ onMounted(async () => {
         <span>AME / Gestion de stock BTP / Côte d'Ivoire</span>
         <span class="mono text-center tracking-wider2">© AME {{ anneeCourante }} · {{ signature }}</span>
         <span class="flex items-center justify-end gap-4">
-          <span class="mono">v0.5.0</span>
+          <span class="mono">v0.5.1</span>
           <span class="flex items-center gap-1.5">
             <span class="h-1.5 w-1.5 rounded-sm bg-emerald-500" />Base à jour
           </span>
