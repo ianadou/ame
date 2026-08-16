@@ -37,7 +37,10 @@ const typeOptions = [
   { value: 'ajustement_negatif', label: 'Ajustements −' },
 ]
 
-function mvtMeta(type: string): { label: string; variant: 'success' | 'danger' | 'neutral' | 'info' } {
+function mvtMeta(type: string): {
+  label: string
+  variant: 'success' | 'danger' | 'neutral' | 'info'
+} {
   if (type === 'entree') return { label: 'Approvisionnement', variant: 'success' }
   if (type === 'sortie') return { label: 'Vente', variant: 'neutral' }
   if (type === 'ajustement_positif') return { label: 'Ajustement +', variant: 'info' }
@@ -72,16 +75,6 @@ async function handleMouvement(data: Record<string, unknown>) {
   await $fetch('/api/mouvements', { method: 'POST', body: data })
   showEntreeModal.value = false
   await refresh()
-}
-
-function formatDate(iso: string) {
-  return new Intl.DateTimeFormat('fr-FR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(new Date(iso))
 }
 </script>
 

@@ -13,13 +13,6 @@ const statutOptions = [
   { value: 'impaye', label: 'Impayé' },
 ]
 
-const paiementMeta: Record<string, { label: string; variant: 'success' | 'warning' | 'neutral' }> =
-  {
-    paye: { label: 'Payé', variant: 'success' },
-    partiel: { label: 'Partiel', variant: 'warning' },
-    impaye: { label: 'Impayé', variant: 'neutral' },
-  }
-
 async function load() {
   await fetchSorties({
     search: search.value || undefined,
@@ -30,18 +23,6 @@ async function load() {
 const debouncedSearch = useDebounceFn(load, 300)
 watch(search, debouncedSearch)
 watch(statutFilter, load)
-
-function fcfa(n: number) {
-  return new Intl.NumberFormat('fr-FR').format(Math.round(n)) + ' FCFA'
-}
-function formatDate(iso: string | null) {
-  if (!iso) return ''
-  return new Intl.DateTimeFormat('fr-FR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  }).format(new Date(iso))
-}
 
 await load()
 </script>
@@ -97,10 +78,10 @@ await load()
               <td class="mono text-[12.5px] text-muted">{{ formatDate(s.dateSortie) }}</td>
               <td class="text-center text-muted">{{ s.nbArticles }}</td>
               <td class="text-center font-medium text-ink">{{ fcfa(s.montantTotal) }}</td>
-              <td class="text-muted capitalize">{{ s.modeReglement.replace('_', ' ') }}</td>
+              <td class="text-muted">{{ libelleReglement(s.modeReglement) }}</td>
               <td>
-                <AppBadge :variant="paiementMeta[s.statutPaiement]?.variant ?? 'neutral'">
-                  {{ paiementMeta[s.statutPaiement]?.label ?? s.statutPaiement }}
+                <AppBadge :variant="metaPaiement(s.statutPaiement).variant" solid>
+                  {{ metaPaiement(s.statutPaiement).label }}
                 </AppBadge>
               </td>
             </tr>

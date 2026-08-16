@@ -53,36 +53,6 @@ if (!sortie.value) {
   throw createError({ statusCode: 404, message: 'Bon de vente introuvable' })
 }
 
-const paiementMeta: Record<string, { label: string; variant: 'success' | 'warning' | 'neutral' }> =
-  {
-    paye: { label: 'Payé', variant: 'success' },
-    partiel: { label: 'Partiel', variant: 'warning' },
-    impaye: { label: 'Impayé', variant: 'neutral' },
-  }
-
-function fcfa(n: number) {
-  return new Intl.NumberFormat('fr-FR').format(Math.round(n)) + ' FCFA'
-}
-function formatDate(iso: string | null) {
-  if (!iso) return ''
-  return new Intl.DateTimeFormat('fr-FR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  }).format(new Date(iso))
-}
-function formatDateTime(iso: string | null) {
-  if (!iso) return ''
-  const d = new Date(iso.includes('T') ? iso : iso.replace(' ', 'T'))
-  return new Intl.DateTimeFormat('fr-FR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(d)
-}
-
 const annule = computed(() => sortie.value?.statut === 'annule')
 
 // La colonne « Rendu » n'a de sens que si le bon porte au moins un
@@ -136,15 +106,15 @@ async function confirmerAnnulation() {
 <template>
   <div v-if="sortie" class="space-y-6" :class="annule ? 'opacity-70' : ''">
     <div class="flex items-center gap-4">
-      <AppButton variant="ghost" size="sm" @click="navigateTo('/sorties')">
+      <AppButton variant="ghost" size="sm" aria-label="Retour" @click="navigateTo('/sorties')">
         <ArrowLeft class="h-4 w-4" />
       </AppButton>
       <div class="flex-1">
         <div class="flex items-center gap-3">
           <h2 class="text-lg font-semibold text-ink">{{ sortie.reference }}</h2>
           <AppBadge v-if="annule" variant="danger" solid>Annulée</AppBadge>
-          <AppBadge v-else :variant="paiementMeta[sortie.statutPaiement]?.variant ?? 'neutral'">
-            {{ paiementMeta[sortie.statutPaiement]?.label ?? sortie.statutPaiement }}
+          <AppBadge v-else :variant="metaPaiement(sortie.statutPaiement).variant" solid>
+            {{ metaPaiement(sortie.statutPaiement).label }}
           </AppBadge>
         </div>
         <p class="text-sm text-muted">
@@ -161,7 +131,7 @@ async function confirmerAnnulation() {
       </AppButton>
     </div>
 
-    <AppCard v-if="annule" class="border-l-4 border-rust">
+    <AppCard v-if="annule" class="border-rust/30 bg-rust/5">
       <p class="text-sm font-semibold text-rust-dark">
         Bon annulé le {{ formatDateTime(sortie.annuleLe) }}
       </p>
@@ -197,8 +167,8 @@ async function confirmerAnnulation() {
       </AppCard>
       <AppCard>
         <p class="text-sm text-muted">Règlement</p>
-        <p class="text-lg font-semibold capitalize text-ink">
-          {{ sortie.modeReglement.replace('_', ' ') }}
+        <p class="text-lg font-semibold text-ink">
+          {{ libelleReglement(sortie.modeReglement) }}
         </p>
       </AppCard>
     </div>
@@ -287,7 +257,7 @@ async function confirmerAnnulation() {
               </td>
               <td class="px-4 py-3 text-center text-sm text-muted">{{ l.stockApres }}</td>
               <td v-if="aRetournables" class="px-4 py-3 text-center text-sm">
-                <span v-if="!l.retournable" class="text-muted">—</span>
+                <span v-if="!l.retournable" class="text-[12px] text-muted">Non retournable</span>
                 <AppBadge v-else-if="l.quantiteRetournee >= l.quantite" variant="success">
                   Rendu
                 </AppBadge>

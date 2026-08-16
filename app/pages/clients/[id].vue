@@ -8,6 +8,7 @@ const { updateClient, deleteClient } = useClients()
 const notifications = useNotifications()
 
 const showEditModal = ref(false)
+const showDeleteModal = ref(false)
 const deleting = ref(false)
 const deleteError = ref<string | null>(null)
 
@@ -44,25 +45,6 @@ if (!client.value) {
   throw createError({ statusCode: 404, message: 'Client introuvable' })
 }
 
-const paiementMeta: Record<string, { label: string; variant: 'success' | 'warning' | 'neutral' }> =
-  {
-    paye: { label: 'Payé', variant: 'success' },
-    partiel: { label: 'Partiel', variant: 'warning' },
-    impaye: { label: 'Impayé', variant: 'neutral' },
-  }
-
-function fcfa(n: number) {
-  return new Intl.NumberFormat('fr-FR').format(Math.round(n)) + ' FCFA'
-}
-function formatDate(iso: string | null) {
-  if (!iso) return ''
-  return new Intl.DateTimeFormat('fr-FR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  }).format(new Date(iso))
-}
-
 async function handleEdit(data: Record<string, unknown>) {
   await updateClient(clientId, data)
   showEditModal.value = false
@@ -72,6 +54,7 @@ async function handleEdit(data: Record<string, unknown>) {
 
 async function handleDelete() {
   deleteError.value = null
+  showDeleteModal.value = false
   deleting.value = true
   try {
     const nom = client.value?.nom ?? 'Client'
@@ -95,21 +78,18 @@ async function handleDelete() {
 <template>
   <div v-if="client" class="space-y-6">
     <div class="flex items-center gap-4">
-      <AppButton variant="ghost" size="sm" @click="navigateTo('/clients')">
+      <AppButton variant="ghost" size="sm" aria-label="Retour" @click="navigateTo('/clients')">
         <ArrowLeft class="h-4 w-4" />
       </AppButton>
       <div class="flex-1">
         <div class="flex items-center gap-3">
           <h2 class="text-lg font-semibold text-ink">{{ client.nom }}</h2>
-          <AppBadge :variant="client.type === 'entreprise' ? 'neutral' : 'success'">
+          <AppBadge variant="neutral">
             {{ client.type === 'entreprise' ? 'Entreprise' : 'Particulier' }}
           </AppBadge>
         </div>
         <p class="text-sm text-muted">
-          {{
-            [client.telephone, client.ville].filter(Boolean).join(' · ') ||
-            'Aucune coordonnée'
-          }}
+          {{ [client.telephone, client.ville].filter(Boolean).join(' · ') || 'Aucune coordonnée' }}
         </p>
       </div>
       <div class="flex gap-2">
@@ -125,7 +105,7 @@ async function handleDelete() {
           <Pencil class="h-4 w-4" />
           Modifier
         </AppButton>
-        <AppButton variant="ghost" size="sm" :disabled="deleting" @click="handleDelete">
+        <AppButton variant="ghost" size="sm" :disabled="deleting" @click="showDeleteModal = true">
           <Trash2 class="h-4 w-4" />
           Supprimer
         </AppButton>
@@ -200,8 +180,8 @@ async function handleDelete() {
               <td class="text-right text-muted">{{ s.nbArticles }}</td>
               <td class="text-right font-medium text-ink">{{ fcfa(s.montantTotal) }}</td>
               <td>
-                <AppBadge :variant="paiementMeta[s.statutPaiement]?.variant ?? 'neutral'">
-                  {{ paiementMeta[s.statutPaiement]?.label ?? s.statutPaiement }}
+                <AppBadge :variant="metaPaiement(s.statutPaiement).variant" solid>
+                  {{ metaPaiement(s.statutPaiement).label }}
                 </AppBadge>
               </td>
             </tr>
@@ -236,5 +216,14 @@ async function handleDelete() {
         </template>
       </ClientForm>
     </AppModal>
+
+    <ConfirmDialog
+      v-model:open="showDeleteModal"
+      title="Supprimer ce client"
+      :cible="client.nom"
+      message="La fiche est retirée définitivement. Les bons de vente déjà émis à son nom bloquent la suppression et resteront intacts."
+      :loading="deleting"
+      @confirm="handleDelete"
+    />
   </div>
 </template>

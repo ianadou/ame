@@ -17,8 +17,7 @@ export default defineEventHandler(async (event) => {
 
   // Fige le taux TVA selon le régime actuel (cf. /sorties POST).
   const [param] = await db.select().from(parametres).where(eq(parametres.id, 'app'))
-  const tauxTvaApplique =
-    param?.regimeTva === 'assujetti' ? (param?.tauxTva ?? 18) : null
+  const tauxTvaApplique = param?.regimeTva === 'assujetti' ? (param?.tauxTva ?? 18) : null
 
   const commandeId = generateId()
   const commande = {

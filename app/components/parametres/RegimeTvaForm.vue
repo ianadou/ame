@@ -23,10 +23,10 @@ watch(
   },
 )
 
-const tauxValide = computed(() => Number.isFinite(taux.value) && taux.value >= 0 && taux.value <= 30)
-const peutValider = computed(
-  () => regime.value === 'non_assujetti' || tauxValide.value,
+const tauxValide = computed(
+  () => Number.isFinite(taux.value) && taux.value >= 0 && taux.value <= 30,
 )
+const peutValider = computed(() => regime.value === 'non_assujetti' || tauxValide.value)
 const aChange = computed(() => regime.value !== props.regime || taux.value !== props.taux)
 
 function valider() {
@@ -38,18 +38,15 @@ function valider() {
 <template>
   <div class="space-y-4">
     <p class="text-sm text-muted">
-      Définit l'affichage TVA sur les bons de sortie et commandes. Les bons déjà créés conservent
-      le taux figé à leur émission.
+      Définit l'affichage TVA sur les bons de sortie et commandes. Les bons déjà créés conservent le
+      taux figé à leur émission.
     </p>
 
     <div class="space-y-2">
-      <label class="flex cursor-pointer items-start gap-3 rounded-md border border-line px-3 py-2.5 hover:bg-paper-2">
-        <input
-          v-model="regime"
-          type="radio"
-          value="non_assujetti"
-          class="mt-0.5"
-        />
+      <label
+        class="flex cursor-pointer items-start gap-3 rounded-md border border-line px-3 py-2.5 hover:bg-paper-2"
+      >
+        <input v-model="regime" type="radio" value="non_assujetti" class="mt-0.5" />
         <div class="flex-1">
           <p class="text-sm font-medium text-ink">Non assujetti à la TVA</p>
           <p class="mt-0.5 text-[12px] text-muted">
@@ -58,13 +55,10 @@ function valider() {
         </div>
       </label>
 
-      <label class="flex cursor-pointer items-start gap-3 rounded-md border border-line px-3 py-2.5 hover:bg-paper-2">
-        <input
-          v-model="regime"
-          type="radio"
-          value="assujetti"
-          class="mt-0.5"
-        />
+      <label
+        class="flex cursor-pointer items-start gap-3 rounded-md border border-line px-3 py-2.5 hover:bg-paper-2"
+      >
+        <input v-model="regime" type="radio" value="assujetti" class="mt-0.5" />
         <div class="flex-1">
           <p class="text-sm font-medium text-ink">Assujetti à la TVA</p>
           <p class="mt-0.5 text-[12px] text-muted">

@@ -76,7 +76,7 @@ onMounted(async () => {
   try {
     const a = await $fetch<unknown[]>('/api/alertes')
     if (a.length > 0) {
-      notifications.danger(
+      notifications.warning(
         `${a.length} article${a.length > 1 ? 's' : ''} en alerte de stock bas`,
         'Réapprovisionnement conseillé.',
       )
@@ -158,13 +158,22 @@ onMounted(async () => {
                   </AppBadge>
                 </div>
               </td>
-              <td class="truncate font-medium">{{ article.nom }}</td>
+              <td class="truncate font-medium">
+                {{ article.nom }}
+                <!-- La nature de l'article commande tout le suivi des retours ;
+                     elle n'était visible sur aucun écran de lecture. -->
+                <span
+                  v-if="article.type === 'equipement'"
+                  class="ml-2 whitespace-nowrap rounded-full bg-paper-2 px-2 py-px text-[10.5px] text-ink-3"
+                >
+                  Équipement{{ article.retournable ? ' · à rendre' : '' }}
+                </span>
+              </td>
               <td class="!pl-8 text-muted">{{ article.categorieNom ?? '' }}</td>
               <td
                 class="mono num text-right text-[14px] font-semibold"
                 :class="{
-                  'text-rust-dark':
-                    article.statut === 'actif' && stockStatus(article) === 'danger',
+                  'text-rust-dark': article.statut === 'actif' && stockStatus(article) === 'danger',
                   'text-ochre-dark':
                     article.statut === 'actif' && stockStatus(article) === 'warning',
                 }"
@@ -173,11 +182,7 @@ onMounted(async () => {
               </td>
               <td class="!pl-12 text-muted">{{ article.unite }}</td>
               <td class="!pl-6">
-                <AppBadge
-                  v-if="article.statut === 'actif'"
-                  :variant="stockStatus(article)"
-                  solid
-                >
+                <AppBadge v-if="article.statut === 'actif'" :variant="stockStatus(article)" solid>
                   {{ stockLabel(article) }}
                 </AppBadge>
                 <AppBadge v-else variant="neutral">Archivé</AppBadge>

@@ -18,11 +18,14 @@ const softClasses = {
   info: 'bg-sky-50 text-sky-700',
   neutral: 'bg-paper-2 text-ink-3',
 }
+// Fonds sur les crans foncés : le texte blanc sur `forest` (#10B981) tombe à
+// 2,5:1 et sur `rust` (#EF4444) à 3,8:1, sous le seuil AA de 4,5:1. Les crans
+// `-dark` gardent le badge plein voulu tout en passant le contraste.
 const solidClasses = {
-  success: 'bg-emerald-500 text-white',
-  warning: 'bg-amber-500 text-white',
-  danger: 'bg-rust text-white',
-  info: 'bg-sky-500 text-white',
+  success: 'bg-forest-dark text-white',
+  warning: 'bg-ochre-dark text-white',
+  danger: 'bg-rust-dark text-white',
+  info: 'bg-sky-700 text-white',
   neutral: 'bg-slate-500 text-white',
 }
 const dotClasses = {

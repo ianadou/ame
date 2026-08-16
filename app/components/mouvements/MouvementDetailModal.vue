@@ -114,7 +114,9 @@ function formatDateTime(iso: string) {
           class="mt-1 flex items-baseline gap-2 hover:text-forest"
           @click="emit('close')"
         >
-          <span class="mono text-[13px] font-medium text-ink-2">{{ detail.article.reference }}</span>
+          <span class="mono text-[13px] font-medium text-ink-2">{{
+            detail.article.reference
+          }}</span>
           <span class="text-sm font-medium text-ink">{{ detail.article.nom }}</span>
         </NuxtLink>
       </div>

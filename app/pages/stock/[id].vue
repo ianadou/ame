@@ -175,27 +175,6 @@ async function handleMouvement(data: Record<string, unknown>) {
   }
 }
 
-function formatDate(iso: string) {
-  return new Intl.DateTimeFormat('fr-FR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(new Date(iso))
-}
-function formatDateTime(iso: string | null) {
-  if (!iso) return ''
-  const d = new Date(iso.includes('T') ? iso : iso.replace(' ', 'T'))
-  return new Intl.DateTimeFormat('fr-FR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(d)
-}
-
 // Métadonnées d'affichage par type de transaction (entrée, sortie,
 // ajustement positif/négatif). Le sens est positif sauf pour sortie
 // et ajustement_negatif → préfixe « − » dans la colonne quantité.
@@ -218,7 +197,7 @@ function mvtSigne(type: string) {
   <div v-if="article" class="space-y-6" :class="archive ? 'opacity-80' : ''">
     <!-- Header -->
     <div class="flex items-center gap-4">
-      <AppButton variant="ghost" size="sm" @click="navigateTo('/stock')">
+      <AppButton variant="ghost" size="sm" aria-label="Retour" @click="navigateTo('/stock')">
         <ArrowLeft class="h-4 w-4" />
       </AppButton>
       <div class="flex-1">
@@ -253,7 +232,7 @@ function mvtSigne(type: string) {
       </div>
     </div>
 
-    <AppCard v-if="archive" class="border-l-4 border-rust">
+    <AppCard v-if="archive" class="border-rust/30 bg-rust/5">
       <p class="text-sm font-semibold text-rust-dark">
         Article archivé le {{ formatDateTime(article.archiveLe) }}
       </p>
@@ -291,8 +270,17 @@ function mvtSigne(type: string) {
     </div>
 
     <!-- Details -->
-    <AppCard v-if="article.emplacement || article.notes">
+    <AppCard>
       <dl class="space-y-3">
+        <div>
+          <dt class="text-sm text-muted">Nature</dt>
+          <dd class="text-sm font-medium text-ink">
+            {{ article.type === 'equipement' ? 'Équipement réutilisable' : 'Consommable' }}
+            <span v-if="article.retournable" class="font-normal text-muted">
+              · le bénéficiaire doit le rapporter
+            </span>
+          </dd>
+        </div>
         <div v-if="article.emplacement">
           <dt class="text-sm text-muted">Emplacement</dt>
           <dd class="text-sm font-medium text-ink">{{ article.emplacement }}</dd>

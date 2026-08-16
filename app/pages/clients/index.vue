@@ -85,7 +85,9 @@ await loadClients()
             >
               <td class="font-medium">{{ client.nom }}</td>
               <td>
-                <AppBadge :variant="client.type === 'entreprise' ? 'neutral' : 'success'">
+                <!-- Catégorie, pas état : le vert « succès » n'a rien à dire
+                     d'un client particulier. Neutre pour les deux. -->
+                <AppBadge variant="neutral">
                   {{ client.type === 'entreprise' ? 'Entreprise' : 'Particulier' }}
                 </AppBadge>
               </td>

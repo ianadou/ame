@@ -11,6 +11,7 @@ const notifications = useNotifications()
 
 const showEditModal = ref(false)
 const deleting = ref(false)
+const showDeleteModal = ref(false)
 
 interface BonBeneficiaire {
   id: string
@@ -54,19 +55,6 @@ async function apresRetour() {
   await Promise.all([refresh(), fetchMaterielDehors({ beneficiaireId })])
 }
 
-function formatDate(iso: string | null) {
-  if (!iso) return ''
-  return new Intl.DateTimeFormat('fr-FR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  }).format(new Date(iso))
-}
-
-function fcfa(n: number) {
-  return new Intl.NumberFormat('fr-FR').format(Math.round(n)) + ' FCFA'
-}
-
 async function handleEdit(data: Record<string, unknown>) {
   try {
     await updateBeneficiaire(beneficiaireId, data)
@@ -83,6 +71,7 @@ async function handleEdit(data: Record<string, unknown>) {
 }
 
 async function handleDelete() {
+  showDeleteModal.value = false
   deleting.value = true
   try {
     const nom = beneficiaire.value?.nom ?? 'Bénéficiaire'
@@ -104,14 +93,19 @@ async function handleDelete() {
 <template>
   <div v-if="beneficiaire" class="space-y-6">
     <div class="flex items-center gap-4">
-      <AppButton variant="ghost" size="sm" @click="navigateTo('/beneficiaires')">
+      <AppButton
+        variant="ghost"
+        size="sm"
+        aria-label="Retour"
+        @click="navigateTo('/beneficiaires')"
+      >
         <ArrowLeft class="h-4 w-4" />
       </AppButton>
       <div class="flex-1">
         <div class="flex items-center gap-3">
           <h2 class="text-lg font-semibold text-ink">{{ beneficiaire.nom }}</h2>
-          <AppBadge :variant="beneficiaire.actif ? 'success' : 'neutral'">
-            {{ beneficiaire.actif ? 'Actif' : 'Inactif' }}
+          <AppBadge :variant="metaActif(beneficiaire.actif).variant" solid>
+            {{ metaActif(beneficiaire.actif).label }}
           </AppBadge>
         </div>
         <p class="text-sm text-muted">{{ beneficiaire.fonction ?? 'Sans fonction' }}</p>
@@ -121,7 +115,7 @@ async function handleDelete() {
           <Pencil class="h-4 w-4" />
           Modifier
         </AppButton>
-        <AppButton variant="ghost" size="sm" :disabled="deleting" @click="handleDelete">
+        <AppButton variant="ghost" size="sm" :disabled="deleting" @click="showDeleteModal = true">
           <Trash2 class="h-4 w-4" />
           Supprimer
         </AppButton>
@@ -234,5 +228,13 @@ async function handleDelete() {
     </AppModal>
 
     <RetourModal v-model:open="showRetourModal" :ligne="ligneActive" @saved="apresRetour" />
+    <ConfirmDialog
+      v-model:open="showDeleteModal"
+      title="Supprimer ce bénéficiaire"
+      :cible="beneficiaire.nom"
+      message="La fiche est retirée définitivement. Si cette personne figure sur des bons, la suppression est bloquée — désactivez-la plutôt pour conserver l’historique."
+      :loading="deleting"
+      @confirm="handleDelete"
+    />
   </div>
 </template>

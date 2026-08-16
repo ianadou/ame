@@ -11,6 +11,7 @@ const notifications = useNotifications()
 
 const showEditModal = ref(false)
 const deleting = ref(false)
+const showDeleteModal = ref(false)
 
 interface BonChantier {
   id: string
@@ -48,19 +49,6 @@ if (!chantier.value) {
 
 await fetchMaterielDehors({ chantierId })
 
-const statutMeta: Record<string, { label: string; variant: 'success' | 'warning' | 'neutral' }> = {
-  en_cours: { label: 'En cours', variant: 'success' },
-  pause: { label: 'En pause', variant: 'warning' },
-  termine: { label: 'Terminé', variant: 'neutral' },
-}
-
-const paiementMeta: Record<string, { label: string; variant: 'success' | 'warning' | 'neutral' }> =
-  {
-    paye: { label: 'Payé', variant: 'success' },
-    partiel: { label: 'Partiel', variant: 'warning' },
-    impaye: { label: 'Impayé', variant: 'neutral' },
-  }
-
 // Part du budget déjà consommée. Sans budget alloué, on n'affiche pas de
 // jauge : un pourcentage sur un dénominateur absent n'a pas de sens.
 const budget = computed(() => {
@@ -70,20 +58,6 @@ const budget = computed(() => {
   const pct = (consomme / alloue) * 100
   return { alloue, consomme, reste: alloue - consomme, pct, depasse: consomme > alloue }
 })
-
-function fcfa(n: number | null) {
-  if (n === null) return ''
-  return new Intl.NumberFormat('fr-FR').format(Math.round(n)) + ' FCFA'
-}
-
-function formatDate(iso: string | null) {
-  if (!iso) return ''
-  return new Intl.DateTimeFormat('fr-FR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  }).format(new Date(iso))
-}
 
 const ligneActive = ref<MaterielDehors | null>(null)
 const showRetourModal = ref(false)
@@ -113,6 +87,7 @@ async function handleEdit(data: Record<string, unknown>) {
 }
 
 async function handleDelete() {
+  showDeleteModal.value = false
   deleting.value = true
   try {
     const nom = chantier.value?.nom ?? 'Chantier'
@@ -134,14 +109,14 @@ async function handleDelete() {
 <template>
   <div v-if="chantier" class="space-y-6">
     <div class="flex items-center gap-4">
-      <AppButton variant="ghost" size="sm" @click="navigateTo('/chantiers')">
+      <AppButton variant="ghost" size="sm" aria-label="Retour" @click="navigateTo('/chantiers')">
         <ArrowLeft class="h-4 w-4" />
       </AppButton>
       <div class="flex-1">
         <div class="flex items-center gap-3">
           <h2 class="text-lg font-semibold text-ink">{{ chantier.nom }}</h2>
-          <AppBadge :variant="statutMeta[chantier.statut]?.variant ?? 'neutral'">
-            {{ statutMeta[chantier.statut]?.label ?? chantier.statut }}
+          <AppBadge :variant="metaChantier(chantier.statut).variant" solid>
+            {{ metaChantier(chantier.statut).label }}
           </AppBadge>
         </div>
         <p class="text-sm text-muted">
@@ -153,7 +128,7 @@ async function handleDelete() {
           <Pencil class="h-4 w-4" />
           Modifier
         </AppButton>
-        <AppButton variant="ghost" size="sm" :disabled="deleting" @click="handleDelete">
+        <AppButton variant="ghost" size="sm" :disabled="deleting" @click="showDeleteModal = true">
           <Trash2 class="h-4 w-4" />
           Supprimer
         </AppButton>
@@ -278,8 +253,8 @@ async function handleDelete() {
               <td class="text-muted">{{ bon.objet ?? '' }}</td>
               <td class="text-muted">{{ bon.beneficiaireNom ?? '—' }}</td>
               <td>
-                <AppBadge :variant="paiementMeta[bon.statutPaiement]?.variant ?? 'neutral'">
-                  {{ paiementMeta[bon.statutPaiement]?.label ?? bon.statutPaiement }}
+                <AppBadge :variant="metaPaiement(bon.statutPaiement).variant" solid>
+                  {{ metaPaiement(bon.statutPaiement).label }}
                 </AppBadge>
               </td>
               <td class="mono num text-right text-ink-2">{{ fcfa(bon.montantTotal) }}</td>
@@ -318,5 +293,13 @@ async function handleDelete() {
     </AppModal>
 
     <RetourModal v-model:open="showRetourModal" :ligne="ligneActive" @saved="apresRetour" />
+    <ConfirmDialog
+      v-model:open="showDeleteModal"
+      title="Supprimer ce chantier"
+      :cible="chantier.nom"
+      message="Le chantier est retiré définitivement. Les bons de vente qui lui sont rattachés bloquent la suppression — dans ce cas, passez-le plutôt en « Terminé »."
+      :loading="deleting"
+      @confirm="handleDelete"
+    />
   </div>
 </template>

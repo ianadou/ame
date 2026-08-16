@@ -16,17 +16,6 @@ const statutOptions = [
   { value: 'termine', label: 'Terminé' },
 ]
 
-const statutMeta: Record<string, { label: string; variant: 'success' | 'warning' | 'neutral' }> = {
-  en_cours: { label: 'En cours', variant: 'success' },
-  pause: { label: 'En pause', variant: 'warning' },
-  termine: { label: 'Terminé', variant: 'neutral' },
-}
-
-function fcfa(n: number | null) {
-  if (n === null) return ''
-  return new Intl.NumberFormat('fr-FR').format(Math.round(n)) + ' FCFA'
-}
-
 async function loadChantiers() {
   await fetchChantiers({
     search: search.value || undefined,
@@ -93,8 +82,8 @@ await loadChantiers()
             >
               <td class="font-medium">{{ chantier.nom }}</td>
               <td>
-                <AppBadge :variant="statutMeta[chantier.statut]?.variant ?? 'neutral'">
-                  {{ statutMeta[chantier.statut]?.label ?? chantier.statut }}
+                <AppBadge :variant="metaChantier(chantier.statut).variant" solid>
+                  {{ metaChantier(chantier.statut).label }}
                 </AppBadge>
               </td>
               <td class="text-muted">{{ chantier.ville ?? '' }}</td>

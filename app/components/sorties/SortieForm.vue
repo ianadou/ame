@@ -119,10 +119,6 @@ function removeLigne(i: number) {
 
 const erreur = ref('')
 
-function fcfa(n: number) {
-  return new Intl.NumberFormat('fr-FR').format(Math.round(n)) + ' FCFA'
-}
-
 function handleSubmit() {
   erreur.value = ''
   if (!form.clientId) {

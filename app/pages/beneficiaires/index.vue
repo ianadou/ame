@@ -81,8 +81,8 @@ await loadBeneficiaires()
               <td class="text-muted">{{ b.fonction ?? '' }}</td>
               <td class="mono text-[12.5px] text-muted">{{ b.telephone ?? '' }}</td>
               <td>
-                <AppBadge :variant="b.actif ? 'success' : 'neutral'">
-                  {{ b.actif ? 'Actif' : 'Inactif' }}
+                <AppBadge :variant="metaActif(b.actif).variant" solid>
+                  {{ metaActif(b.actif).label }}
                 </AppBadge>
               </td>
             </tr>

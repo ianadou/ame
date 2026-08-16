@@ -97,6 +97,7 @@ await fetchCategories()
                 <div class="flex justify-end gap-1">
                   <button
                     class="flex h-7 w-7 items-center justify-center rounded-md text-muted hover:bg-paper-2 hover:text-ink"
+                    aria-label="Modifier la catégorie"
                     title="Modifier"
                     @click="editing = row.cat"
                   >
@@ -104,6 +105,7 @@ await fetchCategories()
                   </button>
                   <button
                     class="flex h-7 w-7 items-center justify-center rounded-md text-muted hover:bg-rust/10 hover:text-rust"
+                    aria-label="Supprimer la catégorie"
                     title="Supprimer"
                     @click="deletingItem = row.cat"
                   >

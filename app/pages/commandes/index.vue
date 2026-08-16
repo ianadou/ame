@@ -15,17 +15,6 @@ const statutOptions = [
   { value: 'annulee', label: 'Annulée' },
 ]
 
-const statutMeta: Record<
-  string,
-  { label: string; variant: 'success' | 'warning' | 'danger' | 'info' | 'neutral' }
-> = {
-  brouillon: { label: 'Brouillon', variant: 'neutral' },
-  envoyee: { label: 'Envoyée', variant: 'info' },
-  partielle: { label: 'Partielle', variant: 'warning' },
-  recue: { label: 'Reçue', variant: 'success' },
-  annulee: { label: 'Annulée', variant: 'danger' },
-}
-
 const { data: fournisseurs } = await useFetch<{ id: string; nom: string }[]>('/api/fournisseurs')
 
 const fournisseurOptions = computed(() =>
@@ -45,15 +34,6 @@ async function handleCreate(data: Record<string, unknown>) {
   await createCommande(data)
   showCreateModal.value = false
   await loadCommandes()
-}
-
-function formatDate(iso: string | null) {
-  if (!iso) return ''
-  return new Intl.DateTimeFormat('fr-FR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  }).format(new Date(iso))
 }
 
 function formatMontant(montant: number) {
@@ -104,8 +84,8 @@ await loadCommandes()
               <td class="mono font-medium text-ink-2">{{ commande.reference }}</td>
               <td>{{ commande.fournisseurNom ?? '' }}</td>
               <td>
-                <AppBadge :variant="statutMeta[commande.statut]?.variant ?? 'neutral'">
-                  {{ statutMeta[commande.statut]?.label ?? commande.statut }}
+                <AppBadge :variant="metaCommande(commande.statut).variant" solid>
+                  {{ metaCommande(commande.statut).label }}
                 </AppBadge>
               </td>
               <td class="mono num text-center font-semibold">
