@@ -50,9 +50,3 @@ export function fcfa(n: number | null | undefined): string {
   if (n === null || n === undefined) return ''
   return NOMBRE.format(Math.round(n)) + ' FCFA'
 }
-
-// « 1 sortie » / « 2 sorties » — le pluriel muet faisait écrire « 1 sorties »
-// sur le dashboard et « 12 sac » sur la fiche article.
-export function pluriel(n: number, singulier: string, plurielForme?: string): string {
-  return n > 1 ? (plurielForme ?? `${singulier}s`) : singulier
-}
