@@ -16,6 +16,8 @@ export const createArticleSchema = z.object({
   prixUnitaire: z.number().positive().optional(),
   seuilAlerte: z.number().int().min(0).default(5),
   emplacement: z.string().optional(),
+  type: z.enum(['consommable', 'equipement']).default('consommable'),
+  retournable: z.boolean().default(false),
   notes: z.string().optional(),
 })
 

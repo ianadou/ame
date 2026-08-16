@@ -85,6 +85,13 @@
       "when": 1779837100000,
       "tag": "0011_chantiers_beneficiaires",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1779837200000,
+      "tag": "0012_articles_type_retournable",
+      "breakpoints": true
     }
   ]
 }

@@ -24,6 +24,12 @@ export const articles = sqliteTable(
     seuilAlerte: integer('seuil_alerte').notNull().default(5),
     emplacement: text('emplacement'),
     notes: text('notes'),
+    // Nature physique de l'article : `consommable` = sortie définitive
+    // (ciment, EPI usage unique) ; `equipement` = bien réutilisable
+    // (perceuse, brouette). `retournable` complète : si vrai, on attend
+    // que le bénéficiaire le ramène (suivi « non retourné »).
+    type: text('type').notNull().default('consommable'),
+    retournable: integer('retournable', { mode: 'boolean' }).notNull().default(false),
     statut: text('statut').notNull().default('actif'),
     archiveLe: text('archive_le'),
     motifArchivage: text('motif_archivage'),
@@ -39,6 +45,7 @@ export const articles = sqliteTable(
     check('articles_stock_positif', sql`${t.stockActuel} >= 0`),
     check('articles_seuil_positif', sql`${t.seuilAlerte} >= 0`),
     check('articles_statut_valide', sql`${t.statut} IN ('actif','archive')`),
+    check('articles_type_valide', sql`${t.type} IN ('consommable','equipement')`),
     check(
       'articles_archivage_coherent',
       sql`(${t.statut} = 'actif' AND ${t.archiveLe} IS NULL AND ${t.motifArchivage} IS NULL) OR (${t.statut} = 'archive' AND ${t.archiveLe} IS NOT NULL AND ${t.motifArchivage} IS NOT NULL)`,

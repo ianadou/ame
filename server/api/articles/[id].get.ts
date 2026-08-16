@@ -17,6 +17,8 @@ export default defineEventHandler(async (event) => {
       stockActuel: articles.stockActuel,
       seuilAlerte: articles.seuilAlerte,
       emplacement: articles.emplacement,
+      type: articles.type,
+      retournable: articles.retournable,
       notes: articles.notes,
       statut: articles.statut,
       archiveLe: articles.archiveLe,
