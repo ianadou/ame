@@ -155,7 +155,7 @@ async function confirmerAnnulation() {
           <span v-if="sortie.objet"> · {{ sortie.objet }}</span>
         </p>
       </div>
-      <AppButton v-if="!annule" variant="ghost" size="sm" @click="ouvrirAnnulation">
+      <AppButton v-if="!annule" variant="danger" size="sm" @click="ouvrirAnnulation">
         <Ban class="h-4 w-4" />
         Annuler ce bon
       </AppButton>
@@ -323,7 +323,7 @@ async function confirmerAnnulation() {
       <template #footer>
         <AppButton variant="secondary" @click="showAnnulerModal = false">Retour</AppButton>
         <AppButton
-          variant="primary"
+          variant="danger"
           :loading="submitting"
           :disabled="!motifValide"
           @click="confirmerAnnulation"

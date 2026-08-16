@@ -1,12 +1,15 @@
 <script setup lang="ts">
-const { user, editing, configured, save } = useSessionUser()
+const { user, editing, loaded, configured, save } = useSessionUser()
 
 const nom = ref('')
 const saving = ref(false)
 const erreur = ref<string | null>(null)
 
-// Visible si non configuré (1er lancement, bloquant) ou en mode édition.
-const visible = computed(() => !configured.value || editing.value)
+// Visible si non configuré (1er lancement, bloquant) ou en mode édition —
+// mais jamais avant que l'état de session soit résolu, sinon la modale
+// s'affiche puis disparaît à chaque chargement de page et avale le premier
+// clic de l'utilisateur.
+const visible = computed(() => loaded.value && (!configured.value || editing.value))
 // Fermable uniquement si une identité existe déjà (édition volontaire).
 const dismissible = computed(() => configured.value)
 
@@ -39,6 +42,15 @@ async function valider() {
 function fermer() {
   if (dismissible.value) editing.value = false
 }
+
+// Échap ne ferme que l'édition volontaire : au premier lancement le nom est
+// requis, il n'y a pas de sortie à offrir.
+function onKeydown(e: KeyboardEvent) {
+  if (e.key === 'Escape' && visible.value) fermer()
+}
+
+onMounted(() => document.addEventListener('keydown', onKeydown))
+onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
 </script>
 
 <template>

@@ -18,6 +18,14 @@ const PAGE_META: Record<string, { title: string; kicker: string; crumb: string }
   '/fournisseurs': { title: 'Fournisseurs', kicker: 'Carnet fournisseurs', crumb: 'Partenaires' },
   '/clients': { title: 'Clients', kicker: 'Carnet clients', crumb: 'Ventes' },
   '/sorties': { title: 'Ventes', kicker: 'Ventes aux clients', crumb: 'Ventes' },
+  '/categories': { title: 'Catégories', kicker: 'Familles d’articles', crumb: 'Catalogue' },
+  '/chantiers': { title: 'Chantiers', kicker: 'Sites et budgets', crumb: 'Référentiels' },
+  '/beneficiaires': {
+    title: 'Bénéficiaires',
+    kicker: 'Personnel qui retire le matériel',
+    crumb: 'Référentiels',
+  },
+  '/retours': { title: 'Retours', kicker: 'Matériel prêté non rendu', crumb: 'Opérations' },
   '/parametres': { title: 'Réglages', kicker: 'Profil et données', crumb: 'Configuration' },
 }
 
@@ -78,7 +86,9 @@ onMounted(async () => {
         class="grid grid-cols-3 items-center border-t border-line bg-white px-4 py-4 text-[11.5px] text-muted lg:px-8"
       >
         <span>AME / Gestion de stock BTP / Côte d'Ivoire</span>
-        <span class="mono text-center tracking-wider2">© AME {{ anneeCourante }} · {{ signature }}</span>
+        <span class="mono text-center tracking-wider2"
+          >© AME {{ anneeCourante }} · {{ signature }}</span
+        >
         <span class="flex items-center justify-end gap-4">
           <span class="mono">v0.5.1</span>
           <span class="flex items-center gap-1.5">
