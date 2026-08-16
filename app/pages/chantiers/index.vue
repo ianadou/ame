@@ -82,7 +82,7 @@ await loadChantiers()
             >
               <td class="font-medium">{{ chantier.nom }}</td>
               <td>
-                <AppBadge :variant="metaChantier(chantier.statut).variant" solid>
+                <AppBadge :variant="metaChantier(chantier.statut).variant">
                   {{ metaChantier(chantier.statut).label }}
                 </AppBadge>
               </td>

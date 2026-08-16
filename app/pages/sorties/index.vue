@@ -71,7 +71,7 @@ await load()
               <td class="font-medium">
                 <div class="flex items-center gap-2">
                   <span>{{ s.reference }}</span>
-                  <AppBadge v-if="s.statut === 'annule'" variant="danger" solid>Annulée</AppBadge>
+                  <AppBadge v-if="s.statut === 'annule'" variant="danger">Annulée</AppBadge>
                 </div>
               </td>
               <td>{{ s.clientNom }}</td>
@@ -80,7 +80,7 @@ await load()
               <td class="text-center font-medium text-ink">{{ fcfa(s.montantTotal) }}</td>
               <td class="text-muted">{{ libelleConditions(s.conditionsReglement) }}</td>
               <td>
-                <AppBadge :variant="metaPaiement(s.statutPaiement).variant" solid>
+                <AppBadge :variant="metaPaiement(s.statutPaiement).variant">
                   {{ metaPaiement(s.statutPaiement).label }}
                 </AppBadge>
               </td>

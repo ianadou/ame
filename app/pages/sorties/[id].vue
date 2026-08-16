@@ -147,8 +147,8 @@ async function confirmerAnnulation() {
       <div class="flex-1">
         <div class="flex items-center gap-3">
           <h2 class="text-lg font-semibold text-ink">{{ sortie.reference }}</h2>
-          <AppBadge v-if="annule" variant="danger" solid>Annulée</AppBadge>
-          <AppBadge v-else :variant="metaPaiement(sortie.statutPaiement).variant" solid>
+          <AppBadge v-if="annule" variant="danger">Annulée</AppBadge>
+          <AppBadge v-else :variant="metaPaiement(sortie.statutPaiement).variant">
             {{ metaPaiement(sortie.statutPaiement).label }}
           </AppBadge>
         </div>

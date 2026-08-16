@@ -203,10 +203,8 @@ function mvtSigne(type: string) {
       <div class="flex-1">
         <div class="flex items-center gap-3">
           <h2 class="text-lg font-semibold text-ink">{{ article.nom }}</h2>
-          <AppBadge v-if="archive" variant="danger" solid>Archivé</AppBadge>
-          <AppBadge v-else :variant="stockStatus(article)" solid>{{
-            stockLabel(article)
-          }}</AppBadge>
+          <AppBadge v-if="archive" variant="danger">Archivé</AppBadge>
+          <AppBadge v-else :variant="stockStatus(article)">{{ stockLabel(article) }}</AppBadge>
         </div>
         <p class="text-sm text-muted">{{ article.reference }}</p>
       </div>

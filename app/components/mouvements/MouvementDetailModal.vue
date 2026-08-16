@@ -95,7 +95,7 @@ function formatDateTime(iso: string) {
       <!-- Type + quantité + horodatage -->
       <div class="flex items-start justify-between gap-4">
         <div>
-          <AppBadge :variant="mvtMeta(detail.type).variant" solid>
+          <AppBadge :variant="mvtMeta(detail.type).variant">
             {{ mvtMeta(detail.type).label }}
           </AppBadge>
           <p class="mt-2 text-xs text-muted">{{ formatDateTime(detail.createdAt) }}</p>

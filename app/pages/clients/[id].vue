@@ -180,7 +180,7 @@ async function handleDelete() {
               <td class="text-right text-muted">{{ s.nbArticles }}</td>
               <td class="text-right font-medium text-ink">{{ fcfa(s.montantTotal) }}</td>
               <td>
-                <AppBadge :variant="metaPaiement(s.statutPaiement).variant" solid>
+                <AppBadge :variant="metaPaiement(s.statutPaiement).variant">
                   {{ metaPaiement(s.statutPaiement).label }}
                 </AppBadge>
               </td>

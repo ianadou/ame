@@ -148,7 +148,7 @@ await load()
               </td>
               <td class="mono num text-right text-ink-2">{{ r.quantite }} {{ r.unite }}</td>
               <td>
-                <AppBadge :variant="r.etat === 'bon' ? 'success' : 'danger'" solid>
+                <AppBadge :variant="r.etat === 'bon' ? 'success' : 'danger'">
                   {{ r.etat === 'bon' ? 'Bon état' : 'Endommagé' }}
                 </AppBadge>
               </td>

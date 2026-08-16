@@ -104,7 +104,7 @@ async function handleDelete() {
       <div class="flex-1">
         <div class="flex items-center gap-3">
           <h2 class="text-lg font-semibold text-ink">{{ beneficiaire.nom }}</h2>
-          <AppBadge :variant="metaActif(beneficiaire.actif).variant" solid>
+          <AppBadge :variant="metaActif(beneficiaire.actif).variant">
             {{ metaActif(beneficiaire.actif).label }}
           </AppBadge>
         </div>

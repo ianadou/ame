@@ -153,7 +153,7 @@ onMounted(async () => {
               <td class="mono font-medium text-ink-2">
                 <div class="flex items-center gap-2">
                   <span>{{ article.reference }}</span>
-                  <AppBadge v-if="article.statut === 'archive'" variant="danger" solid>
+                  <AppBadge v-if="article.statut === 'archive'" variant="danger">
                     Archivé
                   </AppBadge>
                 </div>
@@ -182,7 +182,7 @@ onMounted(async () => {
               </td>
               <td class="!pl-12 text-muted">{{ article.unite }}</td>
               <td class="!pl-6">
-                <AppBadge v-if="article.statut === 'actif'" :variant="stockStatus(article)" solid>
+                <AppBadge v-if="article.statut === 'actif'" :variant="stockStatus(article)">
                   {{ stockLabel(article) }}
                 </AppBadge>
                 <AppBadge v-else variant="neutral">Archivé</AppBadge>

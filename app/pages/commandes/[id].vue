@@ -159,7 +159,7 @@ const tva = computed(() => {
       <div class="flex-1">
         <div class="flex items-center gap-3">
           <h2 class="text-lg font-semibold text-ink">{{ commande.reference }}</h2>
-          <AppBadge :variant="metaCommande(commande.statut).variant" solid>
+          <AppBadge :variant="metaCommande(commande.statut).variant">
             {{ metaCommande(commande.statut).label }}
           </AppBadge>
         </div>

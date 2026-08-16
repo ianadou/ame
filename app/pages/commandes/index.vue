@@ -84,7 +84,7 @@ await loadCommandes()
               <td class="mono font-medium text-ink-2">{{ commande.reference }}</td>
               <td>{{ commande.fournisseurNom ?? '' }}</td>
               <td>
-                <AppBadge :variant="metaCommande(commande.statut).variant" solid>
+                <AppBadge :variant="metaCommande(commande.statut).variant">
                   {{ metaCommande(commande.statut).label }}
                 </AppBadge>
               </td>
