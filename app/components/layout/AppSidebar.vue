@@ -112,7 +112,7 @@ const nomComplet = computed(() => user.value.nomEntreprise?.trim() || 'Entrepris
             <span>{{ item.name }}</span>
             <span
               v-if="item.to === '/stock' && nbAlertes > 0"
-              class="ml-auto inline-flex items-center rounded-full bg-rust-dark px-2 py-px text-[10.5px] font-semibold text-white"
+              class="mono num ml-auto inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-rust/10 px-1.5 text-[10.5px] font-semibold text-rust-dark"
             >
               {{ nbAlertes }}
             </span>
