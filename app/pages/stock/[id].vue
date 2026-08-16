@@ -30,6 +30,8 @@ interface ArticleDetail {
   stockActuel: number
   seuilAlerte: number
   emplacement: string | null
+  type: 'consommable' | 'equipement'
+  retournable: boolean
   notes: string | null
   statut: 'actif' | 'archive'
   archiveLe: string | null
@@ -118,7 +120,10 @@ const delta = computed(() => {
 })
 const motifAjustementValide = computed(() => motifAjustement.value.trim().length >= 3)
 const stockPhysiqueValide = computed(
-  () => stockPhysique.value !== null && stockPhysique.value >= 0 && Number.isInteger(stockPhysique.value),
+  () =>
+    stockPhysique.value !== null &&
+    stockPhysique.value >= 0 &&
+    Number.isInteger(stockPhysique.value),
 )
 const peutAjuster = computed(
   () => stockPhysiqueValide.value && delta.value !== 0 && motifAjustementValide.value,
@@ -170,31 +175,13 @@ async function handleMouvement(data: Record<string, unknown>) {
   }
 }
 
-function formatDate(iso: string) {
-  return new Intl.DateTimeFormat('fr-FR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(new Date(iso))
-}
-function formatDateTime(iso: string | null) {
-  if (!iso) return ''
-  const d = new Date(iso.includes('T') ? iso : iso.replace(' ', 'T'))
-  return new Intl.DateTimeFormat('fr-FR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(d)
-}
-
 // Métadonnées d'affichage par type de transaction (entrée, sortie,
 // ajustement positif/négatif). Le sens est positif sauf pour sortie
 // et ajustement_negatif → préfixe « − » dans la colonne quantité.
-function mvtMeta(type: string): { label: string; variant: 'success' | 'danger' | 'neutral' | 'info' } {
+function mvtMeta(type: string): {
+  label: string
+  variant: 'success' | 'danger' | 'neutral' | 'info'
+} {
   if (type === 'entree') return { label: 'Approvisionnement', variant: 'success' }
   if (type === 'sortie') return { label: 'Vente', variant: 'neutral' }
   if (type === 'ajustement_positif') return { label: 'Ajustement +', variant: 'info' }
@@ -210,14 +197,14 @@ function mvtSigne(type: string) {
   <div v-if="article" class="space-y-6" :class="archive ? 'opacity-80' : ''">
     <!-- Header -->
     <div class="flex items-center gap-4">
-      <AppButton variant="ghost" size="sm" @click="navigateTo('/stock')">
+      <AppButton variant="ghost" size="sm" aria-label="Retour" @click="navigateTo('/stock')">
         <ArrowLeft class="h-4 w-4" />
       </AppButton>
       <div class="flex-1">
         <div class="flex items-center gap-3">
           <h2 class="text-lg font-semibold text-ink">{{ article.nom }}</h2>
-          <AppBadge v-if="archive" variant="danger" solid>Archivé</AppBadge>
-          <AppBadge v-else :variant="stockStatus(article)" solid>{{ stockLabel(article) }}</AppBadge>
+          <AppBadge v-if="archive" variant="danger">Archivé</AppBadge>
+          <AppBadge v-else :variant="stockStatus(article)">{{ stockLabel(article) }}</AppBadge>
         </div>
         <p class="text-sm text-muted">{{ article.reference }}</p>
       </div>
@@ -243,7 +230,7 @@ function mvtSigne(type: string) {
       </div>
     </div>
 
-    <AppCard v-if="archive" class="border-l-4 border-rust">
+    <AppCard v-if="archive" class="border-rust/30 bg-rust/5">
       <p class="text-sm font-semibold text-rust-dark">
         Article archivé le {{ formatDateTime(article.archiveLe) }}
       </p>
@@ -281,8 +268,17 @@ function mvtSigne(type: string) {
     </div>
 
     <!-- Details -->
-    <AppCard v-if="article.emplacement || article.notes">
+    <AppCard>
       <dl class="space-y-3">
+        <div>
+          <dt class="text-sm text-muted">Nature</dt>
+          <dd class="text-sm font-medium text-ink">
+            {{ article.type === 'equipement' ? 'Équipement réutilisable' : 'Consommable' }}
+            <span v-if="article.retournable" class="font-normal text-muted">
+              · le bénéficiaire doit le rapporter
+            </span>
+          </dd>
+        </div>
         <div v-if="article.emplacement">
           <dt class="text-sm text-muted">Emplacement</dt>
           <dd class="text-sm font-medium text-ink">{{ article.emplacement }}</dd>
@@ -348,8 +344,8 @@ function mvtSigne(type: string) {
     <AppModal v-model:open="showArchiverModal" title="Archiver cet article">
       <div class="space-y-3">
         <p class="text-sm text-muted">
-          L'article sera retiré des sélecteurs de nouveaux bons, commandes et ajustements.
-          Son historique de transactions reste préservé et il peut être restauré à tout moment.
+          L'article sera retiré des sélecteurs de nouveaux bons, commandes et ajustements. Son
+          historique de transactions reste préservé et il peut être restauré à tout moment.
         </p>
         <div>
           <label class="mb-1.5 block text-sm font-medium text-ink">
@@ -380,8 +376,8 @@ function mvtSigne(type: string) {
     <AppModal v-model:open="showAjustementModal" title="Ajustement de stock">
       <div class="space-y-4">
         <p class="text-sm text-muted">
-          Réconcilie le stock théorique avec un comptage physique. Une transaction
-          d'ajustement sera inscrite au journal pour traçabilité.
+          Réconcilie le stock théorique avec un comptage physique. Une transaction d'ajustement sera
+          inscrite au journal pour traçabilité.
         </p>
 
         <div class="grid grid-cols-2 gap-3">

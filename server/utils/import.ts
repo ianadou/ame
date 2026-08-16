@@ -13,8 +13,23 @@ import {
 } from './validation'
 
 export type EntiteImport = 'articles' | 'categories' | 'fournisseurs' | 'clients'
+export type EntiteImportOuTous = EntiteImport | 'tous'
 
 export const ENTITES_IMPORT: EntiteImport[] = ['articles', 'categories', 'fournisseurs', 'clients']
+export const ENTITES_IMPORT_AVEC_TOUS: EntiteImportOuTous[] = [...ENTITES_IMPORT, 'tous']
+
+// Ordre d'application en mode « tous » : on respecte les dépendances FK
+// (catégories avant articles ; clients/fournisseurs indépendants).
+const ORDRE_IMPORT_TOUS: EntiteImport[] = ['categories', 'fournisseurs', 'clients', 'articles']
+
+// Heuristique de mapping nom de feuille → entité (insensible à la casse
+// et aux accents). Première correspondance gagne.
+const PATTERNS_FEUILLE: { pattern: RegExp; entite: EntiteImport }[] = [
+  { pattern: /cat[eé]gor/i, entite: 'categories' },
+  { pattern: /fourn/i, entite: 'fournisseurs' },
+  { pattern: /client/i, entite: 'clients' },
+  { pattern: /article|stock|inventaire|produit/i, entite: 'articles' },
+]
 
 export const MAX_TAILLE = 5 * 1024 * 1024
 export const MAX_LIGNES = 5000
@@ -51,7 +66,7 @@ export interface ErreurLigne {
 }
 
 export interface RapportImport {
-  entite: EntiteImport
+  entite: EntiteImport | 'tous'
   total: number
   valides: number
   crees?: number
@@ -111,32 +126,52 @@ async function lireFichier(
     await wb.xlsx.load(buffer)
     const ws = wb.worksheets[0]
     if (!ws) return { entetes: [], lignes: [] }
-    const entetes: string[] = []
-    ws.getRow(1).eachCell((cell, col) => {
-      entetes[col - 1] = String(cell.value ?? '').trim()
-    })
-    const lignes: Record<string, string>[] = []
-    for (let r = 2; r <= ws.rowCount; r++) {
-      const row = ws.getRow(r)
-      const obj: Record<string, string> = {}
-      let vide = true
-      entetes.forEach((h, i) => {
-        if (!h) return
-        const val = row.getCell(i + 1).value
-        let str = ''
-        if (val instanceof Date) str = val.toISOString().slice(0, 10)
-        else if (val && typeof val === 'object' && 'text' in val)
-          str = String((val as { text: unknown }).text ?? '')
-        else str = val === null || val === undefined ? '' : String(val)
-        obj[h] = str.trim()
-        if (obj[h] !== '') vide = false
-      })
-      if (!vide) lignes.push(obj)
-    }
-    return { entetes, lignes }
+    return extraireFeuille(ws)
   }
 
   throw createError({ statusCode: 400, message: 'Format non supporté (utiliser .csv ou .xlsx)' })
+}
+
+function extraireFeuille(ws: ExcelJS.Worksheet): {
+  entetes: string[]
+  lignes: Record<string, string>[]
+} {
+  const entetes: string[] = []
+  ws.getRow(1).eachCell((cell, col) => {
+    entetes[col - 1] = String(cell.value ?? '').trim()
+  })
+  const lignes: Record<string, string>[] = []
+  for (let r = 2; r <= ws.rowCount; r++) {
+    const row = ws.getRow(r)
+    const obj: Record<string, string> = {}
+    let vide = true
+    entetes.forEach((h, i) => {
+      if (!h) return
+      const val = row.getCell(i + 1).value
+      let str = ''
+      if (val instanceof Date) str = val.toISOString().slice(0, 10)
+      else if (val && typeof val === 'object' && 'text' in val)
+        str = String((val as { text: unknown }).text ?? '')
+      else str = val === null || val === undefined ? '' : String(val)
+      obj[h] = str.trim()
+      if (obj[h] !== '') vide = false
+    })
+    if (!vide) lignes.push(obj)
+  }
+  return { entetes, lignes }
+}
+
+async function lireFeuillesXlsx(
+  buffer: Buffer,
+): Promise<{ nom: string; entetes: string[]; lignes: Record<string, string>[] }[]> {
+  const wb = new ExcelJS.Workbook()
+  await wb.xlsx.load(buffer)
+  const sorties: { nom: string; entetes: string[]; lignes: Record<string, string>[] }[] = []
+  for (const ws of wb.worksheets) {
+    const { entetes, lignes } = extraireFeuille(ws)
+    sorties.push({ nom: ws.name, entetes, lignes })
+  }
+  return sorties
 }
 
 async function upsertParNom<T extends typeof fournisseurs | typeof clients | typeof categories>(
@@ -311,7 +346,7 @@ const CONFIGS: Record<EntiteImport, EntiteConfig> = {
       let crees = 0
       let maj = 0
 
-      // Passe 1 : assigner un id par nom (existant ou nouveau) — gère les
+      // Passe 1 : assigner un id par nom (existant ou nouveau), gère les
       // références parent au sein du même fichier.
       const idParNom = new Map<string, string>()
       const resolus: {
@@ -469,21 +504,13 @@ export function configModele(entite: EntiteImport) {
   return CONFIGS[entite].modele
 }
 
-export async function traiterImport(
+async function traiterFeuilleEntite(
   entite: EntiteImport,
-  buffer: Buffer,
-  nom: string,
+  entetes: string[],
+  lignes: Record<string, string>[],
   dryRun: boolean,
 ): Promise<RapportImport> {
   const config = CONFIGS[entite]
-  const { entetes, lignes } = await lireFichier(buffer, nom)
-
-  if (lignes.length === 0) {
-    throw createError({ statusCode: 400, message: 'Fichier vide ou sans données' })
-  }
-  if (lignes.length > MAX_LIGNES) {
-    throw createError({ statusCode: 400, message: `Trop de lignes (max ${MAX_LIGNES})` })
-  }
 
   // Mapping entête d'origine -> champ canonique
   const mapping = new Map<string, string>()
@@ -536,22 +563,141 @@ export async function traiterImport(
     }
   })
 
-  const base: RapportImport = {
+  const r = await config.appliquer(valides, dryRun)
+  const rapport: RapportImport = {
     entite,
     total: lignes.length,
-    valides: valides.length,
+    valides: r.crees + r.maj,
+    crees: r.crees,
+    maj: r.maj,
     avertissements,
-    erreurs,
+    erreurs: [...erreurs, ...r.erreurs].sort((a, b) => a.ligne - b.ligne),
+  }
+  if (dryRun) rapport.apercu = r.actions.slice(0, 100)
+  return rapport
+}
+
+export async function traiterImport(
+  entite: EntiteImport,
+  buffer: Buffer,
+  nom: string,
+  dryRun: boolean,
+): Promise<RapportImport> {
+  const { entetes, lignes } = await lireFichier(buffer, nom)
+  if (lignes.length === 0) {
+    throw createError({ statusCode: 400, message: 'Fichier vide ou sans données' })
+  }
+  if (lignes.length > MAX_LIGNES) {
+    throw createError({ statusCode: 400, message: `Trop de lignes (max ${MAX_LIGNES})` })
+  }
+  return traiterFeuilleEntite(entite, entetes, lignes, dryRun)
+}
+
+// Import multi-entités (xlsx uniquement) : chaque feuille du classeur
+// est appariée à une entité par son nom (cf. PATTERNS_FEUILLE). Les
+// feuilles non reconnues sont ignorées avec un avertissement. Les
+// imports s'enchaînent dans ORDRE_IMPORT_TOUS pour respecter les FK.
+export async function traiterImportTous(
+  buffer: Buffer,
+  nom: string,
+  dryRun: boolean,
+): Promise<RapportImport> {
+  const ext = nom.toLowerCase().split('.').pop()
+  if (ext !== 'xlsx') {
+    throw createError({
+      statusCode: 400,
+      message: 'Le mode « tous » requiert un fichier .xlsx multi-feuilles',
+    })
   }
 
-  const r = await config.appliquer(valides, dryRun)
-  base.crees = r.crees
-  base.maj = r.maj
-  base.erreurs = [...erreurs, ...r.erreurs].sort((a, b) => a.ligne - b.ligne)
-  base.valides = r.crees + r.maj
+  const feuilles = await lireFeuillesXlsx(buffer)
+  const parEntite = new Map<EntiteImport, (typeof feuilles)[number]>()
+  const avertissements: string[] = []
 
-  if (dryRun) {
-    base.apercu = r.actions.slice(0, 100)
+  for (const feuille of feuilles) {
+    if (feuille.lignes.length === 0) continue
+    const match = PATTERNS_FEUILLE.find((p) => p.pattern.test(feuille.nom))
+    if (!match) {
+      avertissements.push(`Feuille « ${feuille.nom} » ignorée (nom non reconnu)`)
+      continue
+    }
+    if (parEntite.has(match.entite)) {
+      avertissements.push(
+        `Feuille « ${feuille.nom} » ignorée : entité ${match.entite} déjà mappée à une autre feuille`,
+      )
+      continue
+    }
+    parEntite.set(match.entite, feuille)
   }
-  return base
+
+  if (parEntite.size === 0) {
+    throw createError({
+      statusCode: 400,
+      message:
+        'Aucune feuille reconnue. Nommez vos feuilles « articles », « categories », « fournisseurs », « clients ».',
+    })
+  }
+
+  const totalLignes = Array.from(parEntite.values()).reduce((s, f) => s + f.lignes.length, 0)
+  if (totalLignes > MAX_LIGNES) {
+    throw createError({
+      statusCode: 400,
+      message: `Trop de lignes au total (${totalLignes}, max ${MAX_LIGNES})`,
+    })
+  }
+
+  let totalCrees = 0
+  let totalMaj = 0
+  let totalValides = 0
+  const erreursAggreg: ErreurLigne[] = []
+
+  for (const entite of ORDRE_IMPORT_TOUS) {
+    const feuille = parEntite.get(entite)
+    if (!feuille) continue
+    try {
+      const r = await traiterFeuilleEntite(entite, feuille.entetes, feuille.lignes, dryRun)
+      totalCrees += r.crees ?? 0
+      totalMaj += r.maj ?? 0
+      totalValides += r.valides
+      avertissements.push(
+        `Feuille « ${feuille.nom} » → ${entite} : ${r.crees ?? 0} créé(s), ${r.maj ?? 0} mis à jour${r.erreurs.length > 0 ? `, ${r.erreurs.length} erreur(s)` : ''}`,
+      )
+      for (const e of r.erreurs) {
+        erreursAggreg.push({ ...e, champ: `[${feuille.nom}] ${e.champ ?? ''}` })
+      }
+      for (const a of r.avertissements) avertissements.push(`[${feuille.nom}] ${a}`)
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e)
+      avertissements.push(`Feuille « ${feuille.nom} » → ${entite} : ÉCHEC : ${msg}`)
+    }
+  }
+
+  return {
+    entite: 'tous',
+    total: totalLignes,
+    valides: totalValides,
+    crees: totalCrees,
+    maj: totalMaj,
+    avertissements,
+    erreurs: erreursAggreg,
+  }
+}
+
+// Génère le modèle « tous » : un xlsx avec une feuille par entité
+// (nommée comme l'entité), entêtes + 1 ligne d'exemple, identique au
+// modèle CSV de chaque entité prise isolément.
+export async function genererModeleTous(): Promise<Buffer> {
+  const wb = new ExcelJS.Workbook()
+  for (const entite of ENTITES_IMPORT) {
+    const { entetes, exemple } = CONFIGS[entite].modele
+    const ws = wb.addWorksheet(entite)
+    ws.addRow(entetes)
+    ws.addRow(exemple)
+    ws.getRow(1).font = { bold: true }
+    ws.columns.forEach((col) => {
+      col.width = Math.max(14, ...entetes.map((e) => e.length + 2))
+    })
+  }
+  const buf = await wb.xlsx.writeBuffer()
+  return Buffer.from(buf)
 }

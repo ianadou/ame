@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Plus, Pencil, Trash2 } from 'lucide-vue-next'
+import { Plus, Pencil, Trash2, Tags } from 'lucide-vue-next'
 import type { Categorie } from '~/composables/useCategories'
 
 const { categories, loading, fetchCategories, createCategorie, updateCategorie, deleteCategorie } =
@@ -79,7 +79,7 @@ await fetchCategories()
 
     <AppCard :padding="false">
       <div class="overflow-x-auto">
-        <table class="data-table">
+        <table v-if="!loading && rows.length > 0" class="data-table">
           <thead>
             <tr>
               <th>Nom</th>
@@ -87,7 +87,7 @@ await fetchCategories()
               <th class="w-24 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody v-if="!loading && rows.length > 0">
+          <tbody>
             <tr v-for="row in rows" :key="row.cat.id" class="row-hover">
               <td class="font-medium" :class="{ 'pl-8 font-normal text-ink-3': row.isChild }">
                 <span v-if="row.isChild" class="text-muted">↳ </span>{{ row.cat.nom }}
@@ -97,6 +97,7 @@ await fetchCategories()
                 <div class="flex justify-end gap-1">
                   <button
                     class="flex h-7 w-7 items-center justify-center rounded-md text-muted hover:bg-paper-2 hover:text-ink"
+                    aria-label="Modifier la catégorie"
                     title="Modifier"
                     @click="editing = row.cat"
                   >
@@ -104,6 +105,7 @@ await fetchCategories()
                   </button>
                   <button
                     class="flex h-7 w-7 items-center justify-center rounded-md text-muted hover:bg-rust/10 hover:text-rust"
+                    aria-label="Supprimer la catégorie"
                     title="Supprimer"
                     @click="deletingItem = row.cat"
                   >
@@ -120,6 +122,7 @@ await fetchCategories()
 
       <AppEmptyState
         v-if="!loading && rows.length === 0"
+        :icon="Tags"
         title="Aucune catégorie"
         description="Commencez par créer votre première catégorie."
       >

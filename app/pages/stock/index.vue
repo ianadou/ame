@@ -6,7 +6,9 @@ const { articles, total, loading, fetchArticles, createArticle } = useStock()
 
 const search = ref('')
 const categorieFilter = ref('')
-const alerteOnly = ref(false)
+// La carte « Alertes stock bas » du tableau de bord pointe ici avec le filtre
+// déjà posé : elle annonce un nombre, elle doit livrer les lignes.
+const alerteOnly = ref(useRoute().query.alerte === '1')
 const voirArchives = ref(false)
 const currentPage = ref(1)
 const showCreateModal = ref(false)
@@ -76,7 +78,7 @@ onMounted(async () => {
   try {
     const a = await $fetch<unknown[]>('/api/alertes')
     if (a.length > 0) {
-      notifications.danger(
+      notifications.warning(
         `${a.length} article${a.length > 1 ? 's' : ''} en alerte de stock bas`,
         'Réapprovisionnement conseillé.',
       )
@@ -131,7 +133,7 @@ onMounted(async () => {
     <!-- Table -->
     <AppCard :padding="false">
       <div class="overflow-x-auto">
-        <table class="data-table">
+        <table v-if="!loading && articles.length > 0" class="data-table">
           <thead>
             <tr>
               <th class="w-[120px]">Réf.</th>
@@ -142,7 +144,7 @@ onMounted(async () => {
               <th class="w-[140px] !pl-6">Statut</th>
             </tr>
           </thead>
-          <tbody v-if="!loading && articles.length > 0">
+          <tbody>
             <tr
               v-for="article in articles"
               :key="article.id"
@@ -153,18 +155,27 @@ onMounted(async () => {
               <td class="mono font-medium text-ink-2">
                 <div class="flex items-center gap-2">
                   <span>{{ article.reference }}</span>
-                  <AppBadge v-if="article.statut === 'archive'" variant="danger" solid>
+                  <AppBadge v-if="article.statut === 'archive'" variant="danger">
                     Archivé
                   </AppBadge>
                 </div>
               </td>
-              <td class="truncate font-medium">{{ article.nom }}</td>
+              <td class="truncate font-medium">
+                {{ article.nom }}
+                <!-- La nature de l'article commande tout le suivi des retours ;
+                     elle n'était visible sur aucun écran de lecture. -->
+                <span
+                  v-if="article.type === 'equipement'"
+                  class="ml-2 whitespace-nowrap rounded-full bg-paper-2 px-2 py-px text-[10.5px] text-ink-3"
+                >
+                  Équipement{{ article.retournable ? ' · à rendre' : '' }}
+                </span>
+              </td>
               <td class="!pl-8 text-muted">{{ article.categorieNom ?? '' }}</td>
               <td
                 class="mono num text-right text-[14px] font-semibold"
                 :class="{
-                  'text-rust-dark':
-                    article.statut === 'actif' && stockStatus(article) === 'danger',
+                  'text-rust-dark': article.statut === 'actif' && stockStatus(article) === 'danger',
                   'text-ochre-dark':
                     article.statut === 'actif' && stockStatus(article) === 'warning',
                 }"
@@ -173,11 +184,7 @@ onMounted(async () => {
               </td>
               <td class="!pl-12 text-muted">{{ article.unite }}</td>
               <td class="!pl-6">
-                <AppBadge
-                  v-if="article.statut === 'actif'"
-                  :variant="stockStatus(article)"
-                  solid
-                >
+                <AppBadge v-if="article.statut === 'actif'" :variant="stockStatus(article)">
                   {{ stockLabel(article) }}
                 </AppBadge>
                 <AppBadge v-else variant="neutral">Archivé</AppBadge>
@@ -208,7 +215,7 @@ onMounted(async () => {
         class="flex items-center justify-between border-t border-slate-200 px-4 py-3"
       >
         <p class="text-sm text-slate-500">
-          {{ (currentPage - 1) * 20 + 1 }}–{{ Math.min(currentPage * 20, total) }} sur {{ total }}
+          {{ (currentPage - 1) * 20 + 1 }} à {{ Math.min(currentPage * 20, total) }} sur {{ total }}
         </p>
         <div class="flex gap-2">
           <AppButton

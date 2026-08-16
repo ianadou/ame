@@ -37,7 +37,10 @@ const typeOptions = [
   { value: 'ajustement_negatif', label: 'Ajustements −' },
 ]
 
-function mvtMeta(type: string): { label: string; variant: 'success' | 'danger' | 'neutral' | 'info' } {
+function mvtMeta(type: string): {
+  label: string
+  variant: 'success' | 'danger' | 'neutral' | 'info'
+} {
   if (type === 'entree') return { label: 'Approvisionnement', variant: 'success' }
   if (type === 'sortie') return { label: 'Vente', variant: 'neutral' }
   if (type === 'ajustement_positif') return { label: 'Ajustement +', variant: 'info' }
@@ -72,16 +75,6 @@ async function handleMouvement(data: Record<string, unknown>) {
   await $fetch('/api/mouvements', { method: 'POST', body: data })
   showEntreeModal.value = false
   await refresh()
-}
-
-function formatDate(iso: string) {
-  return new Intl.DateTimeFormat('fr-FR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(new Date(iso))
 }
 </script>
 
@@ -171,7 +164,7 @@ function formatDate(iso: string) {
         class="flex items-center justify-between border-t border-slate-200 px-4 py-3"
       >
         <p class="text-sm text-slate-500">
-          {{ (currentPage - 1) * 20 + 1 }}–{{ Math.min(currentPage * 20, total) }} sur {{ total }}
+          {{ (currentPage - 1) * 20 + 1 }} à {{ Math.min(currentPage * 20, total) }} sur {{ total }}
         </p>
         <div class="flex gap-2">
           <AppButton

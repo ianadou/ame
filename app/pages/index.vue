@@ -11,6 +11,9 @@ import {
   ArrowUpRight as ArrowLink,
   Receipt,
   Pencil,
+  Upload,
+  Download,
+  Wallet,
 } from 'lucide-vue-next'
 import type { RegimeTva } from '~/composables/useSessionUser'
 
@@ -24,6 +27,7 @@ interface Activite {
   sub: string
   deltaSub: string
   ticks: string[]
+  libelles: string[]
   series: { entrees: (number | null)[]; sorties: (number | null)[] }
   kpi: { mvmts: number; entrees: number; sorties: number; valEntree: number; valSortie: number }
   delta: {
@@ -51,6 +55,7 @@ interface DashboardData {
   valeurStock: number
   nbAlertes: number
   nbClients: number
+  creances: { aEncaisser: number; nbBons: number; enRetard: number; nbEnRetard: number }
   derniersMouvements: DernierMouvement[]
   topClients: Tendance[]
 }
@@ -73,6 +78,7 @@ const videActivite: Activite = {
   sub: '',
   deltaSub: '',
   ticks: [],
+  libelles: [],
   series: { entrees: [], sorties: [] },
   kpi: { mvmts: 0, entrees: 0, sorties: 0, valEntree: 0, valSortie: 0 },
   delta: { mvmts: '+0%', entrees: '+0%', sorties: '+0%', valEntree: '+0%', valSortie: '+0%' },
@@ -107,7 +113,7 @@ const valEvolution = computed(() =>
   }),
 )
 
-// Régime fiscal — affichage + édition rapide depuis le dashboard.
+// Régime fiscal : affichage + édition rapide depuis le dashboard.
 const { user, saveRegimeTva } = useSessionUser()
 const notifications = useNotifications()
 const showTvaModal = ref(false)
@@ -136,6 +142,26 @@ async function handleTvaSubmit(regime: RegimeTva, taux: number) {
     tvaSubmitting.value = false
   }
 }
+
+// Import / Export globaux : on rouvre les dialogs existants avec la
+// liste complète des entités supportées (cf. utils/import.ts &
+// utils/export.ts côté serveur).
+const showImportModal = ref(false)
+const showExportModal = ref(false)
+const importEntites = [
+  { value: 'tous', label: 'Tout (fichier .xlsx multi-feuilles)' },
+  { value: 'articles', label: 'Articles' },
+  { value: 'categories', label: 'Catégories' },
+  { value: 'fournisseurs', label: 'Fournisseurs' },
+  { value: 'clients', label: 'Clients' },
+]
+const exportEntites = [
+  { value: 'articles', label: 'Articles' },
+  { value: 'categories', label: 'Catégories' },
+  { value: 'fournisseurs', label: 'Fournisseurs' },
+  { value: 'clients', label: 'Clients' },
+  { value: 'mouvements', label: 'Transactions' },
+]
 </script>
 
 <template>
@@ -155,6 +181,15 @@ async function handleTvaSubmit(regime: RegimeTva, taux: number) {
         <FilePlus class="h-4 w-4" />Bon de commande
       </AppButton>
 
+      <span class="mx-1 h-5 w-px bg-line" aria-hidden="true" />
+
+      <AppButton variant="secondary" @click="showImportModal = true">
+        <Upload class="h-4 w-4" />Importer
+      </AppButton>
+      <AppButton variant="secondary" @click="showExportModal = true">
+        <Download class="h-4 w-4" />Exporter
+      </AppButton>
+
       <button
         class="ml-auto flex items-center gap-2 rounded-md border border-line bg-white px-3 py-1.5 text-[12.5px] text-ink-2 transition-colors hover:bg-paper-2"
         title="Modifier le régime fiscal"
@@ -171,6 +206,7 @@ async function handleTvaSubmit(regime: RegimeTva, taux: number) {
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <KpiCard
         label="Articles référencés"
+        to="/stock"
         :value="fmt(dashboard?.nbArticles ?? 0)"
         :icon="Package"
         :spark="[26, 27, 28, 27, 29, 29, 30, 30]"
@@ -178,6 +214,7 @@ async function handleTvaSubmit(regime: RegimeTva, taux: number) {
       />
       <KpiCard
         label="Valeur du stock"
+        to="/stock"
         :value="valeurK"
         unit="K FCFA"
         :icon="Coins"
@@ -188,6 +225,7 @@ async function handleTvaSubmit(regime: RegimeTva, taux: number) {
       />
       <KpiCard
         label="Alertes stock bas"
+        to="/stock?alerte=1"
         :value="fmt(alertes?.length ?? 0)"
         :icon="AlertTriangle"
         :tone="(alertes?.length ?? 0) > 0 ? 'danger' : 'success'"
@@ -197,7 +235,21 @@ async function handleTvaSubmit(regime: RegimeTva, taux: number) {
         spark-color="#EF4444"
       />
       <KpiCard
+        label="À encaisser"
+        to="/creances"
+        :value="fcfa(dashboard?.creances.aEncaisser ?? 0)"
+        :icon="Wallet"
+        :tone="(dashboard?.creances.enRetard ?? 0) > 0 ? 'danger' : 'neutral'"
+        :delta="
+          (dashboard?.creances.nbEnRetard ?? 0) > 0 ? String(dashboard?.creances.nbEnRetard) : null
+        "
+        :delta-sub="(dashboard?.creances.nbEnRetard ?? 0) > 0 ? 'en retard' : null"
+        :spark="[1, 1, 2, 1, 2, 2, 3, 2]"
+        spark-color="#D9871A"
+      />
+      <KpiCard
         label="Clients"
+        to="/clients"
         :value="fmt(dashboard?.nbClients ?? 0)"
         :icon="Users"
         :spark="[4, 4, 5, 5, 5, 6, 6, 6]"
@@ -221,6 +273,7 @@ async function handleTvaSubmit(regime: RegimeTva, taux: number) {
     <div class="grid grid-cols-2 gap-4 lg:grid-cols-5">
       <KpiCard
         label="Transactions"
+        to="/mouvements"
         :value="fmt(data.kpi.mvmts)"
         :delta="data.delta.mvmts"
         :delta-sub="data.deltaSub"
@@ -231,6 +284,7 @@ async function handleTvaSubmit(regime: RegimeTva, taux: number) {
       />
       <KpiCard
         label="Approvisionnements"
+        to="/mouvements"
         :value="fmt(data.kpi.entrees)"
         :delta="data.delta.entrees"
         :delta-sub="data.deltaSub"
@@ -239,6 +293,7 @@ async function handleTvaSubmit(regime: RegimeTva, taux: number) {
       />
       <KpiCard
         label="Ventes"
+        to="/sorties"
         :value="fmt(data.kpi.sorties)"
         :delta="data.delta.sorties"
         :delta-sub="data.deltaSub"
@@ -247,6 +302,7 @@ async function handleTvaSubmit(regime: RegimeTva, taux: number) {
       />
       <KpiCard
         label="Valeur achetée"
+        to="/commandes"
         :value="fmt(data.kpi.valEntree / 1000)"
         unit="K FCFA"
         :delta="data.delta.valEntree"
@@ -256,6 +312,7 @@ async function handleTvaSubmit(regime: RegimeTva, taux: number) {
       />
       <KpiCard
         label="Valeur vendue"
+        to="/sorties"
         :value="fmt(data.kpi.valSortie / 1000)"
         unit="K FCFA"
         :delta="data.delta.valSortie"
@@ -273,10 +330,10 @@ async function handleTvaSubmit(regime: RegimeTva, taux: number) {
       <template #action>
         <div class="flex items-center gap-4 text-[11.5px]">
           <span class="flex items-center gap-1.5"
-            ><span class="h-2.5 w-2.5 rounded-[2px] bg-forest" />Approvisionnements</span
+            ><span class="h-2.5 w-2.5 rounded-[2px] bg-forest-dark" />Approvisionnements</span
           >
           <span class="flex items-center gap-1.5"
-            ><span class="h-2.5 w-2.5 rounded-[2px] bg-slate-600" />Ventes</span
+            ><span class="h-2.5 w-2.5 rounded-[2px] bg-ochre-dark" />Ventes</span
           >
         </div>
       </template>
@@ -285,6 +342,7 @@ async function handleTvaSubmit(regime: RegimeTva, taux: number) {
           :entrees="data.series.entrees"
           :sorties="data.series.sorties"
           :ticks="data.ticks"
+          :libelles="data.libelles"
           :height="240"
         />
       </div>
@@ -299,7 +357,14 @@ async function handleTvaSubmit(regime: RegimeTva, taux: number) {
         ><span class="text-[11.5px] text-muted">Cumul entrées + sorties</span></template
       >
       <div class="px-5 pb-4 pt-5">
-        <Sparkline :values="valEvolution" color="#475569" :height="160" />
+        <Sparkline
+          :values="valEvolution"
+          :labels="data.libelles"
+          color="#047857"
+          :height="160"
+          interactive
+          :format="fcfa"
+        />
       </div>
     </PanelCard>
 
@@ -413,5 +478,8 @@ async function handleTvaSubmit(regime: RegimeTva, taux: number) {
         @cancel="showTvaModal = false"
       />
     </AppModal>
+
+    <ImportDialog v-model:open="showImportModal" :entites="importEntites" />
+    <ExportDialog v-model:open="showExportModal" :entites="exportEntites" />
   </div>
 </template>

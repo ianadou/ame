@@ -29,7 +29,7 @@ export default defineEventHandler(async (event) => {
       objet: sorties.objet,
       montantTotal: sorties.montantTotal,
       montantPaye: sorties.montantPaye,
-      modeReglement: sorties.modeReglement,
+      conditionsReglement: sorties.conditionsReglement,
       statutPaiement: sorties.statutPaiement,
       statut: sorties.statut,
       tauxTvaApplique: sorties.tauxTvaApplique,

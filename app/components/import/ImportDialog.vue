@@ -117,7 +117,7 @@ const titreEntite = computed(() => props.entites.find((e) => e.value === entite.
           class="inline-flex items-center gap-2 text-sm font-medium text-primary-700 hover:text-primary-800"
         >
           <FileDown class="h-4 w-4" />
-          Télécharger le modèle {{ titreEntite }} (CSV)
+          Télécharger le modèle {{ titreEntite }} ({{ entite === 'tous' ? 'xlsx' : 'CSV' }})
         </a>
 
         <label
@@ -125,10 +125,25 @@ const titreEntite = computed(() => props.entites.find((e) => e.value === entite.
         >
           <UploadCloud class="h-8 w-8 text-slate-400" />
           <span class="text-sm font-medium text-slate-700">
-            Choisir un fichier CSV ou Excel (.xlsx)
+            {{
+              entite === 'tous'
+                ? 'Choisir un fichier Excel (.xlsx) multi-feuilles'
+                : 'Choisir un fichier CSV ou Excel (.xlsx)'
+            }}
           </span>
-          <span class="text-xs text-slate-500">Max 5 Mo, 5000 lignes</span>
-          <input type="file" accept=".csv,.xlsx" class="hidden" @change="onFichier" />
+          <span class="text-xs text-slate-500">
+            {{
+              entite === 'tous'
+                ? 'Feuilles nommées : articles, categories, fournisseurs, clients'
+                : 'Max 5 Mo, 5000 lignes'
+            }}
+          </span>
+          <input
+            type="file"
+            :accept="entite === 'tous' ? '.xlsx' : '.csv,.xlsx'"
+            class="hidden"
+            @change="onFichier"
+          />
         </label>
       </template>
 

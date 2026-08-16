@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Plus } from 'lucide-vue-next'
+import { Plus, ShoppingCart } from 'lucide-vue-next'
 
 const { commandes, loading, fetchCommandes, createCommande } = useCommandes()
 
@@ -14,17 +14,6 @@ const statutOptions = [
   { value: 'recue', label: 'Reçue' },
   { value: 'annulee', label: 'Annulée' },
 ]
-
-const statutMeta: Record<
-  string,
-  { label: string; variant: 'success' | 'warning' | 'danger' | 'info' | 'neutral' }
-> = {
-  brouillon: { label: 'Brouillon', variant: 'neutral' },
-  envoyee: { label: 'Envoyée', variant: 'info' },
-  partielle: { label: 'Partielle', variant: 'warning' },
-  recue: { label: 'Reçue', variant: 'success' },
-  annulee: { label: 'Annulée', variant: 'danger' },
-}
 
 const { data: fournisseurs } = await useFetch<{ id: string; nom: string }[]>('/api/fournisseurs')
 
@@ -45,15 +34,6 @@ async function handleCreate(data: Record<string, unknown>) {
   await createCommande(data)
   showCreateModal.value = false
   await loadCommandes()
-}
-
-function formatDate(iso: string | null) {
-  if (!iso) return ''
-  return new Intl.DateTimeFormat('fr-FR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  }).format(new Date(iso))
 }
 
 function formatMontant(montant: number) {
@@ -84,7 +64,7 @@ await loadCommandes()
     <!-- Table -->
     <AppCard :padding="false">
       <div class="overflow-x-auto">
-        <table class="data-table">
+        <table v-if="!loading && commandes.length > 0" class="data-table">
           <thead>
             <tr>
               <th class="w-[200px]">Référence</th>
@@ -94,7 +74,7 @@ await loadCommandes()
               <th>Livraison prévue</th>
             </tr>
           </thead>
-          <tbody v-if="!loading && commandes.length > 0">
+          <tbody>
             <tr
               v-for="commande in commandes"
               :key="commande.id"
@@ -104,8 +84,8 @@ await loadCommandes()
               <td class="mono font-medium text-ink-2">{{ commande.reference }}</td>
               <td>{{ commande.fournisseurNom ?? '' }}</td>
               <td>
-                <AppBadge :variant="statutMeta[commande.statut]?.variant ?? 'neutral'">
-                  {{ statutMeta[commande.statut]?.label ?? commande.statut }}
+                <AppBadge :variant="metaCommande(commande.statut).variant">
+                  {{ metaCommande(commande.statut).label }}
                 </AppBadge>
               </td>
               <td class="mono num text-center font-semibold">
@@ -123,6 +103,7 @@ await loadCommandes()
 
       <AppEmptyState
         v-if="!loading && commandes.length === 0"
+        :icon="ShoppingCart"
         title="Aucune commande"
         description="Créez votre première commande fournisseur."
       >

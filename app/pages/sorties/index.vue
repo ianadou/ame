@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Plus } from 'lucide-vue-next'
+import { Plus, PackageMinus } from 'lucide-vue-next'
 import { useDebounceFn } from '@vueuse/core'
 
 const { sorties, loading, fetchSorties } = useSorties()
@@ -13,13 +13,6 @@ const statutOptions = [
   { value: 'impaye', label: 'Impayé' },
 ]
 
-const paiementMeta: Record<string, { label: string; variant: 'success' | 'warning' | 'neutral' }> =
-  {
-    paye: { label: 'Payé', variant: 'success' },
-    partiel: { label: 'Partiel', variant: 'warning' },
-    impaye: { label: 'Impayé', variant: 'neutral' },
-  }
-
 async function load() {
   await fetchSorties({
     search: search.value || undefined,
@@ -30,18 +23,6 @@ async function load() {
 const debouncedSearch = useDebounceFn(load, 300)
 watch(search, debouncedSearch)
 watch(statutFilter, load)
-
-function fcfa(n: number) {
-  return new Intl.NumberFormat('fr-FR').format(Math.round(n)) + ' FCFA'
-}
-function formatDate(iso: string | null) {
-  if (!iso) return ''
-  return new Intl.DateTimeFormat('fr-FR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  }).format(new Date(iso))
-}
 
 await load()
 </script>
@@ -67,7 +48,7 @@ await load()
 
     <AppCard :padding="false">
       <div class="overflow-x-auto">
-        <table class="data-table">
+        <table v-if="!loading && sorties.length > 0" class="data-table">
           <thead>
             <tr>
               <th>Référence</th>
@@ -79,7 +60,7 @@ await load()
               <th>Paiement</th>
             </tr>
           </thead>
-          <tbody v-if="!loading && sorties.length > 0">
+          <tbody>
             <tr
               v-for="s in sorties"
               :key="s.id"
@@ -90,17 +71,17 @@ await load()
               <td class="font-medium">
                 <div class="flex items-center gap-2">
                   <span>{{ s.reference }}</span>
-                  <AppBadge v-if="s.statut === 'annule'" variant="danger" solid>Annulée</AppBadge>
+                  <AppBadge v-if="s.statut === 'annule'" variant="danger">Annulée</AppBadge>
                 </div>
               </td>
               <td>{{ s.clientNom }}</td>
               <td class="mono text-[12.5px] text-muted">{{ formatDate(s.dateSortie) }}</td>
               <td class="text-center text-muted">{{ s.nbArticles }}</td>
               <td class="text-center font-medium text-ink">{{ fcfa(s.montantTotal) }}</td>
-              <td class="text-muted capitalize">{{ s.modeReglement.replace('_', ' ') }}</td>
+              <td class="text-muted">{{ libelleConditions(s.conditionsReglement) }}</td>
               <td>
-                <AppBadge :variant="paiementMeta[s.statutPaiement]?.variant ?? 'neutral'">
-                  {{ paiementMeta[s.statutPaiement]?.label ?? s.statutPaiement }}
+                <AppBadge :variant="metaPaiement(s.statutPaiement).variant">
+                  {{ metaPaiement(s.statutPaiement).label }}
                 </AppBadge>
               </td>
             </tr>
@@ -112,6 +93,7 @@ await load()
 
       <AppEmptyState
         v-if="!loading && sorties.length === 0"
+        :icon="PackageMinus"
         title="Aucune vente"
         description="Créez un bon de vente pour livrer des articles à un client."
       >

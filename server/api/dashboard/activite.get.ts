@@ -72,6 +72,36 @@ function bucketsConfig(periode: Periode, now: Date) {
   }
 }
 
+// `ticks` étiquette l'axe de façon clairsemée (7 repères pour 31 jours) ;
+// l'infobulle, elle, doit nommer le point exact survolé. D'où une étiquette
+// par point, distincte des repères d'axe.
+function libellesPoints(periode: Periode, n: number, now: Date): string[] {
+  if (periode === 'jour') {
+    return Array.from({ length: n }, (_, i) => `${String(i * 2).padStart(2, '0')} h`)
+  }
+  if (periode === 'semaine') {
+    return ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
+  }
+  if (periode === 'annee') {
+    return [
+      'Janvier',
+      'Février',
+      'Mars',
+      'Avril',
+      'Mai',
+      'Juin',
+      'Juillet',
+      'Août',
+      'Septembre',
+      'Octobre',
+      'Novembre',
+      'Décembre',
+    ]
+  }
+  const mois = new Intl.DateTimeFormat('fr-FR', { month: 'long' }).format(now)
+  return Array.from({ length: n }, (_, i) => `${i + 1} ${mois}`)
+}
+
 function indexBucket(date: Date, periode: Periode, debut: Date): number {
   if (periode === 'jour') return Math.floor(date.getHours() / 2)
   if (periode === 'semaine') return Math.floor((date.getTime() - debut.getTime()) / 86400000)
@@ -184,6 +214,7 @@ export default defineEventHandler(async (event) => {
     sub: sub[periode],
     deltaSub: deltaSub[periode],
     ticks,
+    libelles: libellesPoints(periode, n, now),
     series: { entrees, sorties },
     kpi: {
       mvmts: nbE + nbS,

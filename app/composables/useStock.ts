@@ -18,6 +18,8 @@ interface ArticleListItem {
   stockActuel: number
   seuilAlerte: number
   emplacement: string | null
+  type: 'consommable' | 'equipement'
+  retournable: boolean
   statut: 'actif' | 'archive'
 }
 
@@ -74,10 +76,10 @@ export function useStock() {
   }
 
   async function ajusterStock(id: string, stockPhysique: number, motif: string) {
-    return await $fetch<{ delta: number; stockApres: number }>(
-      `/api/articles/${id}/ajustement`,
-      { method: 'POST', body: { stockPhysique, motif } },
-    )
+    return await $fetch<{ delta: number; stockApres: number }>(`/api/articles/${id}/ajustement`, {
+      method: 'POST',
+      body: { stockPhysique, motif },
+    })
   }
 
   return {

@@ -54,15 +54,11 @@ export default defineEventHandler(async (event) => {
     })
     .from(mouvements)
     .where(
-      and(
-        eq(mouvements.articleId, mvt.articleId),
-        sql`${mouvements.createdAt} > ${mvt.createdAt}`,
-      ),
+      and(eq(mouvements.articleId, mvt.articleId), sql`${mouvements.createdAt} > ${mvt.createdAt}`),
     )
 
   const stockApres = (mvt.stockActuel ?? 0) - posterieures
-  const signe =
-    mvt.type === 'entree' || mvt.type === 'ajustement_positif' ? 1 : -1
+  const signe = mvt.type === 'entree' || mvt.type === 'ajustement_positif' ? 1 : -1
   const stockAvant = stockApres - signe * mvt.quantite
 
   return {

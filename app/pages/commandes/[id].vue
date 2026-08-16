@@ -44,17 +44,6 @@ if (!commande.value) {
   throw createError({ statusCode: 404, message: 'Commande introuvable' })
 }
 
-const statutMeta: Record<
-  string,
-  { label: string; variant: 'success' | 'warning' | 'danger' | 'info' | 'neutral' }
-> = {
-  brouillon: { label: 'Brouillon', variant: 'neutral' },
-  envoyee: { label: 'Envoyée', variant: 'info' },
-  partielle: { label: 'Reçue partiellement', variant: 'warning' },
-  recue: { label: 'Reçue', variant: 'success' },
-  annulee: { label: 'Annulée', variant: 'danger' },
-}
-
 const peutReceptionner = computed(
   () =>
     commande.value &&
@@ -145,15 +134,6 @@ async function handleDelete() {
   }
 }
 
-function formatDate(iso: string | null) {
-  if (!iso) return ''
-  return new Intl.DateTimeFormat('fr-FR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  }).format(new Date(iso))
-}
-
 function formatMontant(montant: number) {
   return `${Math.round(montant).toLocaleString('fr-FR')} FCFA`
 }
@@ -173,14 +153,14 @@ const tva = computed(() => {
   <div v-if="commande" class="space-y-6">
     <!-- Header -->
     <div class="flex items-center gap-4">
-      <AppButton variant="ghost" size="sm" @click="navigateTo('/commandes')">
+      <AppButton variant="ghost" size="sm" aria-label="Retour" @click="navigateTo('/commandes')">
         <ArrowLeft class="h-4 w-4" />
       </AppButton>
       <div class="flex-1">
         <div class="flex items-center gap-3">
           <h2 class="text-lg font-semibold text-ink">{{ commande.reference }}</h2>
-          <AppBadge :variant="statutMeta[commande.statut]?.variant ?? 'neutral'">
-            {{ statutMeta[commande.statut]?.label ?? commande.statut }}
+          <AppBadge :variant="metaCommande(commande.statut).variant">
+            {{ metaCommande(commande.statut).label }}
           </AppBadge>
         </div>
         <p class="text-sm text-muted">{{ commande.fournisseurNom ?? '' }}</p>

@@ -9,6 +9,7 @@ const notifications = useNotifications()
 
 const showEditModal = ref(false)
 const deleting = ref(false)
+const showDeleteModal = ref(false)
 const deleteError = ref<string | null>(null)
 
 interface CommandeLiee {
@@ -60,6 +61,7 @@ async function handleEdit(data: Record<string, unknown>) {
 
 async function handleDelete() {
   deleteError.value = null
+  showDeleteModal.value = false
   deleting.value = true
   try {
     const nom = fournisseur.value?.nom ?? 'Fournisseur'
@@ -85,22 +87,13 @@ function statutVariant(statut: string) {
   if (statut === 'brouillon') return 'neutral'
   return 'info'
 }
-
-function formatDate(iso: string | null) {
-  if (!iso) return ''
-  return new Intl.DateTimeFormat('fr-FR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  }).format(new Date(iso))
-}
 </script>
 
 <template>
   <div v-if="fournisseur" class="space-y-6">
     <!-- Header -->
     <div class="flex items-center gap-4">
-      <AppButton variant="ghost" size="sm" @click="navigateTo('/fournisseurs')">
+      <AppButton variant="ghost" size="sm" aria-label="Retour" @click="navigateTo('/fournisseurs')">
         <ArrowLeft class="h-4 w-4" />
       </AppButton>
       <div class="flex-1">
@@ -112,7 +105,7 @@ function formatDate(iso: string | null) {
           <Pencil class="h-4 w-4" />
           Modifier
         </AppButton>
-        <AppButton variant="ghost" size="sm" :disabled="deleting" @click="handleDelete">
+        <AppButton variant="ghost" size="sm" :disabled="deleting" @click="showDeleteModal = true">
           <Trash2 class="h-4 w-4" />
           Supprimer
         </AppButton>
@@ -248,5 +241,13 @@ function formatDate(iso: string | null) {
         </template>
       </FournisseurForm>
     </AppModal>
+    <ConfirmDialog
+      v-model:open="showDeleteModal"
+      title="Supprimer ce fournisseur"
+      :cible="fournisseur.nom"
+      message="La fiche est retirée définitivement. Les commandes déjà passées auprès de ce fournisseur bloquent la suppression et resteront intactes."
+      :loading="deleting"
+      @confirm="handleDelete"
+    />
   </div>
 </template>

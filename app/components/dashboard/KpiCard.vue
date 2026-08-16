@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Component } from 'vue'
+import { NuxtLink } from '#components'
 
 const props = defineProps<{
   label: string
@@ -11,6 +12,9 @@ const props = defineProps<{
   tone?: 'danger' | 'warning' | 'success'
   spark?: (number | null)[]
   sparkColor?: string
+  // Destination de la carte. Un chiffre de tableau de bord appelle toujours
+  // la question « lesquels ? » : la carte doit y mener d'un clic.
+  to?: string
 }>()
 
 const toneStyles = {
@@ -40,7 +44,17 @@ const deltaText = computed(() => props.delta?.replace(/^[+\-−]/, ''))
 </script>
 
 <template>
-  <div class="card relative overflow-hidden p-5 shadow-soft" :class="t?.card">
+  <component
+    :is="to ? NuxtLink : 'div'"
+    :to="to"
+    class="card relative block overflow-hidden p-5 text-left shadow-soft"
+    :class="[
+      t?.card,
+      to
+        ? 'transition-shadow hover:shadow-soft-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40'
+        : '',
+    ]"
+  >
     <div class="mb-3 flex items-start justify-between gap-2">
       <div class="text-[12px] font-medium" :class="t ? t.label : 'text-muted'">{{ label }}</div>
       <div
@@ -89,5 +103,5 @@ const deltaText = computed(() => props.delta?.replace(/^[+\-−]/, ''))
         />
       </div>
     </div>
-  </div>
+  </component>
 </template>
