@@ -32,7 +32,7 @@ export default defineEventHandler(async (event) => {
       objet: sorties.objet,
       montantTotal: sorties.montantTotal,
       montantPaye: sorties.montantPaye,
-      modeReglement: sorties.modeReglement,
+      conditionsReglement: sorties.conditionsReglement,
       statutPaiement: sorties.statutPaiement,
       notes: sorties.notes,
       statut: sorties.statut,
@@ -80,6 +80,7 @@ export default defineEventHandler(async (event) => {
       montant: reglements.montant,
       dateReglement: reglements.dateReglement,
       mode: reglements.mode,
+      reference: reglements.reference,
       notes: reglements.notes,
     })
     .from(reglements)

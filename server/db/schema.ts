@@ -148,7 +148,9 @@ export const sorties = sqliteTable(
     dateEcheance: text('date_echeance'),
     objet: text('objet'),
     montantTotal: real('montant_total').notNull().default(0),
-    modeReglement: text('mode_reglement').notNull().default('comptant'),
+    // Conditions convenues à l'émission, pas l'instrument de paiement : le
+    // canal réel (Orange Money, espèces, virement...) vit sur chaque règlement.
+    conditionsReglement: text('conditions_reglement').notNull().default('comptant'),
     statutPaiement: text('statut_paiement').notNull().default('paye'),
     montantPaye: real('montant_paye').notNull().default(0),
     notes: text('notes'),
@@ -209,7 +211,15 @@ export const reglements = sqliteTable(
       .notNull(),
     montant: real('montant').notNull(),
     dateReglement: text('date_reglement').notNull(),
+    // Canal réellement utilisé. En Côte d'Ivoire l'essentiel passe par le
+    // mobile money, d'où un canal par opérateur plutôt qu'un libellé unique :
+    // savoir sur quel compte l'argent est arrivé sert au rapprochement.
+    // `mobile_money` reste accepté pour les règlements enregistrés avant que
+    // les opérateurs soient distingués, mais n'est plus proposé à la saisie.
     mode: text('mode').notNull().default('especes'),
+    // Identifiant de transaction fourni par l'opérateur : c'est la preuve du
+    // versement, elle mérite mieux qu'une note libre.
+    reference: text('reference'),
     notes: text('notes'),
     createdAt: text('created_at')
       .default(sql`(datetime('now'))`)
@@ -219,7 +229,7 @@ export const reglements = sqliteTable(
     check('reglements_montant_positif', sql`${t.montant} > 0`),
     check(
       'reglements_mode_valide',
-      sql`${t.mode} IN ('especes','mobile_money','virement','cheque')`,
+      sql`${t.mode} IN ('orange_money','mtn_momo','moov_money','wave','especes','virement','cheque','mobile_money')`,
     ),
   ],
 )

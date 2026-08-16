@@ -255,7 +255,7 @@ async function seed() {
           probability: 0.5,
         }) ?? null,
       montantTotal,
-      modeReglement: faker.helpers.arrayElement(['comptant', 'credit', 'mobile_money'] as const),
+      conditionsReglement: faker.helpers.arrayElement(['comptant', 'credit'] as const),
       statutPaiement,
       montantPaye,
       notes: faker.helpers.maybe(() => faker.lorem.sentence(), { probability: 0.2 }) ?? null,

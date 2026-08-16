@@ -7,7 +7,7 @@ export interface SortieListe {
   objet: string | null
   montantTotal: number
   montantPaye: number
-  modeReglement: string
+  conditionsReglement: string
   statutPaiement: string
   statut: 'actif' | 'annule'
   createdAt: string

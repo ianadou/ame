@@ -14,7 +14,8 @@ const { enregistrerReglement } = useCreances()
 const notifications = useNotifications()
 
 const montant = ref('')
-const mode = ref('especes')
+const mode = ref('orange_money')
+const referenceTransaction = ref('')
 const dateReglement = ref('')
 const notes = ref('')
 const submitting = ref(false)
@@ -25,7 +26,8 @@ const erreur = ref('')
 watch(open, (ouvert) => {
   if (!ouvert) return
   montant.value = String(Math.round(props.reste))
-  mode.value = 'especes'
+  mode.value = 'orange_money'
+  referenceTransaction.value = ''
   dateReglement.value = new Date().toISOString().slice(0, 10)
   notes.value = ''
   erreur.value = ''
@@ -48,6 +50,7 @@ async function confirmer() {
       montant: Number(montant.value),
       dateReglement: dateReglement.value || undefined,
       mode: mode.value,
+      reference: referenceTransaction.value.trim() || undefined,
       notes: notes.value.trim() || undefined,
     })
     notifications.success(
@@ -83,7 +86,17 @@ async function confirmer() {
         <AppInput v-model="dateReglement" label="Date du règlement" type="date" />
       </div>
 
-      <AppSelect v-model="mode" label="Reçu par" :options="OPTIONS_MODE_ENCAISSEMENT" />
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <AppSelect v-model="mode" label="Reçu par" :options="OPTIONS_MODE_ENCAISSEMENT" />
+        <!-- L'identifiant de transaction est la preuve du versement : on le
+             demande pour les canaux qui en émettent un. -->
+        <AppInput
+          v-if="attendUneReference(mode)"
+          v-model="referenceTransaction"
+          label="Référence de transaction"
+          placeholder="MP260816.1423.A48291"
+        />
+      </div>
 
       <div>
         <label class="mb-1.5 block text-[12px] font-medium text-ink-2">Notes (optionnel)</label>

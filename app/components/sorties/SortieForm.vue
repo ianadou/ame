@@ -59,18 +59,18 @@ const form = reactive({
   dateSortie: new Date().toISOString().slice(0, 10),
   dateEcheance: '',
   objet: '',
-  modeReglement: 'comptant',
+  conditionsReglement: 'comptant',
   statutPaiement: 'paye',
   montantPaye: '',
+  modeAcompte: 'orange_money',
   notes: '',
 })
 
 const lignes = ref<{ articleId: string; quantite: string }[]>([{ articleId: '', quantite: '1' }])
 
-const modeOptions = [
+const conditionsOptions = [
   { value: 'comptant', label: 'Comptant' },
   { value: 'credit', label: 'Crédit' },
-  { value: 'mobile_money', label: 'Mobile money' },
 ]
 const statutOptions = [
   { value: 'paye', label: 'Payé' },
@@ -144,7 +144,7 @@ function handleSubmit() {
   const data: Record<string, unknown> = {
     clientId: form.clientId,
     dateSortie: form.dateSortie || undefined,
-    modeReglement: form.modeReglement,
+    conditionsReglement: form.conditionsReglement,
     statutPaiement: form.statutPaiement,
     lignes: lignesValides,
   }
@@ -156,6 +156,7 @@ function handleSubmit() {
   if (form.statutPaiement === 'partiel' && form.montantPaye) {
     data.montantPaye = Number(form.montantPaye)
   }
+  if (form.statutPaiement !== 'impaye') data.modeAcompte = form.modeAcompte
 
   emit('submit', data)
 }
@@ -239,7 +240,11 @@ function handleSubmit() {
 
     <!-- Règlement -->
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-      <AppSelect v-model="form.modeReglement" label="Mode de règlement" :options="modeOptions" />
+      <AppSelect
+        v-model="form.conditionsReglement"
+        label="Conditions"
+        :options="conditionsOptions"
+      />
       <AppSelect
         v-model="form.statutPaiement"
         label="Encaissé à l'émission"
@@ -253,6 +258,15 @@ function handleSubmit() {
         placeholder="0"
       />
     </div>
+
+    <!-- Dès qu'il y a un encaissement à l'émission, on note par où il est
+         passé : c'est la trace du versement, pas un détail administratif. -->
+    <AppSelect
+      v-if="form.statutPaiement !== 'impaye'"
+      v-model="form.modeAcompte"
+      label="Reçu par"
+      :options="OPTIONS_MODE_ENCAISSEMENT"
+    />
 
     <!-- L'échéance ne concerne que ce qui n'est pas encaissé tout de suite :
          c'est elle qui fera remonter le bon dans les créances en retard. -->

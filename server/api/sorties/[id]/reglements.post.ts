@@ -41,6 +41,7 @@ export default defineEventHandler(async (event) => {
     montant: body.montant,
     dateReglement: body.dateReglement ?? new Date().toISOString().slice(0, 10),
     mode: body.mode,
+    reference: body.reference ?? null,
     notes: body.notes ?? null,
   }
 

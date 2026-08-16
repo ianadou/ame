@@ -38,7 +38,7 @@ interface SortieDetail {
   objet: string | null
   montantTotal: number
   montantPaye: number
-  modeReglement: string
+  conditionsReglement: string
   statutPaiement: string
   notes: string | null
   statut: 'actif' | 'annule'
@@ -205,11 +205,11 @@ async function confirmerAnnulation() {
           {{
             sortie.dateEcheance
               ? formatDate(sortie.dateEcheance)
-              : libelleReglement(sortie.modeReglement)
+              : libelleConditions(sortie.conditionsReglement)
           }}
         </p>
         <p v-if="sortie.dateEcheance" class="mt-0.5 text-[11.5px] text-muted">
-          {{ libelleReglement(sortie.modeReglement) }}
+          {{ libelleConditions(sortie.conditionsReglement) }}
         </p>
       </AppCard>
     </div>
@@ -286,7 +286,12 @@ async function confirmerAnnulation() {
           <tbody>
             <tr v-for="r in sortie.reglements" :key="r.id" class="row-hover">
               <td class="mono text-[12.5px] text-ink-2">{{ formatDate(r.dateReglement) }}</td>
-              <td class="text-ink-2">{{ libelleEncaissement(r.mode) }}</td>
+              <td class="text-ink-2">
+                {{ libelleEncaissement(r.mode) }}
+                <span v-if="r.reference" class="mono ml-2 text-[11.5px] text-muted">
+                  {{ r.reference }}
+                </span>
+              </td>
               <td class="text-[12.5px] text-muted">{{ r.notes ?? '' }}</td>
               <td class="mono num text-right font-medium text-ink">{{ fcfa(r.montant) }}</td>
               <td class="text-right">

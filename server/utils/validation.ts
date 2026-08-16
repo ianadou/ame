@@ -82,6 +82,20 @@ export const annulerSortieSchema = z.object({
   motif: z.string().trim().min(3).max(500),
 })
 
+// Canaux d'encaissement, opérateurs mobile money de Côte d'Ivoire en tête :
+// c'est par là que passe l'essentiel des règlements. `mobile_money` reste
+// accepté en lecture pour les lignes enregistrées avant que les opérateurs
+// soient distingués, mais n'est plus proposé à la saisie.
+export const MODES_REGLEMENT = [
+  'orange_money',
+  'mtn_momo',
+  'moov_money',
+  'wave',
+  'especes',
+  'virement',
+  'cheque',
+] as const
+
 export const createSortieSchema = z.object({
   clientId: z.string().uuid(),
   chantierId: z.string().uuid().optional(),
@@ -89,19 +103,21 @@ export const createSortieSchema = z.object({
   dateSortie: z.string().optional(),
   dateEcheance: z.string().optional(),
   objet: z.string().max(300).optional(),
-  modeReglement: z.enum(['comptant', 'credit', 'mobile_money']).default('comptant'),
+  conditionsReglement: z.enum(['comptant', 'credit']).default('comptant'),
   statutPaiement: z.enum(['paye', 'partiel', 'impaye']).default('paye'),
   montantPaye: z.number().min(0).optional(),
+  // Canal de l'acompte encaissé à l'émission, quand il y en a un.
+  modeAcompte: z.enum(MODES_REGLEMENT).optional(),
   notes: z.string().optional(),
   lignes: z.array(ligneSortieSchema).min(1),
 })
 
-export const MODES_REGLEMENT = ['especes', 'mobile_money', 'virement', 'cheque'] as const
-
 export const createReglementSchema = z.object({
   montant: z.number().positive(),
   dateReglement: z.string().optional(),
-  mode: z.enum(MODES_REGLEMENT).default('especes'),
+  mode: z.enum(MODES_REGLEMENT),
+  // Identifiant de transaction de l'opérateur, la preuve du versement.
+  reference: z.string().trim().max(100).optional(),
   notes: z.string().max(500).optional(),
 })
 

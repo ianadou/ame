@@ -78,7 +78,7 @@ await load()
               <td class="mono text-[12.5px] text-muted">{{ formatDate(s.dateSortie) }}</td>
               <td class="text-center text-muted">{{ s.nbArticles }}</td>
               <td class="text-center font-medium text-ink">{{ fcfa(s.montantTotal) }}</td>
-              <td class="text-muted">{{ libelleReglement(s.modeReglement) }}</td>
+              <td class="text-muted">{{ libelleConditions(s.conditionsReglement) }}</td>
               <td>
                 <AppBadge :variant="metaPaiement(s.statutPaiement).variant" solid>
                   {{ metaPaiement(s.statutPaiement).label }}

@@ -36,7 +36,7 @@ export default defineEventHandler(async (event) => {
         montantPaye: sorties.montantPaye,
         reste,
         statutPaiement: sorties.statutPaiement,
-        modeReglement: sorties.modeReglement,
+        conditionsReglement: sorties.conditionsReglement,
         clientId: sorties.clientId,
         clientNom: clients.nom,
         clientTelephone: clients.telephone,

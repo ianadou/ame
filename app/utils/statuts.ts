@@ -30,25 +30,38 @@ const COMMANDE: Record<string, MetaStatut> = {
   annulee: { label: 'Annulée', variant: 'danger' },
 }
 
-const REGLEMENT: Record<string, string> = {
+// Conditions convenues à l'émission du bon, pas l'instrument de paiement.
+const CONDITIONS: Record<string, string> = {
   comptant: 'Comptant',
   credit: 'Crédit',
-  mobile_money: 'Mobile money',
 }
 
 // Canal par lequel l'argent est effectivement rentré, distinct de
-// `sorties.modeReglement` qui porte les conditions convenues (comptant ou
-// crédit) au moment de l'émission.
+// `sorties.conditionsReglement` qui porte les conditions convenues au moment
+// de l'émission. Les opérateurs mobile money de Côte d'Ivoire viennent en
+// premier : c'est par là que passe l'essentiel des encaissements.
 const MODE_ENCAISSEMENT: Record<string, string> = {
+  orange_money: 'Orange Money',
+  mtn_momo: 'MTN MoMo',
+  moov_money: 'Moov Money',
+  wave: 'Wave',
   especes: 'Espèces',
-  mobile_money: 'Mobile money',
-  virement: 'Virement',
+  virement: 'Virement bancaire',
   cheque: 'Chèque',
+  // Héritage : règlements saisis avant que les opérateurs soient distingués.
+  mobile_money: 'Mobile money',
 }
 
-export const OPTIONS_MODE_ENCAISSEMENT = Object.entries(MODE_ENCAISSEMENT).map(
-  ([value, label]) => ({ value, label }),
-)
+// `mobile_money` n'est plus proposé à la saisie : il ne dit pas sur quel
+// compte l'argent est arrivé.
+export const OPTIONS_MODE_ENCAISSEMENT = Object.entries(MODE_ENCAISSEMENT)
+  .filter(([value]) => value !== 'mobile_money')
+  .map(([value, label]) => ({ value, label }))
+
+// Un identifiant de transaction n'a de sens que pour un canal qui en émet un.
+export function attendUneReference(mode: string): boolean {
+  return ['orange_money', 'mtn_momo', 'moov_money', 'wave', 'virement'].includes(mode)
+}
 
 export function libelleEncaissement(mode: string): string {
   return MODE_ENCAISSEMENT[mode] ?? mode
@@ -74,7 +87,6 @@ export function metaActif(actif: boolean): MetaStatut {
   return actif ? { label: 'Actif', variant: 'success' } : { label: 'Inactif', variant: 'neutral' }
 }
 
-// « credit » s'affichait tel quel, sans accent, via un simple replace('_', ' ').
-export function libelleReglement(mode: string): string {
-  return REGLEMENT[mode] ?? mode
+export function libelleConditions(conditions: string): string {
+  return CONDITIONS[conditions] ?? conditions
 }

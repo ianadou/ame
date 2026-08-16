@@ -121,7 +121,8 @@ export default defineEventHandler(async (event) => {
           sortieId,
           montant: acompte,
           dateReglement: body.dateSortie ?? new Date().toISOString().slice(0, 10),
-          mode: body.modeReglement === 'mobile_money' ? 'mobile_money' : 'especes',
+          mode: body.modeAcompte ?? 'especes',
+          reference: null,
           notes: "Encaissé à l'émission du bon",
         }
       : null
@@ -136,7 +137,7 @@ export default defineEventHandler(async (event) => {
     dateEcheance: body.dateEcheance ?? null,
     objet: body.objet ?? null,
     montantTotal,
-    modeReglement: body.modeReglement,
+    conditionsReglement: body.conditionsReglement,
     statutPaiement: acompte <= 0 ? 'impaye' : acompte >= montantTotal ? 'paye' : 'partiel',
     montantPaye: acompte,
     notes: body.notes ?? null,

@@ -8,7 +8,7 @@ export interface Creance {
   montantPaye: number
   reste: number
   statutPaiement: string
-  modeReglement: string
+  conditionsReglement: string
   clientId: string
   clientNom: string
   clientTelephone: string | null
@@ -23,6 +23,7 @@ export interface Reglement {
   montant: number
   dateReglement: string
   mode: string
+  reference: string | null
   notes: string | null
 }
 
