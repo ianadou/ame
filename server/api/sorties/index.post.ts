@@ -8,6 +8,7 @@ import {
   beneficiaires,
   articles,
   mouvements,
+  reglements,
   parametres,
 } from '../../db/schema'
 import { createSortieSchema } from '../../utils/validation'
@@ -25,7 +26,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // Destination et bénéficiaire sont optionnels, mais s'ils sont fournis
-  // ils doivent exister — sinon le bon partirait avec une référence morte.
+  // ils doivent exister, sinon le bon partirait avec une référence morte.
   if (body.chantierId) {
     const [chantier] = await db
       .select({ id: chantiers.id })
@@ -103,12 +104,27 @@ export default defineEventHandler(async (event) => {
 
   const montantTotal = lignes.reduce((s, l) => s + l.quantite * l.prixUnitaire, 0)
 
-  const montantPaye =
+  // L'acompte éventuellement encaissé à l'émission devient un règlement à part
+  // entière : le statut du bon découle toujours d'une trace, jamais d'une
+  // simple déclaration.
+  const acompte =
     body.statutPaiement === 'paye'
       ? montantTotal
       : body.statutPaiement === 'impaye'
         ? 0
         : Math.min(body.montantPaye ?? 0, montantTotal)
+
+  const reglementInitial =
+    acompte > 0
+      ? {
+          id: generateId(),
+          sortieId,
+          montant: acompte,
+          dateReglement: body.dateSortie ?? new Date().toISOString().slice(0, 10),
+          mode: body.modeReglement === 'mobile_money' ? 'mobile_money' : 'especes',
+          notes: "Encaissé à l'émission du bon",
+        }
+      : null
 
   const sortie = {
     id: sortieId,
@@ -117,11 +133,12 @@ export default defineEventHandler(async (event) => {
     chantierId: body.chantierId ?? null,
     beneficiaireId: body.beneficiaireId ?? null,
     dateSortie: body.dateSortie ?? new Date().toISOString().slice(0, 10),
+    dateEcheance: body.dateEcheance ?? null,
     objet: body.objet ?? null,
     montantTotal,
     modeReglement: body.modeReglement,
-    statutPaiement: body.statutPaiement,
-    montantPaye,
+    statutPaiement: acompte <= 0 ? 'impaye' : acompte >= montantTotal ? 'paye' : 'partiel',
+    montantPaye: acompte,
     notes: body.notes ?? null,
     tauxTvaApplique,
   }
@@ -129,6 +146,7 @@ export default defineEventHandler(async (event) => {
   await db.transaction(async (tx) => {
     await tx.insert(sorties).values(sortie)
     await tx.insert(lignesSortie).values(lignes)
+    if (reglementInitial) await tx.insert(reglements).values(reglementInitial)
 
     for (const ligne of lignes) {
       await tx

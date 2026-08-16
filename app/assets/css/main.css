@@ -52,7 +52,7 @@
     border-radius: 14px;
   }
 
-  /* Tableau de données — style maquette */
+  /* Tableau de données, style maquette */
   .data-table {
     @apply w-full;
   }

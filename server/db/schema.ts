@@ -143,6 +143,9 @@ export const sorties = sqliteTable(
       onDelete: 'restrict',
     }),
     dateSortie: text('date_sortie'),
+    // Date à laquelle le solde est attendu. Ne vaut que pour un bon non
+    // soldé : c'est elle qui fait remonter une créance en retard.
+    dateEcheance: text('date_echeance'),
     objet: text('objet'),
     montantTotal: real('montant_total').notNull().default(0),
     modeReglement: text('mode_reglement').notNull().default('comptant'),
@@ -190,6 +193,34 @@ export const lignesSortie = sqliteTable(
     check('lignes_sortie_quantite_positive', sql`${t.quantite} > 0`),
     check('lignes_sortie_prix_positif', sql`${t.prixUnitaire} >= 0`),
     check('lignes_sortie_stock_positif', sql`${t.stockApres} >= 0`),
+  ],
+)
+
+// Encaissement reçu sur un bon. L'app ne déplace pas d'argent : elle garde la
+// trace de ce qui a été réglé, quand et par quel canal. `sorties.montantPaye`
+// et `sorties.statutPaiement` sont recalculés depuis cette table à chaque
+// écriture, pour qu'un bon ne puisse jamais afficher « Payé » sans trace.
+export const reglements = sqliteTable(
+  'reglements',
+  {
+    id: text('id').primaryKey(),
+    sortieId: text('sortie_id')
+      .references(() => sorties.id, { onDelete: 'cascade' })
+      .notNull(),
+    montant: real('montant').notNull(),
+    dateReglement: text('date_reglement').notNull(),
+    mode: text('mode').notNull().default('especes'),
+    notes: text('notes'),
+    createdAt: text('created_at')
+      .default(sql`(datetime('now'))`)
+      .notNull(),
+  },
+  (t) => [
+    check('reglements_montant_positif', sql`${t.montant} > 0`),
+    check(
+      'reglements_mode_valide',
+      sql`${t.mode} IN ('especes','mobile_money','virement','cheque')`,
+    ),
   ],
 )
 

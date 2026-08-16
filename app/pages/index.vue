@@ -13,6 +13,7 @@ import {
   Pencil,
   Upload,
   Download,
+  Wallet,
 } from 'lucide-vue-next'
 import type { RegimeTva } from '~/composables/useSessionUser'
 
@@ -53,6 +54,7 @@ interface DashboardData {
   valeurStock: number
   nbAlertes: number
   nbClients: number
+  creances: { aEncaisser: number; nbBons: number; enRetard: number; nbEnRetard: number }
   derniersMouvements: DernierMouvement[]
   topClients: Tendance[]
 }
@@ -109,7 +111,7 @@ const valEvolution = computed(() =>
   }),
 )
 
-// Régime fiscal — affichage + édition rapide depuis le dashboard.
+// Régime fiscal : affichage + édition rapide depuis le dashboard.
 const { user, saveRegimeTva } = useSessionUser()
 const notifications = useNotifications()
 const showTvaModal = ref(false)
@@ -226,6 +228,19 @@ const exportEntites = [
         :delta-sub="(alertes?.length ?? 0) > 0 ? 'à traiter' : null"
         :spark="[0, 0, 1, 0, 2, 1, 0, 1]"
         spark-color="#EF4444"
+      />
+      <KpiCard
+        label="À encaisser"
+        :value="fcfa(dashboard?.creances.aEncaisser ?? 0)"
+        :icon="Wallet"
+        :tone="(dashboard?.creances.enRetard ?? 0) > 0 ? 'danger' : 'neutral'"
+        :delta="
+          (dashboard?.creances.nbEnRetard ?? 0) > 0 ? String(dashboard?.creances.nbEnRetard) : null
+        "
+        :delta-sub="(dashboard?.creances.nbEnRetard ?? 0) > 0 ? 'en retard' : null"
+        :spark="[1, 1, 2, 1, 2, 2, 3, 2]"
+        spark-color="#D9871A"
+        @click="navigateTo('/creances')"
       />
       <KpiCard
         label="Clients"

@@ -8,7 +8,7 @@
 //
 // On recopie donc ENTIERS, depuis node_modules vers .output : le paquet
 // natif `libsql`, et TOUS les sous-paquets `@libsql/*` présents (le binding
-// de plateforme installé dépend de l'OS du build — Windows en CI). Écrase
+// de plateforme installé dépend de l'OS du build, Windows en CI). Écrase
 // pour garantir tous les fichiers (force).
 //
 // Windows seulement : le `.node` libsql dépend du runtime MSVC

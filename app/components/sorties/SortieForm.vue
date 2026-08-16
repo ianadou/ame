@@ -57,6 +57,7 @@ const form = reactive({
   chantierId: '',
   beneficiaireId: '',
   dateSortie: new Date().toISOString().slice(0, 10),
+  dateEcheance: '',
   objet: '',
   modeReglement: 'comptant',
   statutPaiement: 'paye',
@@ -88,7 +89,7 @@ const total = computed(() =>
   }, 0),
 )
 
-// Preview TVA en temps réel si l'utilisateur est assujetti — le taux
+// Preview TVA en temps réel si l'utilisateur est assujetti : le taux
 // figé sur le bon sera celui des paramètres au moment du submit.
 const { user, assujettiTva } = useSessionUser()
 const tvaPreview = computed(() => {
@@ -101,7 +102,7 @@ const tvaPreview = computed(() => {
 
 // Un article retournable doit pouvoir être réclamé à quelqu'un : sans
 // bénéficiaire, le suivi des retours n'aurait personne à qui demander.
-// Simple avertissement — certaines ventes retournables partent chez un
+// Simple avertissement : certaines ventes retournables partent chez un
 // client sans passer par un chef d'équipe.
 const alerteRetournable = computed(
   () =>
@@ -147,6 +148,7 @@ function handleSubmit() {
     statutPaiement: form.statutPaiement,
     lignes: lignesValides,
   }
+  if (form.dateEcheance) data.dateEcheance = form.dateEcheance
   if (form.chantierId) data.chantierId = form.chantierId
   if (form.beneficiaireId) data.beneficiaireId = form.beneficiaireId
   if (form.objet) data.objet = form.objet
@@ -176,7 +178,7 @@ function handleSubmit() {
         v-model="form.chantierId"
         label="Chantier (optionnel)"
         :options="chantierOptions"
-        placeholder="Aucun — vente au comptoir"
+        placeholder="Aucun (vente au comptoir)"
       />
       <AppSelect
         v-model="form.beneficiaireId"
@@ -238,14 +240,27 @@ function handleSubmit() {
     <!-- Règlement -->
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
       <AppSelect v-model="form.modeReglement" label="Mode de règlement" :options="modeOptions" />
-      <AppSelect v-model="form.statutPaiement" label="Statut paiement" :options="statutOptions" />
+      <AppSelect
+        v-model="form.statutPaiement"
+        label="Encaissé à l'émission"
+        :options="statutOptions"
+      />
       <AppInput
         v-if="form.statutPaiement === 'partiel'"
         v-model="form.montantPaye"
-        label="Montant payé (FCFA)"
+        label="Montant reçu (FCFA)"
         type="number"
         placeholder="0"
       />
+    </div>
+
+    <!-- L'échéance ne concerne que ce qui n'est pas encaissé tout de suite :
+         c'est elle qui fera remonter le bon dans les créances en retard. -->
+    <div v-if="form.statutPaiement !== 'paye'" class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <AppInput v-model="form.dateEcheance" label="Échéance du solde" type="date" />
+      <p class="self-end pb-2 text-[12px] text-muted">
+        Sans échéance, le bon apparaît dans les créances mais jamais comme étant en retard.
+      </p>
     </div>
 
     <div>

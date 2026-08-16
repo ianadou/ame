@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ArrowLeft, Ban } from 'lucide-vue-next'
+import { ArrowLeft, Ban, Wallet, Trash2 } from 'lucide-vue-next'
+import type { Reglement } from '~/composables/useCreances'
 
 const route = useRoute()
 const sortieId = route.params.id as string
@@ -33,6 +34,7 @@ interface SortieDetail {
   beneficiaireNom: string | null
   beneficiaireFonction: string | null
   dateSortie: string | null
+  dateEcheance: string | null
   objet: string | null
   montantTotal: number
   montantPaye: number
@@ -45,6 +47,7 @@ interface SortieDetail {
   tauxTvaApplique: number | null
   createdAt: string
   lignes: LigneSortie[]
+  reglements: Reglement[]
 }
 
 const { data: sortie, refresh } = await useFetch<SortieDetail>(`/api/sorties/${sortieId}`)
@@ -55,8 +58,33 @@ if (!sortie.value) {
 
 const annule = computed(() => sortie.value?.statut === 'annule')
 
+const { supprimerReglement } = useCreances()
+
+const showReglementModal = ref(false)
+const reglementASupprimer = ref<Reglement | null>(null)
+const suppressionEnCours = ref(false)
+
+async function confirmerSuppressionReglement() {
+  if (!reglementASupprimer.value) return
+  suppressionEnCours.value = true
+  try {
+    await supprimerReglement(reglementASupprimer.value.id)
+    notifications.success('Règlement supprimé', 'Le statut du bon a été recalculé')
+    reglementASupprimer.value = null
+    await refresh()
+  } catch (e: unknown) {
+    const msg =
+      e && typeof e === 'object' && 'data' in e
+        ? ((e as { data?: { message?: string } }).data?.message ?? 'Suppression impossible')
+        : 'Suppression impossible'
+    notifications.danger('Suppression impossible', msg)
+  } finally {
+    suppressionEnCours.value = false
+  }
+}
+
 // La colonne « Rendu » n'a de sens que si le bon porte au moins un
-// article retournable — sinon elle serait une colonne de tirets.
+// article retournable, sinon elle serait une colonne de tirets.
 const aRetournables = computed(() => (sortie.value?.lignes ?? []).some((l) => l.retournable))
 
 // Si le bon a été émis avec un taux TVA figé (régime assujetti à
@@ -70,6 +98,13 @@ const tva = computed(() => {
   const montantTva = ht * (taux / 100)
   return { taux, ht, montantTva, ttc: ht + montantTva }
 })
+
+// Le TTC fait foi quand un taux TVA a été figé sur le bon : c'est ce que le
+// client doit réellement.
+const montantDu = computed(() =>
+  sortie.value ? (tva.value ? tva.value.ttc : sortie.value.montantTotal) : 0,
+)
+const reste = computed(() => montantDu.value - (sortie.value?.montantPaye ?? 0))
 
 // Modal d'annulation
 const showAnnulerModal = ref(false)
@@ -125,10 +160,16 @@ async function confirmerAnnulation() {
           <span v-if="sortie.objet"> · {{ sortie.objet }}</span>
         </p>
       </div>
-      <AppButton v-if="!annule" variant="danger" size="sm" @click="ouvrirAnnulation">
-        <Ban class="h-4 w-4" />
-        Annuler ce bon
-      </AppButton>
+      <div class="flex gap-2">
+        <AppButton v-if="!annule && reste > 0.5" size="sm" @click="showReglementModal = true">
+          <Wallet class="h-4 w-4" />
+          Encaisser
+        </AppButton>
+        <AppButton v-if="!annule" variant="danger" size="sm" @click="ouvrirAnnulation">
+          <Ban class="h-4 w-4" />
+          Annuler ce bon
+        </AppButton>
+      </div>
     </div>
 
     <AppCard v-if="annule" class="border-rust/30 bg-rust/5">
@@ -154,20 +195,20 @@ async function confirmerAnnulation() {
       </AppCard>
       <AppCard>
         <p class="text-sm text-muted">Reste à payer</p>
-        <p
-          class="text-lg font-semibold"
-          :class="
-            (tva ? tva.ttc : sortie.montantTotal) - sortie.montantPaye > 0
-              ? 'text-rust-dark'
-              : 'text-ink'
-          "
-        >
-          {{ fcfa((tva ? tva.ttc : sortie.montantTotal) - sortie.montantPaye) }}
+        <p class="text-lg font-semibold" :class="reste > 0.5 ? 'text-rust-dark' : 'text-ink'">
+          {{ fcfa(reste) }}
         </p>
       </AppCard>
       <AppCard>
-        <p class="text-sm text-muted">Règlement</p>
+        <p class="text-sm text-muted">{{ sortie.dateEcheance ? 'Échéance' : 'Règlement' }}</p>
         <p class="text-lg font-semibold text-ink">
+          {{
+            sortie.dateEcheance
+              ? formatDate(sortie.dateEcheance)
+              : libelleReglement(sortie.modeReglement)
+          }}
+        </p>
+        <p v-if="sortie.dateEcheance" class="mt-0.5 text-[11.5px] text-muted">
           {{ libelleReglement(sortie.modeReglement) }}
         </p>
       </AppCard>
@@ -228,6 +269,49 @@ async function confirmerAnnulation() {
         </div>
       </dl>
     </AppCard>
+
+    <div>
+      <h3 class="mb-3 text-sm font-semibold text-ink">Règlements reçus</h3>
+      <AppCard :padding="false">
+        <table v-if="sortie.reglements.length > 0" class="data-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Reçu par</th>
+              <th>Note</th>
+              <th class="text-right">Montant</th>
+              <th />
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="r in sortie.reglements" :key="r.id" class="row-hover">
+              <td class="mono text-[12.5px] text-ink-2">{{ formatDate(r.dateReglement) }}</td>
+              <td class="text-ink-2">{{ libelleEncaissement(r.mode) }}</td>
+              <td class="text-[12.5px] text-muted">{{ r.notes ?? '' }}</td>
+              <td class="mono num text-right font-medium text-ink">{{ fcfa(r.montant) }}</td>
+              <td class="text-right">
+                <button
+                  v-if="!annule"
+                  aria-label="Supprimer ce règlement"
+                  title="Supprimer ce règlement"
+                  class="flex h-7 w-7 items-center justify-center rounded-md text-muted hover:bg-rust/10 hover:text-rust"
+                  @click="reglementASupprimer = r"
+                >
+                  <Trash2 class="h-3.5 w-3.5" />
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <AppEmptyState
+          v-else
+          :icon="Wallet"
+          title="Aucun règlement reçu"
+          description="Ce bon n'a encore rien encaissé. Le statut de paiement se calcule à partir des règlements enregistrés ici."
+        />
+      </AppCard>
+    </div>
 
     <div>
       <h3 class="mb-3 text-sm font-semibold text-ink">Articles sortis</h3>
@@ -302,5 +386,28 @@ async function confirmerAnnulation() {
         </AppButton>
       </template>
     </AppModal>
+
+    <ReglementModal
+      v-model:open="showReglementModal"
+      :sortie-id="sortie.id"
+      :reference="sortie.reference"
+      :client-nom="sortie.clientNom"
+      :reste="reste"
+      @saved="refresh"
+    />
+
+    <ConfirmDialog
+      :open="reglementASupprimer !== null"
+      title="Supprimer ce règlement"
+      :cible="
+        reglementASupprimer
+          ? `${fcfa(reglementASupprimer.montant)} du ${formatDate(reglementASupprimer.dateReglement)}`
+          : ''
+      "
+      message="La ligne disparaît de l'historique et le statut du bon est recalculé. Pour corriger un montant, supprimez la ligne fautive et ressaisissez-en une juste."
+      :loading="suppressionEnCours"
+      @update:open="(v) => !v && (reglementASupprimer = null)"
+      @confirm="confirmerSuppressionReglement"
+    />
   </div>
 </template>

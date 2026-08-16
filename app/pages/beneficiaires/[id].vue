@@ -126,11 +126,11 @@ async function handleDelete() {
       <dl class="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div>
           <dt class="text-sm text-muted">Téléphone</dt>
-          <dd class="mono text-sm text-ink-2">{{ beneficiaire.telephone ?? '—' }}</dd>
+          <dd class="mono text-sm text-ink-2">{{ beneficiaire.telephone ?? '' }}</dd>
         </div>
         <div>
           <dt class="text-sm text-muted">Fonction</dt>
-          <dd class="text-sm text-ink-2">{{ beneficiaire.fonction ?? '—' }}</dd>
+          <dd class="text-sm text-ink-2">{{ beneficiaire.fonction ?? '' }}</dd>
         </div>
       </dl>
     </AppCard>
@@ -152,7 +152,7 @@ async function handleDelete() {
             <tr v-for="ligne in materiel" :key="ligne.ligneSortieId" class="row-hover">
               <td class="font-medium text-ink">{{ ligne.articleNom }}</td>
               <td class="mono num text-right text-ink-2">{{ ligne.restant }} {{ ligne.unite }}</td>
-              <td class="text-muted">{{ ligne.chantierNom ?? '—' }}</td>
+              <td class="text-muted">{{ ligne.chantierNom ?? '' }}</td>
               <td>
                 <NuxtLink
                   :to="`/sorties/${ligne.sortieId}`"
@@ -195,7 +195,7 @@ async function handleDelete() {
             >
               <td class="mono text-[12.5px] font-medium text-ink">{{ bon.reference }}</td>
               <td class="mono text-[12.5px] text-muted">{{ formatDate(bon.dateSortie) }}</td>
-              <td class="text-muted">{{ bon.chantierNom ?? '—' }}</td>
+              <td class="text-muted">{{ bon.chantierNom ?? '' }}</td>
               <td class="text-muted">{{ bon.objet ?? '' }}</td>
               <td class="mono num text-right text-ink-2">{{ fcfa(bon.montantTotal) }}</td>
             </tr>
@@ -232,7 +232,7 @@ async function handleDelete() {
       v-model:open="showDeleteModal"
       title="Supprimer ce bénéficiaire"
       :cible="beneficiaire.nom"
-      message="La fiche est retirée définitivement. Si cette personne figure sur des bons, la suppression est bloquée — désactivez-la plutôt pour conserver l’historique."
+      message="La fiche est retirée définitivement. Si cette personne figure sur des bons, la suppression est bloquée : désactivez-la plutôt pour conserver l’historique."
       :loading="deleting"
       @confirm="handleDelete"
     />

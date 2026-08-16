@@ -8,6 +8,7 @@ import {
   lignesSortie,
   articles,
   retours,
+  reglements,
 } from '../../db/schema'
 
 export default defineEventHandler(async (event) => {
@@ -27,6 +28,7 @@ export default defineEventHandler(async (event) => {
       beneficiaireNom: beneficiaires.nom,
       beneficiaireFonction: beneficiaires.fonction,
       dateSortie: sorties.dateSortie,
+      dateEcheance: sorties.dateEcheance,
       objet: sorties.objet,
       montantTotal: sorties.montantTotal,
       montantPaye: sorties.montantPaye,
@@ -72,5 +74,17 @@ export default defineEventHandler(async (event) => {
     .where(eq(lignesSortie.sortieId, id))
     .orderBy(articles.nom)
 
-  return { ...sortie, lignes }
+  const encaissements = await db
+    .select({
+      id: reglements.id,
+      montant: reglements.montant,
+      dateReglement: reglements.dateReglement,
+      mode: reglements.mode,
+      notes: reglements.notes,
+    })
+    .from(reglements)
+    .where(eq(reglements.sortieId, id))
+    .orderBy(reglements.dateReglement, reglements.createdAt)
+
+  return { ...sortie, lignes, reglements: encaissements }
 })

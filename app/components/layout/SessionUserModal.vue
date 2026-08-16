@@ -5,7 +5,7 @@ const nom = ref('')
 const saving = ref(false)
 const erreur = ref<string | null>(null)
 
-// Visible si non configuré (1er lancement, bloquant) ou en mode édition —
+// Visible si non configuré (1er lancement, bloquant) ou en mode édition,
 // mais jamais avant que l'état de session soit résolu, sinon la modale
 // s'affiche puis disparaît à chaque chargement de page et avale le premier
 // clic de l'utilisateur.

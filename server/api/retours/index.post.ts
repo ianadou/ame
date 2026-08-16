@@ -8,7 +8,7 @@ import { generateId } from '../../utils/helpers'
  * Enregistre le retour d'un matériel prêté :
  *  - 'bon' : le stock est réincrémenté et une transaction d'entrée est
  *    inscrite au journal, comme pour une annulation partielle.
- *  - 'endommage' : la ligne est soldée sans réintégration — l'article ne
+ *  - 'endommage' : la ligne est soldée sans réintégration : l'article ne
  *    revient pas à l'inventaire, la perte reste visible dans l'historique.
  * Les retours partiels sont acceptés tant que le cumul ne dépasse pas la
  * quantité sortie.

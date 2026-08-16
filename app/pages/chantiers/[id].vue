@@ -138,7 +138,7 @@ async function handleDelete() {
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-4">
       <AppCard>
         <p class="text-sm text-muted">Budget alloué</p>
-        <p class="text-lg font-semibold text-ink">{{ fcfa(chantier.budgetAlloue) || '—' }}</p>
+        <p class="text-lg font-semibold text-ink">{{ fcfa(chantier.budgetAlloue) || '' }}</p>
       </AppCard>
       <AppCard>
         <p class="text-sm text-muted">Consommé</p>
@@ -157,7 +157,7 @@ async function handleDelete() {
       <AppCard>
         <p class="text-sm text-muted">Reste</p>
         <p class="text-lg font-semibold" :class="budget?.depasse ? 'text-rust-dark' : 'text-ink'">
-          {{ budget ? fcfa(budget.reste) : '—' }}
+          {{ budget ? fcfa(budget.reste) : '' }}
         </p>
       </AppCard>
       <AppCard>
@@ -206,7 +206,7 @@ async function handleDelete() {
             <tr v-for="ligne in materiel" :key="ligne.ligneSortieId" class="row-hover">
               <td class="font-medium text-ink">{{ ligne.articleNom }}</td>
               <td class="mono num text-right text-ink-2">{{ ligne.restant }} {{ ligne.unite }}</td>
-              <td class="text-muted">{{ ligne.beneficiaireNom ?? '—' }}</td>
+              <td class="text-muted">{{ ligne.beneficiaireNom ?? '' }}</td>
               <td>
                 <NuxtLink
                   :to="`/sorties/${ligne.sortieId}`"
@@ -251,7 +251,7 @@ async function handleDelete() {
               <td class="mono text-[12.5px] font-medium text-ink">{{ bon.reference }}</td>
               <td class="mono text-[12.5px] text-muted">{{ formatDate(bon.dateSortie) }}</td>
               <td class="text-muted">{{ bon.objet ?? '' }}</td>
-              <td class="text-muted">{{ bon.beneficiaireNom ?? '—' }}</td>
+              <td class="text-muted">{{ bon.beneficiaireNom ?? '' }}</td>
               <td>
                 <AppBadge :variant="metaPaiement(bon.statutPaiement).variant" solid>
                   {{ metaPaiement(bon.statutPaiement).label }}
@@ -297,7 +297,7 @@ async function handleDelete() {
       v-model:open="showDeleteModal"
       title="Supprimer ce chantier"
       :cible="chantier.nom"
-      message="Le chantier est retiré définitivement. Les bons de vente qui lui sont rattachés bloquent la suppression — dans ce cas, passez-le plutôt en « Terminé »."
+      message="Le chantier est retiré définitivement. Les bons de vente qui lui sont rattachés bloquent la suppression : dans ce cas, passez-le plutôt en « Terminé »."
       :loading="deleting"
       @confirm="handleDelete"
     />

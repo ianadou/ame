@@ -25,6 +25,11 @@ const PAGE_META: Record<string, { title: string; kicker: string; crumb: string }
     kicker: 'Personnel qui retire le matériel',
     crumb: 'Référentiels',
   },
+  '/creances': {
+    title: 'Créances',
+    kicker: 'Bons non soldés et relances',
+    crumb: 'Opérations',
+  },
   '/retours': { title: 'Retours', kicker: 'Matériel prêté non rendu', crumb: 'Opérations' },
   '/parametres': { title: 'Réglages', kicker: 'Profil et données', crumb: 'Configuration' },
 }

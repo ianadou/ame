@@ -4,7 +4,7 @@ import { Menu } from 'lucide-vue-next'
 defineProps<{ title: string; kicker?: string; crumb?: string }>()
 defineEmits<{ toggleSidebar: [] }>()
 
-// Horloge réactive — Intl utilise le fuseau du système d'exploitation
+// Horloge réactive : Intl utilise le fuseau du système d'exploitation
 // (l'heure affichée correspond donc à la zone du PC : Abidjan en CI,
 // Paris en France, etc.). Tick à la minute.
 const now = ref(new Date())

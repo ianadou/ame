@@ -17,8 +17,8 @@ const submitting = ref(false)
 const erreur = ref('')
 
 const etatOptions = [
-  { value: 'bon', label: 'Bon état — remis en stock' },
-  { value: 'endommage', label: 'Endommagé — non remis en stock' },
+  { value: 'bon', label: 'Bon état, remis en stock' },
+  { value: 'endommage', label: 'Endommagé, non remis en stock' },
 ]
 
 // Réinitialise à chaque ouverture : on pré-remplit avec le reste dû, cas

@@ -1,6 +1,6 @@
 // Vocabulaire de statut partagé. Chaque page redéfinissait sa propre table,
 // et les sévérités avaient divergé : « Impayé » était rendu en neutre gris
-// pendant que « Partiel » était en ambre — une facture impayée paraissait
+// pendant que « Partiel » était en ambre, une facture impayée paraissait
 // donc plus calme qu'une facture à moitié réglée.
 
 export type VarianteBadge = 'success' | 'warning' | 'danger' | 'info' | 'neutral'
@@ -34,6 +34,24 @@ const REGLEMENT: Record<string, string> = {
   comptant: 'Comptant',
   credit: 'Crédit',
   mobile_money: 'Mobile money',
+}
+
+// Canal par lequel l'argent est effectivement rentré, distinct de
+// `sorties.modeReglement` qui porte les conditions convenues (comptant ou
+// crédit) au moment de l'émission.
+const MODE_ENCAISSEMENT: Record<string, string> = {
+  especes: 'Espèces',
+  mobile_money: 'Mobile money',
+  virement: 'Virement',
+  cheque: 'Chèque',
+}
+
+export const OPTIONS_MODE_ENCAISSEMENT = Object.entries(MODE_ENCAISSEMENT).map(
+  ([value, label]) => ({ value, label }),
+)
+
+export function libelleEncaissement(mode: string): string {
+  return MODE_ENCAISSEMENT[mode] ?? mode
 }
 
 function lire(table: Record<string, MetaStatut>, cle: string): MetaStatut {

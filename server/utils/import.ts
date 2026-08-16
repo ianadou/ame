@@ -346,7 +346,7 @@ const CONFIGS: Record<EntiteImport, EntiteConfig> = {
       let crees = 0
       let maj = 0
 
-      // Passe 1 : assigner un id par nom (existant ou nouveau) — gère les
+      // Passe 1 : assigner un id par nom (existant ou nouveau), gère les
       // références parent au sein du même fichier.
       const idParNom = new Map<string, string>()
       const resolus: {
@@ -668,7 +668,7 @@ export async function traiterImportTous(
       for (const a of r.avertissements) avertissements.push(`[${feuille.nom}] ${a}`)
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e)
-      avertissements.push(`Feuille « ${feuille.nom} » → ${entite} : ÉCHEC — ${msg}`)
+      avertissements.push(`Feuille « ${feuille.nom} » → ${entite} : ÉCHEC : ${msg}`)
     }
   }
 

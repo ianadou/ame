@@ -106,8 +106,8 @@ await load()
                   / {{ ligne.quantite }}
                 </span>
               </td>
-              <td class="text-muted">{{ ligne.chantierNom ?? '—' }}</td>
-              <td class="text-muted">{{ ligne.beneficiaireNom ?? '—' }}</td>
+              <td class="text-muted">{{ ligne.chantierNom ?? '' }}</td>
+              <td class="text-muted">{{ ligne.beneficiaireNom ?? '' }}</td>
               <td>
                 <NuxtLink
                   :to="`/sorties/${ligne.sortieId}`"
@@ -152,8 +152,8 @@ await load()
                   {{ r.etat === 'bon' ? 'Bon état' : 'Endommagé' }}
                 </AppBadge>
               </td>
-              <td class="text-muted">{{ r.chantierNom ?? '—' }}</td>
-              <td class="text-muted">{{ r.beneficiaireNom ?? '—' }}</td>
+              <td class="text-muted">{{ r.chantierNom ?? '' }}</td>
+              <td class="text-muted">{{ r.beneficiaireNom ?? '' }}</td>
               <td>
                 <NuxtLink
                   :to="`/sorties/${r.sortieId}`"

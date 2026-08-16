@@ -17,6 +17,28 @@ export default defineEventHandler(async () => {
 
   const [{ nbClients }] = await db.select({ nbClients: sql<number>`count(*)` }).from(clients)
 
+  // Ce qui reste à encaisser sur les bons actifs, et la part dont l'échéance
+  // est déjà passée : c'est cette seconde ligne qui appelle une relance.
+  const [creances] = await db
+    .select({
+      aEncaisser: sql<number>`coalesce(sum(${sorties.montantTotal} - ${sorties.montantPaye}), 0)`,
+      nbBons: sql<number>`count(*)`,
+      enRetard: sql<number>`coalesce(sum(
+        case when ${sorties.dateEcheance} is not null
+              and date(${sorties.dateEcheance}) < date('now')
+             then ${sorties.montantTotal} - ${sorties.montantPaye} else 0 end
+      ), 0)`,
+      nbEnRetard: sql<number>`coalesce(sum(
+        case when ${sorties.dateEcheance} is not null
+              and date(${sorties.dateEcheance}) < date('now')
+             then 1 else 0 end
+      ), 0)`,
+    })
+    .from(sorties)
+    .where(
+      sql`${sorties.statut} = 'actif' AND ${sorties.montantTotal} - ${sorties.montantPaye} > 0.5`,
+    )
+
   const derniersMouvements = await db
     .select({
       id: mouvements.id,
@@ -55,11 +77,17 @@ export default defineEventHandler(async () => {
     valeurStock: stats.valeurStock,
     nbAlertes,
     nbClients,
+    creances: {
+      aEncaisser: creances?.aEncaisser ?? 0,
+      nbBons: creances?.nbBons ?? 0,
+      enRetard: creances?.enRetard ?? 0,
+      nbEnRetard: creances?.nbEnRetard ?? 0,
+    },
     derniersMouvements,
     topClients: topClients.map((c) => ({
       nom: c.nom,
       valeur: Math.round(c.valeur),
-      sub: `${c.nb} sorties`,
+      sub: `${c.nb} vente${c.nb > 1 ? 's' : ''}`,
     })),
   }
 })

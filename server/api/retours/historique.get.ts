@@ -4,7 +4,7 @@ import { retours, lignesSortie, sorties, articles, chantiers, beneficiaires } fr
 
 /**
  * Retours déjà enregistrés. La page Retours ne montrait que ce qui est encore
- * dehors : le matériel rendu — et surtout celui rendu endommagé — n'était
+ * dehors : le matériel rendu, et surtout celui rendu endommagé, n'était
  * lisible nulle part, sauf à déduire des lignes « entrée » du journal.
  */
 export default defineEventHandler(async (event) => {
