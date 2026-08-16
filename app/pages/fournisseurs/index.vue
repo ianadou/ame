@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Plus, Upload, Download } from 'lucide-vue-next'
+import { Plus, Upload, Download, Truck } from 'lucide-vue-next'
 import { useDebounceFn } from '@vueuse/core'
 
 const { fournisseurs, loading, fetchFournisseurs, createFournisseur } = useFournisseurs()
@@ -53,7 +53,7 @@ await loadFournisseurs()
     <!-- Table -->
     <AppCard :padding="false">
       <div class="overflow-x-auto">
-        <table class="data-table">
+        <table v-if="!loading && fournisseurs.length > 0" class="data-table">
           <thead>
             <tr>
               <th>Nom</th>
@@ -64,7 +64,7 @@ await loadFournisseurs()
               <th>NCC</th>
             </tr>
           </thead>
-          <tbody v-if="!loading && fournisseurs.length > 0">
+          <tbody>
             <tr
               v-for="fournisseur in fournisseurs"
               :key="fournisseur.id"
@@ -86,6 +86,7 @@ await loadFournisseurs()
 
       <AppEmptyState
         v-if="!loading && fournisseurs.length === 0"
+        :icon="Truck"
         title="Aucun fournisseur"
         description="Commencez par ajouter votre premier fournisseur."
       >

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Plus, Upload, Download } from 'lucide-vue-next'
+import { Plus, Upload, Download, Users } from 'lucide-vue-next'
 import { useDebounceFn } from '@vueuse/core'
 
 const { clients, loading, fetchClients, createClient } = useClients()
@@ -65,7 +65,7 @@ await loadClients()
 
     <AppCard :padding="false">
       <div class="overflow-x-auto">
-        <table class="data-table">
+        <table v-if="!loading && clients.length > 0" class="data-table">
           <thead>
             <tr>
               <th>Nom</th>
@@ -76,7 +76,7 @@ await loadClients()
               <th>NCC</th>
             </tr>
           </thead>
-          <tbody v-if="!loading && clients.length > 0">
+          <tbody>
             <tr
               v-for="client in clients"
               :key="client.id"
@@ -104,6 +104,7 @@ await loadClients()
 
       <AppEmptyState
         v-if="!loading && clients.length === 0"
+        :icon="Users"
         title="Aucun client"
         description="Commencez par créer votre premier client."
       >

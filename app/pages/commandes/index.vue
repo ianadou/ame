@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Plus } from 'lucide-vue-next'
+import { Plus, ShoppingCart } from 'lucide-vue-next'
 
 const { commandes, loading, fetchCommandes, createCommande } = useCommandes()
 
@@ -64,7 +64,7 @@ await loadCommandes()
     <!-- Table -->
     <AppCard :padding="false">
       <div class="overflow-x-auto">
-        <table class="data-table">
+        <table v-if="!loading && commandes.length > 0" class="data-table">
           <thead>
             <tr>
               <th class="w-[200px]">Référence</th>
@@ -74,7 +74,7 @@ await loadCommandes()
               <th>Livraison prévue</th>
             </tr>
           </thead>
-          <tbody v-if="!loading && commandes.length > 0">
+          <tbody>
             <tr
               v-for="commande in commandes"
               :key="commande.id"
@@ -103,6 +103,7 @@ await loadCommandes()
 
       <AppEmptyState
         v-if="!loading && commandes.length === 0"
+        :icon="ShoppingCart"
         title="Aucune commande"
         description="Créez votre première commande fournisseur."
       >

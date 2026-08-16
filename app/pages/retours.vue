@@ -82,7 +82,7 @@ await load()
 
     <AppCard :padding="false">
       <div class="overflow-x-auto">
-        <table v-if="vue === 'dehors'" class="data-table">
+        <table v-if="vue === 'dehors' && !loading && materiel.length > 0" class="data-table">
           <thead>
             <tr>
               <th>Article</th>
@@ -94,7 +94,7 @@ await load()
               <th />
             </tr>
           </thead>
-          <tbody v-if="!loading && materiel.length > 0">
+          <tbody>
             <tr v-for="ligne in materiel" :key="ligne.ligneSortieId" class="row-hover">
               <td>
                 <span class="font-medium text-ink">{{ ligne.articleNom }}</span>
@@ -127,7 +127,7 @@ await load()
           </tbody>
         </table>
 
-        <table v-else class="data-table">
+        <table v-if="vue === 'historique' && !loading && historique.length > 0" class="data-table">
           <thead>
             <tr>
               <th>Article</th>
@@ -140,7 +140,7 @@ await load()
               <th>Note</th>
             </tr>
           </thead>
-          <tbody v-if="!loading && historique.length > 0">
+          <tbody>
             <tr v-for="r in historique" :key="r.id" class="row-hover">
               <td>
                 <span class="font-medium text-ink">{{ r.articleNom }}</span>
@@ -173,11 +173,13 @@ await load()
 
       <AppEmptyState
         v-if="!loading && vue === 'dehors' && materiel.length === 0"
+        :icon="Undo2"
         title="Aucun matériel dehors"
         description="Tout l'équipement retournable est rentré. Un article marqué « retournable » sorti sur un bon apparaît ici jusqu'à son retour."
       />
       <AppEmptyState
         v-if="!loading && vue === 'historique' && historique.length === 0"
+        :icon="Undo2"
         title="Aucun retour enregistré"
         description="Les retours saisis depuis cette page, une fiche chantier ou une fiche bénéficiaire s'inscrivent ici avec leur état."
       />

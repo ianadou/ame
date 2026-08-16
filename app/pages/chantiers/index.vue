@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Plus } from 'lucide-vue-next'
+import { Plus, HardHat } from 'lucide-vue-next'
 import { useDebounceFn } from '@vueuse/core'
 
 const { chantiers, loading, fetchChantiers, createChantier } = useChantiers()
@@ -62,7 +62,7 @@ await loadChantiers()
 
     <AppCard :padding="false">
       <div class="overflow-x-auto">
-        <table class="data-table">
+        <table v-if="!loading && chantiers.length > 0" class="data-table">
           <thead>
             <tr>
               <th>Nom</th>
@@ -73,7 +73,7 @@ await loadChantiers()
               <th>Début</th>
             </tr>
           </thead>
-          <tbody v-if="!loading && chantiers.length > 0">
+          <tbody>
             <tr
               v-for="chantier in chantiers"
               :key="chantier.id"
@@ -99,6 +99,7 @@ await loadChantiers()
 
       <AppEmptyState
         v-if="!loading && chantiers.length === 0"
+        :icon="HardHat"
         title="Aucun chantier"
         description="Commencez par créer votre premier chantier (site interne ou chez un client)."
       >

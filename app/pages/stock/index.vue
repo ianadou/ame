@@ -131,7 +131,7 @@ onMounted(async () => {
     <!-- Table -->
     <AppCard :padding="false">
       <div class="overflow-x-auto">
-        <table class="data-table">
+        <table v-if="!loading && articles.length > 0" class="data-table">
           <thead>
             <tr>
               <th class="w-[120px]">Réf.</th>
@@ -142,7 +142,7 @@ onMounted(async () => {
               <th class="w-[140px] !pl-6">Statut</th>
             </tr>
           </thead>
-          <tbody v-if="!loading && articles.length > 0">
+          <tbody>
             <tr
               v-for="article in articles"
               :key="article.id"

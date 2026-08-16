@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Plus } from 'lucide-vue-next'
+import { Plus, PackageMinus } from 'lucide-vue-next'
 import { useDebounceFn } from '@vueuse/core'
 
 const { sorties, loading, fetchSorties } = useSorties()
@@ -48,7 +48,7 @@ await load()
 
     <AppCard :padding="false">
       <div class="overflow-x-auto">
-        <table class="data-table">
+        <table v-if="!loading && sorties.length > 0" class="data-table">
           <thead>
             <tr>
               <th>Référence</th>
@@ -60,7 +60,7 @@ await load()
               <th>Paiement</th>
             </tr>
           </thead>
-          <tbody v-if="!loading && sorties.length > 0">
+          <tbody>
             <tr
               v-for="s in sorties"
               :key="s.id"
@@ -93,6 +93,7 @@ await load()
 
       <AppEmptyState
         v-if="!loading && sorties.length === 0"
+        :icon="PackageMinus"
         title="Aucune vente"
         description="Créez un bon de vente pour livrer des articles à un client."
       >

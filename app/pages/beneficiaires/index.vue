@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Plus } from 'lucide-vue-next'
+import { Plus, UserCheck } from 'lucide-vue-next'
 import { useDebounceFn } from '@vueuse/core'
 
 const { beneficiaires, loading, fetchBeneficiaires, createBeneficiaire } = useBeneficiaires()
@@ -61,7 +61,7 @@ await loadBeneficiaires()
 
     <AppCard :padding="false">
       <div class="overflow-x-auto">
-        <table class="data-table">
+        <table v-if="!loading && beneficiaires.length > 0" class="data-table">
           <thead>
             <tr>
               <th>Nom</th>
@@ -70,7 +70,7 @@ await loadBeneficiaires()
               <th>Statut</th>
             </tr>
           </thead>
-          <tbody v-if="!loading && beneficiaires.length > 0">
+          <tbody>
             <tr
               v-for="b in beneficiaires"
               :key="b.id"
@@ -94,6 +94,7 @@ await loadBeneficiaires()
 
       <AppEmptyState
         v-if="!loading && beneficiaires.length === 0"
+        :icon="UserCheck"
         title="Aucun bénéficiaire"
         description="Ajoutez le personnel qui retire du matériel pour les chantiers."
       >
