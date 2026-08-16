@@ -27,6 +27,7 @@ interface Activite {
   sub: string
   deltaSub: string
   ticks: string[]
+  libelles: string[]
   series: { entrees: (number | null)[]; sorties: (number | null)[] }
   kpi: { mvmts: number; entrees: number; sorties: number; valEntree: number; valSortie: number }
   delta: {
@@ -77,6 +78,7 @@ const videActivite: Activite = {
   sub: '',
   deltaSub: '',
   ticks: [],
+  libelles: [],
   series: { entrees: [], sorties: [] },
   kpi: { mvmts: 0, entrees: 0, sorties: 0, valEntree: 0, valSortie: 0 },
   delta: { mvmts: '+0%', entrees: '+0%', sorties: '+0%', valEntree: '+0%', valSortie: '+0%' },
@@ -204,6 +206,7 @@ const exportEntites = [
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <KpiCard
         label="Articles référencés"
+        to="/stock"
         :value="fmt(dashboard?.nbArticles ?? 0)"
         :icon="Package"
         :spark="[26, 27, 28, 27, 29, 29, 30, 30]"
@@ -211,6 +214,7 @@ const exportEntites = [
       />
       <KpiCard
         label="Valeur du stock"
+        to="/stock"
         :value="valeurK"
         unit="K FCFA"
         :icon="Coins"
@@ -221,6 +225,7 @@ const exportEntites = [
       />
       <KpiCard
         label="Alertes stock bas"
+        to="/stock?alerte=1"
         :value="fmt(alertes?.length ?? 0)"
         :icon="AlertTriangle"
         :tone="(alertes?.length ?? 0) > 0 ? 'danger' : 'success'"
@@ -231,6 +236,7 @@ const exportEntites = [
       />
       <KpiCard
         label="À encaisser"
+        to="/creances"
         :value="fcfa(dashboard?.creances.aEncaisser ?? 0)"
         :icon="Wallet"
         :tone="(dashboard?.creances.enRetard ?? 0) > 0 ? 'danger' : 'neutral'"
@@ -240,10 +246,10 @@ const exportEntites = [
         :delta-sub="(dashboard?.creances.nbEnRetard ?? 0) > 0 ? 'en retard' : null"
         :spark="[1, 1, 2, 1, 2, 2, 3, 2]"
         spark-color="#D9871A"
-        @click="navigateTo('/creances')"
       />
       <KpiCard
         label="Clients"
+        to="/clients"
         :value="fmt(dashboard?.nbClients ?? 0)"
         :icon="Users"
         :spark="[4, 4, 5, 5, 5, 6, 6, 6]"
@@ -267,6 +273,7 @@ const exportEntites = [
     <div class="grid grid-cols-2 gap-4 lg:grid-cols-5">
       <KpiCard
         label="Transactions"
+        to="/mouvements"
         :value="fmt(data.kpi.mvmts)"
         :delta="data.delta.mvmts"
         :delta-sub="data.deltaSub"
@@ -277,6 +284,7 @@ const exportEntites = [
       />
       <KpiCard
         label="Approvisionnements"
+        to="/mouvements"
         :value="fmt(data.kpi.entrees)"
         :delta="data.delta.entrees"
         :delta-sub="data.deltaSub"
@@ -285,6 +293,7 @@ const exportEntites = [
       />
       <KpiCard
         label="Ventes"
+        to="/sorties"
         :value="fmt(data.kpi.sorties)"
         :delta="data.delta.sorties"
         :delta-sub="data.deltaSub"
@@ -293,6 +302,7 @@ const exportEntites = [
       />
       <KpiCard
         label="Valeur achetée"
+        to="/commandes"
         :value="fmt(data.kpi.valEntree / 1000)"
         unit="K FCFA"
         :delta="data.delta.valEntree"
@@ -302,6 +312,7 @@ const exportEntites = [
       />
       <KpiCard
         label="Valeur vendue"
+        to="/sorties"
         :value="fmt(data.kpi.valSortie / 1000)"
         unit="K FCFA"
         :delta="data.delta.valSortie"
@@ -319,10 +330,10 @@ const exportEntites = [
       <template #action>
         <div class="flex items-center gap-4 text-[11.5px]">
           <span class="flex items-center gap-1.5"
-            ><span class="h-2.5 w-2.5 rounded-[2px] bg-forest" />Approvisionnements</span
+            ><span class="h-2.5 w-2.5 rounded-[2px] bg-forest-dark" />Approvisionnements</span
           >
           <span class="flex items-center gap-1.5"
-            ><span class="h-2.5 w-2.5 rounded-[2px] bg-slate-600" />Ventes</span
+            ><span class="h-2.5 w-2.5 rounded-[2px] bg-ochre-dark" />Ventes</span
           >
         </div>
       </template>
@@ -331,6 +342,7 @@ const exportEntites = [
           :entrees="data.series.entrees"
           :sorties="data.series.sorties"
           :ticks="data.ticks"
+          :libelles="data.libelles"
           :height="240"
         />
       </div>
@@ -345,7 +357,14 @@ const exportEntites = [
         ><span class="text-[11.5px] text-muted">Cumul entrées + sorties</span></template
       >
       <div class="px-5 pb-4 pt-5">
-        <Sparkline :values="valEvolution" color="#475569" :height="160" />
+        <Sparkline
+          :values="valEvolution"
+          :labels="data.libelles"
+          color="#047857"
+          :height="160"
+          interactive
+          :format="fcfa"
+        />
       </div>
     </PanelCard>
 

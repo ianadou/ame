@@ -6,7 +6,9 @@ const { articles, total, loading, fetchArticles, createArticle } = useStock()
 
 const search = ref('')
 const categorieFilter = ref('')
-const alerteOnly = ref(false)
+// La carte « Alertes stock bas » du tableau de bord pointe ici avec le filtre
+// déjà posé : elle annonce un nombre, elle doit livrer les lignes.
+const alerteOnly = ref(useRoute().query.alerte === '1')
 const voirArchives = ref(false)
 const currentPage = ref(1)
 const showCreateModal = ref(false)
