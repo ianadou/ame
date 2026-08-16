@@ -41,3 +41,6 @@ src-tauri/binaries
 
 # Specs (never commit)
 ame-spec.md
+
+# Rapports de critique design (outil, pas source)
+.impeccable

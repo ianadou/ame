@@ -95,7 +95,7 @@ function formatDateTime(iso: string) {
       <!-- Type + quantité + horodatage -->
       <div class="flex items-start justify-between gap-4">
         <div>
-          <AppBadge :variant="mvtMeta(detail.type).variant" solid>
+          <AppBadge :variant="mvtMeta(detail.type).variant">
             {{ mvtMeta(detail.type).label }}
           </AppBadge>
           <p class="mt-2 text-xs text-muted">{{ formatDateTime(detail.createdAt) }}</p>
@@ -114,7 +114,9 @@ function formatDateTime(iso: string) {
           class="mt-1 flex items-baseline gap-2 hover:text-forest"
           @click="emit('close')"
         >
-          <span class="mono text-[13px] font-medium text-ink-2">{{ detail.article.reference }}</span>
+          <span class="mono text-[13px] font-medium text-ink-2">{{
+            detail.article.reference
+          }}</span>
           <span class="text-sm font-medium text-ink">{{ detail.article.nom }}</span>
         </NuxtLink>
       </div>

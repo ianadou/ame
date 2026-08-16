@@ -53,6 +53,8 @@ export default defineEventHandler(async (event) => {
         stockActuel: articles.stockActuel,
         seuilAlerte: articles.seuilAlerte,
         emplacement: articles.emplacement,
+        type: articles.type,
+        retournable: articles.retournable,
         statut: articles.statut,
       })
       .from(articles)

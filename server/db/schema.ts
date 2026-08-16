@@ -24,6 +24,12 @@ export const articles = sqliteTable(
     seuilAlerte: integer('seuil_alerte').notNull().default(5),
     emplacement: text('emplacement'),
     notes: text('notes'),
+    // Nature physique de l'article : `consommable` = sortie définitive
+    // (ciment, EPI usage unique) ; `equipement` = bien réutilisable
+    // (perceuse, brouette). `retournable` complète : si vrai, on attend
+    // que le bénéficiaire le ramène (suivi « non retourné »).
+    type: text('type').notNull().default('consommable'),
+    retournable: integer('retournable', { mode: 'boolean' }).notNull().default(false),
     statut: text('statut').notNull().default('actif'),
     archiveLe: text('archive_le'),
     motifArchivage: text('motif_archivage'),
@@ -39,6 +45,7 @@ export const articles = sqliteTable(
     check('articles_stock_positif', sql`${t.stockActuel} >= 0`),
     check('articles_seuil_positif', sql`${t.seuilAlerte} >= 0`),
     check('articles_statut_valide', sql`${t.statut} IN ('actif','archive')`),
+    check('articles_type_valide', sql`${t.type} IN ('consommable','equipement')`),
     check(
       'articles_archivage_coherent',
       sql`(${t.statut} = 'actif' AND ${t.archiveLe} IS NULL AND ${t.motifArchivage} IS NULL) OR (${t.statut} = 'archive' AND ${t.archiveLe} IS NOT NULL AND ${t.motifArchivage} IS NOT NULL)`,
@@ -77,6 +84,48 @@ export const clients = sqliteTable('clients', {
     .notNull(),
 })
 
+// Site de travail (interne au SIEGE ou chantier externe chez un client).
+// Toute sortie de stock vers un chantier identifie où va le matériel ;
+// `budget_alloue` permet le suivi consommation/budget (page Bilan).
+export const chantiers = sqliteTable(
+  'chantiers',
+  {
+    id: text('id').primaryKey(),
+    nom: text('nom').notNull().unique(),
+    ville: text('ville'),
+    adresse: text('adresse'),
+    statut: text('statut').notNull().default('en_cours'),
+    clientId: text('client_id').references(() => clients.id, { onDelete: 'set null' }),
+    budgetAlloue: real('budget_alloue'),
+    dateDebut: text('date_debut'),
+    dateFinPrevue: text('date_fin_prevue'),
+    notes: text('notes'),
+    createdAt: text('created_at')
+      .default(sql`(datetime('now'))`)
+      .notNull(),
+    updatedAt: text('updated_at')
+      .default(sql`(datetime('now'))`)
+      .notNull(),
+  },
+  (t) => [
+    check('chantiers_statut_valide', sql`${t.statut} IN ('en_cours','termine','pause')`),
+    check('chantiers_budget_positif', sql`${t.budgetAlloue} IS NULL OR ${t.budgetAlloue} >= 0`),
+  ],
+)
+
+// Personnel interne qui retire du matériel pour un chantier. `actif`
+// permet de désactiver les anciens membres sans perdre l'historique.
+export const beneficiaires = sqliteTable('beneficiaires', {
+  id: text('id').primaryKey(),
+  nom: text('nom').notNull().unique(),
+  fonction: text('fonction'),
+  telephone: text('telephone'),
+  actif: integer('actif', { mode: 'boolean' }).notNull().default(true),
+  createdAt: text('created_at')
+    .default(sql`(datetime('now'))`)
+    .notNull(),
+})
+
 export const sorties = sqliteTable(
   'sorties',
   {
@@ -85,10 +134,23 @@ export const sorties = sqliteTable(
     clientId: text('client_id')
       .references(() => clients.id, { onDelete: 'restrict' })
       .notNull(),
+    // Destination physique du matériel et personne qui l'a retiré. Les
+    // deux restent optionnels : une vente au comptoir n'a ni chantier ni
+    // bénéficiaire. `restrict` côté FK pour ne jamais perdre la traçabilité
+    // d'un bon en supprimant un référentiel.
+    chantierId: text('chantier_id').references(() => chantiers.id, { onDelete: 'restrict' }),
+    beneficiaireId: text('beneficiaire_id').references(() => beneficiaires.id, {
+      onDelete: 'restrict',
+    }),
     dateSortie: text('date_sortie'),
+    // Date à laquelle le solde est attendu. Ne vaut que pour un bon non
+    // soldé : c'est elle qui fait remonter une créance en retard.
+    dateEcheance: text('date_echeance'),
     objet: text('objet'),
     montantTotal: real('montant_total').notNull().default(0),
-    modeReglement: text('mode_reglement').notNull().default('comptant'),
+    // Conditions convenues à l'émission, pas l'instrument de paiement : le
+    // canal réel (Orange Money, espèces, virement...) vit sur chaque règlement.
+    conditionsReglement: text('conditions_reglement').notNull().default('comptant'),
     statutPaiement: text('statut_paiement').notNull().default('paye'),
     montantPaye: real('montant_paye').notNull().default(0),
     notes: text('notes'),
@@ -133,6 +195,68 @@ export const lignesSortie = sqliteTable(
     check('lignes_sortie_quantite_positive', sql`${t.quantite} > 0`),
     check('lignes_sortie_prix_positif', sql`${t.prixUnitaire} >= 0`),
     check('lignes_sortie_stock_positif', sql`${t.stockApres} >= 0`),
+  ],
+)
+
+// Encaissement reçu sur un bon. L'app ne déplace pas d'argent : elle garde la
+// trace de ce qui a été réglé, quand et par quel canal. `sorties.montantPaye`
+// et `sorties.statutPaiement` sont recalculés depuis cette table à chaque
+// écriture, pour qu'un bon ne puisse jamais afficher « Payé » sans trace.
+export const reglements = sqliteTable(
+  'reglements',
+  {
+    id: text('id').primaryKey(),
+    sortieId: text('sortie_id')
+      .references(() => sorties.id, { onDelete: 'cascade' })
+      .notNull(),
+    montant: real('montant').notNull(),
+    dateReglement: text('date_reglement').notNull(),
+    // Canal réellement utilisé. En Côte d'Ivoire l'essentiel passe par le
+    // mobile money, d'où un canal par opérateur plutôt qu'un libellé unique :
+    // savoir sur quel compte l'argent est arrivé sert au rapprochement.
+    // `mobile_money` reste accepté pour les règlements enregistrés avant que
+    // les opérateurs soient distingués, mais n'est plus proposé à la saisie.
+    mode: text('mode').notNull().default('especes'),
+    // Identifiant de transaction fourni par l'opérateur : c'est la preuve du
+    // versement, elle mérite mieux qu'une note libre.
+    reference: text('reference'),
+    notes: text('notes'),
+    createdAt: text('created_at')
+      .default(sql`(datetime('now'))`)
+      .notNull(),
+  },
+  (t) => [
+    check('reglements_montant_positif', sql`${t.montant} > 0`),
+    check(
+      'reglements_mode_valide',
+      sql`${t.mode} IN ('orange_money','mtn_momo','moov_money','wave','especes','virement','cheque','mobile_money')`,
+    ),
+  ],
+)
+
+// Retour du matériel retournable prêté via un bon. Une ligne de sortie
+// peut être soldée en plusieurs fois (retours partiels) : le reste dû se
+// calcule par `ligne.quantite - somme(retours.quantite)`.
+// `etat` = 'bon' réintègre le stock ; 'endommage' solde la ligne sans
+// remettre l'article en stock (il est perdu pour l'inventaire).
+export const retours = sqliteTable(
+  'retours',
+  {
+    id: text('id').primaryKey(),
+    ligneSortieId: text('ligne_sortie_id')
+      .references(() => lignesSortie.id, { onDelete: 'cascade' })
+      .notNull(),
+    quantite: integer('quantite').notNull(),
+    dateRetour: text('date_retour').notNull(),
+    etat: text('etat').notNull().default('bon'),
+    notes: text('notes'),
+    createdAt: text('created_at')
+      .default(sql`(datetime('now'))`)
+      .notNull(),
+  },
+  (t) => [
+    check('retours_quantite_positive', sql`${t.quantite} > 0`),
+    check('retours_etat_valide', sql`${t.etat} IN ('bon','endommage')`),
   ],
 )
 

@@ -16,6 +16,8 @@ export const createArticleSchema = z.object({
   prixUnitaire: z.number().positive().optional(),
   seuilAlerte: z.number().int().min(0).default(5),
   emplacement: z.string().optional(),
+  type: z.enum(['consommable', 'equipement']).default('consommable'),
+  retournable: z.boolean().default(false),
   notes: z.string().optional(),
 })
 
@@ -48,6 +50,29 @@ export const createClientSchema = z.object({
 
 export const updateClientSchema = createClientSchema.partial()
 
+export const createChantierSchema = z.object({
+  nom: z.string().trim().min(1).max(200),
+  ville: z.string().trim().max(200).optional(),
+  adresse: z.string().trim().max(500).optional(),
+  statut: z.enum(['en_cours', 'termine', 'pause']).default('en_cours'),
+  clientId: z.string().uuid().optional(),
+  budgetAlloue: z.number().min(0).optional(),
+  dateDebut: z.string().optional(),
+  dateFinPrevue: z.string().optional(),
+  notes: z.string().optional(),
+})
+
+export const updateChantierSchema = createChantierSchema.partial()
+
+export const createBeneficiaireSchema = z.object({
+  nom: z.string().trim().min(1).max(200),
+  fonction: z.string().trim().max(200).optional(),
+  telephone: z.string().trim().max(50).optional(),
+  actif: z.boolean().default(true),
+})
+
+export const updateBeneficiaireSchema = createBeneficiaireSchema.partial()
+
 export const ligneSortieSchema = z.object({
   articleId: z.string().uuid(),
   quantite: z.number().int().positive(),
@@ -57,15 +82,51 @@ export const annulerSortieSchema = z.object({
   motif: z.string().trim().min(3).max(500),
 })
 
+// Canaux d'encaissement, opérateurs mobile money de Côte d'Ivoire en tête :
+// c'est par là que passe l'essentiel des règlements. `mobile_money` reste
+// accepté en lecture pour les lignes enregistrées avant que les opérateurs
+// soient distingués, mais n'est plus proposé à la saisie.
+export const MODES_REGLEMENT = [
+  'orange_money',
+  'mtn_momo',
+  'moov_money',
+  'wave',
+  'especes',
+  'virement',
+  'cheque',
+] as const
+
 export const createSortieSchema = z.object({
   clientId: z.string().uuid(),
+  chantierId: z.string().uuid().optional(),
+  beneficiaireId: z.string().uuid().optional(),
   dateSortie: z.string().optional(),
+  dateEcheance: z.string().optional(),
   objet: z.string().max(300).optional(),
-  modeReglement: z.enum(['comptant', 'credit', 'mobile_money']).default('comptant'),
+  conditionsReglement: z.enum(['comptant', 'credit']).default('comptant'),
   statutPaiement: z.enum(['paye', 'partiel', 'impaye']).default('paye'),
   montantPaye: z.number().min(0).optional(),
+  // Canal de l'acompte encaissé à l'émission, quand il y en a un.
+  modeAcompte: z.enum(MODES_REGLEMENT).optional(),
   notes: z.string().optional(),
   lignes: z.array(ligneSortieSchema).min(1),
+})
+
+export const createReglementSchema = z.object({
+  montant: z.number().positive(),
+  dateReglement: z.string().optional(),
+  mode: z.enum(MODES_REGLEMENT),
+  // Identifiant de transaction de l'opérateur, la preuve du versement.
+  reference: z.string().trim().max(100).optional(),
+  notes: z.string().max(500).optional(),
+})
+
+export const createRetourSchema = z.object({
+  ligneSortieId: z.string().uuid(),
+  quantite: z.number().int().positive(),
+  dateRetour: z.string().optional(),
+  etat: z.enum(['bon', 'endommage']).default('bon'),
+  notes: z.string().max(500).optional(),
 })
 
 export const ligneCommandeSchema = z.object({

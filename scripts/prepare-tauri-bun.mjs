@@ -1,6 +1,6 @@
 // Copie le binaire `bun` courant vers src-tauri/binaries/ sous le nom
 // attendu par Tauri pour un sidecar : `bun-<target-triple>`. Le binaire
-// (~95 Mo, propre à la plateforme) n'est PAS versionné — on le régénère
+// (~95 Mo, propre à la plateforme) n'est PAS versionné, on le régénère
 // avant chaque build desktop.
 import { execFileSync } from 'node:child_process'
 import { chmodSync, copyFileSync, existsSync, mkdirSync } from 'node:fs'

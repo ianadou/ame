@@ -164,7 +164,7 @@ export async function seedDemo() {
     dateSortie: now.toISOString().slice(0, 10),
     objet: 'Livraison chantier Riviera',
     montantTotal: montant,
-    modeReglement: 'comptant',
+    conditionsReglement: 'comptant',
     statutPaiement: 'paye',
     montantPaye: montant,
     notes: null,

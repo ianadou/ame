@@ -37,7 +37,7 @@ function heure(ts: number) {
       <Bell class="h-4 w-4" />
       <span
         v-if="pendingCount > 0"
-        class="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-rust px-1 text-[9px] font-semibold text-white"
+        class="mono num absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-rust/10 px-1 text-[9.5px] font-semibold text-rust-dark ring-2 ring-white"
       >
         {{ pendingCount }}
       </span>

@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { Plus, Trash2 } from 'lucide-vue-next'
 import type { Client } from '~/composables/useClients'
+import type { Chantier } from '~/composables/useChantiers'
+import type { Beneficiaire } from '~/composables/useBeneficiaires'
 
 interface ArticleOption {
   id: string
@@ -9,6 +11,7 @@ interface ArticleOption {
   prixUnitaire: number | null
   stockActuel: number
   unite: string
+  retournable: boolean
 }
 
 const props = defineProps<{
@@ -24,8 +27,25 @@ const { data: articlesResp } = await useFetch<{ data: ArticleOption[] }>('/api/a
   query: { limit: 100 },
 })
 
+const { data: chantiersResp } = await useFetch<Chantier[]>('/api/chantiers')
+const { data: beneficiairesResp } = await useFetch<Beneficiaire[]>('/api/beneficiaires', {
+  query: { actif: '1' },
+})
+
 const clientOptions = computed(() =>
   (clientsResp.value ?? []).map((c) => ({ value: c.id, label: c.nom })),
+)
+const chantierOptions = computed(() =>
+  (chantiersResp.value ?? []).map((c) => ({
+    value: c.id,
+    label: c.ville ? `${c.nom} · ${c.ville}` : c.nom,
+  })),
+)
+const beneficiaireOptions = computed(() =>
+  (beneficiairesResp.value ?? []).map((b) => ({
+    value: b.id,
+    label: b.fonction ? `${b.nom} · ${b.fonction}` : b.nom,
+  })),
 )
 const articles = computed(() => articlesResp.value?.data ?? [])
 const articleOptions = computed(() =>
@@ -34,20 +54,23 @@ const articleOptions = computed(() =>
 
 const form = reactive({
   clientId: props.initialClientId ?? '',
+  chantierId: '',
+  beneficiaireId: '',
   dateSortie: new Date().toISOString().slice(0, 10),
+  dateEcheance: '',
   objet: '',
-  modeReglement: 'comptant',
+  conditionsReglement: 'comptant',
   statutPaiement: 'paye',
   montantPaye: '',
+  modeAcompte: 'orange_money',
   notes: '',
 })
 
 const lignes = ref<{ articleId: string; quantite: string }[]>([{ articleId: '', quantite: '1' }])
 
-const modeOptions = [
+const conditionsOptions = [
   { value: 'comptant', label: 'Comptant' },
   { value: 'credit', label: 'Crédit' },
-  { value: 'mobile_money', label: 'Mobile money' },
 ]
 const statutOptions = [
   { value: 'paye', label: 'Payé' },
@@ -66,7 +89,7 @@ const total = computed(() =>
   }, 0),
 )
 
-// Preview TVA en temps réel si l'utilisateur est assujetti — le taux
+// Preview TVA en temps réel si l'utilisateur est assujetti : le taux
 // figé sur le bon sera celui des paramètres au moment du submit.
 const { user, assujettiTva } = useSessionUser()
 const tvaPreview = computed(() => {
@@ -77,6 +100,16 @@ const tvaPreview = computed(() => {
   return { taux, ht, montantTva, ttc: ht + montantTva }
 })
 
+// Un article retournable doit pouvoir être réclamé à quelqu'un : sans
+// bénéficiaire, le suivi des retours n'aurait personne à qui demander.
+// Simple avertissement : certaines ventes retournables partent chez un
+// client sans passer par un chef d'équipe.
+const alerteRetournable = computed(
+  () =>
+    !form.beneficiaireId &&
+    lignes.value.some((l) => l.articleId && articleById(l.articleId)?.retournable),
+)
+
 function addLigne() {
   lignes.value.push({ articleId: '', quantite: '1' })
 }
@@ -86,10 +119,6 @@ function removeLigne(i: number) {
 }
 
 const erreur = ref('')
-
-function fcfa(n: number) {
-  return new Intl.NumberFormat('fr-FR').format(Math.round(n)) + ' FCFA'
-}
 
 function handleSubmit() {
   erreur.value = ''
@@ -115,15 +144,19 @@ function handleSubmit() {
   const data: Record<string, unknown> = {
     clientId: form.clientId,
     dateSortie: form.dateSortie || undefined,
-    modeReglement: form.modeReglement,
+    conditionsReglement: form.conditionsReglement,
     statutPaiement: form.statutPaiement,
     lignes: lignesValides,
   }
+  if (form.dateEcheance) data.dateEcheance = form.dateEcheance
+  if (form.chantierId) data.chantierId = form.chantierId
+  if (form.beneficiaireId) data.beneficiaireId = form.beneficiaireId
   if (form.objet) data.objet = form.objet
   if (form.notes) data.notes = form.notes
   if (form.statutPaiement === 'partiel' && form.montantPaye) {
     data.montantPaye = Number(form.montantPaye)
   }
+  if (form.statutPaiement !== 'impaye') data.modeAcompte = form.modeAcompte
 
   emit('submit', data)
 }
@@ -139,6 +172,21 @@ function handleSubmit() {
         placeholder="Sélectionner un client..."
       />
       <AppInput v-model="form.dateSortie" label="Date de sortie" type="date" />
+    </div>
+
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <AppSelect
+        v-model="form.chantierId"
+        label="Chantier (optionnel)"
+        :options="chantierOptions"
+        placeholder="Aucun (vente au comptoir)"
+      />
+      <AppSelect
+        v-model="form.beneficiaireId"
+        label="Retiré par (optionnel)"
+        :options="beneficiaireOptions"
+        placeholder="Non précisé"
+      />
     </div>
 
     <AppInput
@@ -192,15 +240,41 @@ function handleSubmit() {
 
     <!-- Règlement -->
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-      <AppSelect v-model="form.modeReglement" label="Mode de règlement" :options="modeOptions" />
-      <AppSelect v-model="form.statutPaiement" label="Statut paiement" :options="statutOptions" />
+      <AppSelect
+        v-model="form.conditionsReglement"
+        label="Conditions"
+        :options="conditionsOptions"
+      />
+      <AppSelect
+        v-model="form.statutPaiement"
+        label="Encaissé à l'émission"
+        :options="statutOptions"
+      />
       <AppInput
         v-if="form.statutPaiement === 'partiel'"
         v-model="form.montantPaye"
-        label="Montant payé (FCFA)"
+        label="Montant reçu (FCFA)"
         type="number"
         placeholder="0"
       />
+    </div>
+
+    <!-- Dès qu'il y a un encaissement à l'émission, on note par où il est
+         passé : c'est la trace du versement, pas un détail administratif. -->
+    <AppSelect
+      v-if="form.statutPaiement !== 'impaye'"
+      v-model="form.modeAcompte"
+      label="Reçu par"
+      :options="OPTIONS_MODE_ENCAISSEMENT"
+    />
+
+    <!-- L'échéance ne concerne que ce qui n'est pas encaissé tout de suite :
+         c'est elle qui fera remonter le bon dans les créances en retard. -->
+    <div v-if="form.statutPaiement !== 'paye'" class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <AppInput v-model="form.dateEcheance" label="Échéance du solde" type="date" />
+      <p class="self-end pb-2 text-[12px] text-muted">
+        Sans échéance, le bon apparaît dans les créances mais jamais comme étant en retard.
+      </p>
     </div>
 
     <div>
@@ -231,6 +305,11 @@ function handleSubmit() {
         </span>
       </div>
     </div>
+
+    <p v-if="alerteRetournable" class="rounded-md bg-amber-50 px-3 py-2 text-[12px] text-amber-700">
+      Ce bon contient du matériel retournable sans bénéficiaire : personne ne sera identifié dans le
+      suivi des retours.
+    </p>
 
     <p v-if="erreur" class="rounded-md bg-rust/10 px-3 py-2 text-[12px] text-rust-dark">
       {{ erreur }}

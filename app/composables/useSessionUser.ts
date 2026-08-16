@@ -16,12 +16,23 @@ export function useSessionUser() {
     tauxTva: 18,
   }))
   const editing = useState<boolean>('session-user-editing', () => false)
+  // Tant que `load()` n'a pas répondu, on ne sait pas si l'entreprise est
+  // configurée : `configured` vaut faux par défaut, ce qui ferait clignoter
+  // la modale de premier lancement à chaque navigation. Les consommateurs
+  // attendent ce drapeau avant de conclure quoi que ce soit.
+  const loaded = useState<boolean>('session-user-loaded', () => false)
 
   const configured = computed(() => !!user.value.nomEntreprise)
   const assujettiTva = computed(() => user.value.regimeTva === 'assujetti')
 
   async function load() {
-    user.value = await $fetch<SessionUser>('/api/parametres')
+    try {
+      user.value = await $fetch<SessionUser>('/api/parametres')
+    } finally {
+      // Même en échec (table absente, serveur non prêt) l'état est résolu :
+      // la modale bloquante doit alors bien prendre le relais.
+      loaded.value = true
+    }
   }
 
   async function save(nomEntreprise: string) {
@@ -39,5 +50,5 @@ export function useSessionUser() {
     })
   }
 
-  return { user, editing, configured, assujettiTva, load, save, saveRegimeTva }
+  return { user, editing, loaded, configured, assujettiTva, load, save, saveRegimeTva }
 }

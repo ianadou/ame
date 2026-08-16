@@ -15,7 +15,7 @@ const meta: Record<NotifVariant, { icon: typeof Info; bg: string }> = {
 <template>
   <Teleport to="body">
     <div
-      class="pointer-events-none fixed right-4 top-4 z-[100] flex w-[360px] max-w-[calc(100vw-2rem)] flex-col gap-2.5"
+      class="pointer-events-none fixed bottom-6 right-4 z-[100] flex w-[360px] max-w-[calc(100vw-2rem)] flex-col-reverse gap-2.5"
     >
       <TransitionGroup name="toast">
         <div

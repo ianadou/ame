@@ -7,6 +7,8 @@ interface ArticleFormData {
   prixUnitaire: string
   seuilAlerte: string
   emplacement: string
+  type: 'consommable' | 'equipement'
+  retournable: boolean
   notes: string
 }
 
@@ -26,8 +28,15 @@ const form = reactive<ArticleFormData>({
   prixUnitaire: props.initial?.prixUnitaire ?? '',
   seuilAlerte: props.initial?.seuilAlerte ?? '5',
   emplacement: props.initial?.emplacement ?? '',
+  type: props.initial?.type ?? 'consommable',
+  retournable: props.initial?.retournable ?? false,
   notes: props.initial?.notes ?? '',
 })
+
+const typeOptions = [
+  { value: 'consommable', label: 'Consommable (ciment, EPI usage unique...)' },
+  { value: 'equipement', label: 'Équipement (brouette, perceuse...)' },
+]
 
 const { categories, fetchCategories, createCategorie } = useCategories()
 await fetchCategories()
@@ -76,6 +85,8 @@ function handleSubmit() {
     reference: form.reference,
     nom: form.nom,
     unite: form.unite,
+    type: form.type,
+    retournable: form.retournable,
   }
   if (form.categorieId) data.categorieId = form.categorieId
   if (form.prixUnitaire) data.prixUnitaire = Number(form.prixUnitaire)
@@ -114,16 +125,23 @@ function handleSubmit() {
     </div>
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-      <AppInput
-        v-model="form.prixUnitaire"
-        :label="prixLabel"
-        type="number"
-        placeholder="0"
-      />
+      <AppInput v-model="form.prixUnitaire" :label="prixLabel" type="number" placeholder="0" />
       <AppInput v-model="form.seuilAlerte" label="Seuil d'alerte" type="number" placeholder="5" />
     </div>
 
     <AppInput v-model="form.emplacement" label="Emplacement" placeholder="Étagère A3, Rack 2" />
+
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <AppSelect v-model="form.type" label="Type d'article" :options="typeOptions" />
+      <label class="flex cursor-pointer items-end gap-3 pb-2 text-sm text-slate-700">
+        <input
+          v-model="form.retournable"
+          type="checkbox"
+          class="h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
+        />
+        <span>Retournable (bénéficiaire doit le ramener)</span>
+      </label>
+    </div>
 
     <div>
       <label class="mb-1 block text-sm font-medium text-slate-700">Notes</label>

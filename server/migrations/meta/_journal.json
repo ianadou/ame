@@ -78,6 +78,41 @@
       "when": 1779837000000,
       "tag": "0010_ncc_bp_ville",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1779837100000,
+      "tag": "0011_chantiers_beneficiaires",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1779837200000,
+      "tag": "0012_articles_type_retournable",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "6",
+      "when": 1779837300000,
+      "tag": "0013_sorties_chantier_retours",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "6",
+      "when": 1779837400000,
+      "tag": "0014_reglements_echeance",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "6",
+      "when": 1779837500000,
+      "tag": "0015_canaux_mobile_money",
+      "breakpoints": true
     }
   ]
 }
