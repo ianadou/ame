@@ -1,6 +1,15 @@
 import { eq, inArray, sql } from 'drizzle-orm'
 import { db } from '../../db'
-import { sorties, lignesSortie, clients, articles, mouvements, parametres } from '../../db/schema'
+import {
+  sorties,
+  lignesSortie,
+  clients,
+  chantiers,
+  beneficiaires,
+  articles,
+  mouvements,
+  parametres,
+} from '../../db/schema'
 import { createSortieSchema } from '../../utils/validation'
 import { generateId, generateSortieReference } from '../../utils/helpers'
 
@@ -13,6 +22,28 @@ export default defineEventHandler(async (event) => {
     .where(eq(clients.id, body.clientId))
   if (!client) {
     throw createError({ statusCode: 404, message: 'Client introuvable' })
+  }
+
+  // Destination et bénéficiaire sont optionnels, mais s'ils sont fournis
+  // ils doivent exister — sinon le bon partirait avec une référence morte.
+  if (body.chantierId) {
+    const [chantier] = await db
+      .select({ id: chantiers.id })
+      .from(chantiers)
+      .where(eq(chantiers.id, body.chantierId))
+    if (!chantier) {
+      throw createError({ statusCode: 404, message: 'Chantier introuvable' })
+    }
+  }
+
+  if (body.beneficiaireId) {
+    const [beneficiaire] = await db
+      .select({ id: beneficiaires.id })
+      .from(beneficiaires)
+      .where(eq(beneficiaires.id, body.beneficiaireId))
+    if (!beneficiaire) {
+      throw createError({ statusCode: 404, message: 'Bénéficiaire introuvable' })
+    }
   }
 
   // Fusionne les lignes en double (même article) : un bon de sortie a une
@@ -48,8 +79,7 @@ export default defineEventHandler(async (event) => {
   // mention TVA), sinon le taux courant. Les anciens bons restent
   // affichés avec leur taux d'origine même si le régime change ensuite.
   const [param] = await db.select().from(parametres).where(eq(parametres.id, 'app'))
-  const tauxTvaApplique =
-    param?.regimeTva === 'assujetti' ? (param?.tauxTva ?? 18) : null
+  const tauxTvaApplique = param?.regimeTva === 'assujetti' ? (param?.tauxTva ?? 18) : null
 
   const sortieId = generateId()
   const reference = generateSortieReference()
@@ -84,6 +114,8 @@ export default defineEventHandler(async (event) => {
     id: sortieId,
     reference,
     clientId: body.clientId,
+    chantierId: body.chantierId ?? null,
+    beneficiaireId: body.beneficiaireId ?? null,
     dateSortie: body.dateSortie ?? new Date().toISOString().slice(0, 10),
     objet: body.objet ?? null,
     montantTotal,

@@ -12,6 +12,7 @@ import {
   Search,
   HardHat,
   UserCheck,
+  Undo2,
 } from 'lucide-vue-next'
 
 const { openSearch } = useGlobalSearch()
@@ -37,6 +38,7 @@ const navGroups: { label: string; items: { name: string; to: string; icon: unkno
       { name: 'Ventes', to: '/sorties', icon: PackageMinus },
       { name: 'Transactions', to: '/mouvements', icon: ArrowLeftRight },
       { name: 'Commandes', to: '/commandes', icon: ShoppingCart },
+      { name: 'Retours', to: '/retours', icon: Undo2 },
     ],
   },
   {

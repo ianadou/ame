@@ -1,6 +1,6 @@
 import { eq, sql } from 'drizzle-orm'
 import { db } from '../../../db'
-import { sorties, lignesSortie, articles, mouvements } from '../../../db/schema'
+import { sorties, lignesSortie, articles, mouvements, retours } from '../../../db/schema'
 import { annulerSortieSchema } from '../../../utils/validation'
 import { generateId } from '../../../utils/helpers'
 
@@ -22,6 +22,23 @@ export default defineEventHandler(async (event) => {
   }
   if (sortie.statut === 'annule') {
     throw createError({ statusCode: 409, message: 'Ce bon de sortie est déjà annulé' })
+  }
+
+  // Un retour a déjà réintégré une partie du stock : contre-passer le bon
+  // entier le compterait une seconde fois. On bloque plutôt que de tenter
+  // une compensation partielle silencieuse.
+  const [{ nbRetours } = { nbRetours: 0 }] = await db
+    .select({ nbRetours: sql<number>`count(*)` })
+    .from(retours)
+    .innerJoin(lignesSortie, eq(retours.ligneSortieId, lignesSortie.id))
+    .where(eq(lignesSortie.sortieId, id))
+
+  if (nbRetours > 0) {
+    throw createError({
+      statusCode: 409,
+      message:
+        'Ce bon a déjà des retours enregistrés. Annulez-les d’abord ou faites un ajustement de stock.',
+    })
   }
 
   const lignes = await db.select().from(lignesSortie).where(eq(lignesSortie.sortieId, id))

@@ -84,6 +84,8 @@ export const annulerSortieSchema = z.object({
 
 export const createSortieSchema = z.object({
   clientId: z.string().uuid(),
+  chantierId: z.string().uuid().optional(),
+  beneficiaireId: z.string().uuid().optional(),
   dateSortie: z.string().optional(),
   objet: z.string().max(300).optional(),
   modeReglement: z.enum(['comptant', 'credit', 'mobile_money']).default('comptant'),
@@ -91,6 +93,14 @@ export const createSortieSchema = z.object({
   montantPaye: z.number().min(0).optional(),
   notes: z.string().optional(),
   lignes: z.array(ligneSortieSchema).min(1),
+})
+
+export const createRetourSchema = z.object({
+  ligneSortieId: z.string().uuid(),
+  quantite: z.number().int().positive(),
+  dateRetour: z.string().optional(),
+  etat: z.enum(['bon', 'endommage']).default('bon'),
+  notes: z.string().max(500).optional(),
 })
 
 export const ligneCommandeSchema = z.object({

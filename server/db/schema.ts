@@ -134,6 +134,14 @@ export const sorties = sqliteTable(
     clientId: text('client_id')
       .references(() => clients.id, { onDelete: 'restrict' })
       .notNull(),
+    // Destination physique du matériel et personne qui l'a retiré. Les
+    // deux restent optionnels : une vente au comptoir n'a ni chantier ni
+    // bénéficiaire. `restrict` côté FK pour ne jamais perdre la traçabilité
+    // d'un bon en supprimant un référentiel.
+    chantierId: text('chantier_id').references(() => chantiers.id, { onDelete: 'restrict' }),
+    beneficiaireId: text('beneficiaire_id').references(() => beneficiaires.id, {
+      onDelete: 'restrict',
+    }),
     dateSortie: text('date_sortie'),
     objet: text('objet'),
     montantTotal: real('montant_total').notNull().default(0),
@@ -182,6 +190,32 @@ export const lignesSortie = sqliteTable(
     check('lignes_sortie_quantite_positive', sql`${t.quantite} > 0`),
     check('lignes_sortie_prix_positif', sql`${t.prixUnitaire} >= 0`),
     check('lignes_sortie_stock_positif', sql`${t.stockApres} >= 0`),
+  ],
+)
+
+// Retour du matériel retournable prêté via un bon. Une ligne de sortie
+// peut être soldée en plusieurs fois (retours partiels) : le reste dû se
+// calcule par `ligne.quantite - somme(retours.quantite)`.
+// `etat` = 'bon' réintègre le stock ; 'endommage' solde la ligne sans
+// remettre l'article en stock (il est perdu pour l'inventaire).
+export const retours = sqliteTable(
+  'retours',
+  {
+    id: text('id').primaryKey(),
+    ligneSortieId: text('ligne_sortie_id')
+      .references(() => lignesSortie.id, { onDelete: 'cascade' })
+      .notNull(),
+    quantite: integer('quantite').notNull(),
+    dateRetour: text('date_retour').notNull(),
+    etat: text('etat').notNull().default('bon'),
+    notes: text('notes'),
+    createdAt: text('created_at')
+      .default(sql`(datetime('now'))`)
+      .notNull(),
+  },
+  (t) => [
+    check('retours_quantite_positive', sql`${t.quantite} > 0`),
+    check('retours_etat_valide', sql`${t.etat} IN ('bon','endommage')`),
   ],
 )
 

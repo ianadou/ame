@@ -1,6 +1,6 @@
-import { eq } from 'drizzle-orm'
+import { and, desc, eq, sql } from 'drizzle-orm'
 import { db } from '../../db'
-import { chantiers, clients } from '../../db/schema'
+import { chantiers, clients, sorties, beneficiaires } from '../../db/schema'
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')!
@@ -29,5 +29,30 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, message: 'Chantier introuvable' })
   }
 
-  return chantier
+  // Consommation = montant des bons actifs affectés au chantier. Les bons
+  // annulés sont exclus : leur stock a été restitué, ils ne pèsent pas sur
+  // le budget.
+  const bonsActifs = and(eq(sorties.chantierId, id), eq(sorties.statut, 'actif'))
+
+  const bons = await db
+    .select({
+      id: sorties.id,
+      reference: sorties.reference,
+      dateSortie: sorties.dateSortie,
+      objet: sorties.objet,
+      montantTotal: sorties.montantTotal,
+      statutPaiement: sorties.statutPaiement,
+      beneficiaireNom: beneficiaires.nom,
+    })
+    .from(sorties)
+    .leftJoin(beneficiaires, eq(sorties.beneficiaireId, beneficiaires.id))
+    .where(bonsActifs)
+    .orderBy(desc(sorties.dateSortie), desc(sorties.createdAt))
+
+  const [totaux] = await db
+    .select({ consomme: sql<number>`coalesce(sum(${sorties.montantTotal}), 0)` })
+    .from(sorties)
+    .where(bonsActifs)
+
+  return { ...chantier, consomme: totaux?.consomme ?? 0, bons }
 })

@@ -13,9 +13,11 @@ interface LigneSortie {
   articleReference: string
   articleNom: string
   unite: string
+  retournable: boolean
   quantite: number
   prixUnitaire: number
   stockApres: number
+  quantiteRetournee: number
 }
 
 interface SortieDetail {
@@ -25,6 +27,11 @@ interface SortieDetail {
   clientNom: string
   clientTelephone: string | null
   clientVille: string | null
+  chantierId: string | null
+  chantierNom: string | null
+  beneficiaireId: string | null
+  beneficiaireNom: string | null
+  beneficiaireFonction: string | null
   dateSortie: string | null
   objet: string | null
   montantTotal: number
@@ -77,6 +84,10 @@ function formatDateTime(iso: string | null) {
 }
 
 const annule = computed(() => sortie.value?.statut === 'annule')
+
+// La colonne « Rendu » n'a de sens que si le bon porte au moins un
+// article retournable — sinon elle serait une colonne de tirets.
+const aRetournables = computed(() => (sortie.value?.lignes ?? []).some((l) => l.retournable))
 
 // Si le bon a été émis avec un taux TVA figé (régime assujetti à
 // l'époque), on affiche Total HT / TVA / Total TTC ; sinon une seule
@@ -175,7 +186,11 @@ async function confirmerAnnulation() {
         <p class="text-sm text-muted">Reste à payer</p>
         <p
           class="text-lg font-semibold"
-          :class="(tva ? tva.ttc : sortie.montantTotal) - sortie.montantPaye > 0 ? 'text-rust-dark' : 'text-ink'"
+          :class="
+            (tva ? tva.ttc : sortie.montantTotal) - sortie.montantPaye > 0
+              ? 'text-rust-dark'
+              : 'text-ink'
+          "
         >
           {{ fcfa((tva ? tva.ttc : sortie.montantTotal) - sortie.montantPaye) }}
         </p>
@@ -206,8 +221,29 @@ async function confirmerAnnulation() {
       </dl>
     </AppCard>
 
-    <AppCard v-if="sortie.notes || sortie.clientTelephone">
+    <AppCard
+      v-if="sortie.notes || sortie.clientTelephone || sortie.chantierNom || sortie.beneficiaireNom"
+    >
       <dl class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div v-if="sortie.chantierNom">
+          <dt class="text-sm text-muted">Chantier</dt>
+          <dd class="text-sm text-ink-2">
+            <NuxtLink :to="`/chantiers/${sortie.chantierId}`" class="hover:text-ink">
+              {{ sortie.chantierNom }}
+            </NuxtLink>
+          </dd>
+        </div>
+        <div v-if="sortie.beneficiaireNom">
+          <dt class="text-sm text-muted">Retiré par</dt>
+          <dd class="text-sm text-ink-2">
+            <NuxtLink :to="`/beneficiaires/${sortie.beneficiaireId}`" class="hover:text-ink">
+              {{ sortie.beneficiaireNom }}
+            </NuxtLink>
+            <span v-if="sortie.beneficiaireFonction" class="text-muted">
+              · {{ sortie.beneficiaireFonction }}
+            </span>
+          </dd>
+        </div>
         <div v-if="sortie.clientTelephone">
           <dt class="text-sm text-muted">Téléphone client</dt>
           <dd class="text-sm text-ink-2">{{ sortie.clientTelephone }}</dd>
@@ -235,6 +271,7 @@ async function confirmerAnnulation() {
               <th class="text-center">Prix unitaire</th>
               <th class="text-center">Sous-total</th>
               <th class="text-center">Stock restant</th>
+              <th v-if="aRetournables" class="text-center">Rendu</th>
             </tr>
           </thead>
           <tbody>
@@ -249,6 +286,15 @@ async function confirmerAnnulation() {
                 {{ fcfa(l.prixUnitaire * l.quantite) }}
               </td>
               <td class="px-4 py-3 text-center text-sm text-muted">{{ l.stockApres }}</td>
+              <td v-if="aRetournables" class="px-4 py-3 text-center text-sm">
+                <span v-if="!l.retournable" class="text-muted">—</span>
+                <AppBadge v-else-if="l.quantiteRetournee >= l.quantite" variant="success">
+                  Rendu
+                </AppBadge>
+                <AppBadge v-else variant="warning">
+                  {{ l.quantite - l.quantiteRetournee }} dehors
+                </AppBadge>
+              </td>
             </tr>
           </tbody>
         </table>
