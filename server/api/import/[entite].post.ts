@@ -1,8 +1,15 @@
-import { ENTITES_IMPORT, MAX_TAILLE, traiterImport, type EntiteImport } from '../../utils/import'
+import {
+  ENTITES_IMPORT_AVEC_TOUS,
+  MAX_TAILLE,
+  traiterImport,
+  traiterImportTous,
+  type EntiteImport,
+  type EntiteImportOuTous,
+} from '../../utils/import'
 
 export default defineEventHandler(async (event) => {
-  const entite = getRouterParam(event, 'entite') as EntiteImport
-  if (!ENTITES_IMPORT.includes(entite)) {
+  const entite = getRouterParam(event, 'entite') as EntiteImportOuTous
+  if (!ENTITES_IMPORT_AVEC_TOUS.includes(entite)) {
     throw createError({ statusCode: 400, message: `Entité inconnue : ${entite}` })
   }
 
@@ -21,5 +28,9 @@ export default defineEventHandler(async (event) => {
   }
 
   const dryRun = getQuery(event).dryRun === '1'
-  return traiterImport(entite, fichier.data, fichier.filename, dryRun)
+
+  if (entite === 'tous') {
+    return traiterImportTous(fichier.data, fichier.filename, dryRun)
+  }
+  return traiterImport(entite as EntiteImport, fichier.data, fichier.filename, dryRun)
 })

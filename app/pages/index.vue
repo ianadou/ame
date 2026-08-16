@@ -11,6 +11,8 @@ import {
   ArrowUpRight as ArrowLink,
   Receipt,
   Pencil,
+  Upload,
+  Download,
 } from 'lucide-vue-next'
 import type { RegimeTva } from '~/composables/useSessionUser'
 
@@ -136,6 +138,26 @@ async function handleTvaSubmit(regime: RegimeTva, taux: number) {
     tvaSubmitting.value = false
   }
 }
+
+// Import / Export globaux : on rouvre les dialogs existants avec la
+// liste complète des entités supportées (cf. utils/import.ts &
+// utils/export.ts côté serveur).
+const showImportModal = ref(false)
+const showExportModal = ref(false)
+const importEntites = [
+  { value: 'tous', label: 'Tout (fichier .xlsx multi-feuilles)' },
+  { value: 'articles', label: 'Articles' },
+  { value: 'categories', label: 'Catégories' },
+  { value: 'fournisseurs', label: 'Fournisseurs' },
+  { value: 'clients', label: 'Clients' },
+]
+const exportEntites = [
+  { value: 'articles', label: 'Articles' },
+  { value: 'categories', label: 'Catégories' },
+  { value: 'fournisseurs', label: 'Fournisseurs' },
+  { value: 'clients', label: 'Clients' },
+  { value: 'mouvements', label: 'Transactions' },
+]
 </script>
 
 <template>
@@ -153,6 +175,15 @@ async function handleTvaSubmit(regime: RegimeTva, taux: number) {
       </AppButton>
       <AppButton variant="secondary" @click="navigateTo('/commandes')">
         <FilePlus class="h-4 w-4" />Bon de commande
+      </AppButton>
+
+      <span class="mx-1 h-5 w-px bg-line" aria-hidden="true" />
+
+      <AppButton variant="secondary" @click="showImportModal = true">
+        <Upload class="h-4 w-4" />Importer
+      </AppButton>
+      <AppButton variant="secondary" @click="showExportModal = true">
+        <Download class="h-4 w-4" />Exporter
       </AppButton>
 
       <button
@@ -413,5 +444,8 @@ async function handleTvaSubmit(regime: RegimeTva, taux: number) {
         @cancel="showTvaModal = false"
       />
     </AppModal>
+
+    <ImportDialog v-model:open="showImportModal" :entites="importEntites" />
+    <ExportDialog v-model:open="showExportModal" :entites="exportEntites" />
   </div>
 </template>
