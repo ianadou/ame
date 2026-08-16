@@ -77,6 +77,48 @@ export const clients = sqliteTable('clients', {
     .notNull(),
 })
 
+// Site de travail (interne au SIEGE ou chantier externe chez un client).
+// Toute sortie de stock vers un chantier identifie où va le matériel ;
+// `budget_alloue` permet le suivi consommation/budget (page Bilan).
+export const chantiers = sqliteTable(
+  'chantiers',
+  {
+    id: text('id').primaryKey(),
+    nom: text('nom').notNull().unique(),
+    ville: text('ville'),
+    adresse: text('adresse'),
+    statut: text('statut').notNull().default('en_cours'),
+    clientId: text('client_id').references(() => clients.id, { onDelete: 'set null' }),
+    budgetAlloue: real('budget_alloue'),
+    dateDebut: text('date_debut'),
+    dateFinPrevue: text('date_fin_prevue'),
+    notes: text('notes'),
+    createdAt: text('created_at')
+      .default(sql`(datetime('now'))`)
+      .notNull(),
+    updatedAt: text('updated_at')
+      .default(sql`(datetime('now'))`)
+      .notNull(),
+  },
+  (t) => [
+    check('chantiers_statut_valide', sql`${t.statut} IN ('en_cours','termine','pause')`),
+    check('chantiers_budget_positif', sql`${t.budgetAlloue} IS NULL OR ${t.budgetAlloue} >= 0`),
+  ],
+)
+
+// Personnel interne qui retire du matériel pour un chantier. `actif`
+// permet de désactiver les anciens membres sans perdre l'historique.
+export const beneficiaires = sqliteTable('beneficiaires', {
+  id: text('id').primaryKey(),
+  nom: text('nom').notNull().unique(),
+  fonction: text('fonction'),
+  telephone: text('telephone'),
+  actif: integer('actif', { mode: 'boolean' }).notNull().default(true),
+  createdAt: text('created_at')
+    .default(sql`(datetime('now'))`)
+    .notNull(),
+})
+
 export const sorties = sqliteTable(
   'sorties',
   {

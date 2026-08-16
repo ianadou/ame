@@ -78,6 +78,13 @@
       "when": 1779837000000,
       "tag": "0010_ncc_bp_ville",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1779837100000,
+      "tag": "0011_chantiers_beneficiaires",
+      "breakpoints": true
     }
   ]
 }

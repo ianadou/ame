@@ -10,6 +10,8 @@ import {
   Tags,
   Settings,
   Search,
+  HardHat,
+  UserCheck,
 } from 'lucide-vue-next'
 
 const { openSearch } = useGlobalSearch()
@@ -17,16 +19,39 @@ const { openSearch } = useGlobalSearch()
 defineProps<{ collapsed?: boolean }>()
 defineEmits<{ close: [] }>()
 
-const navigation = [
-  { name: 'Dashboard', to: '/', icon: LayoutDashboard },
-  { name: 'Stock', to: '/stock', icon: Package },
-  { name: 'Catégories', to: '/categories', icon: Tags },
-  { name: 'Ventes', to: '/sorties', icon: PackageMinus },
-  { name: 'Transactions', to: '/mouvements', icon: ArrowLeftRight },
-  { name: 'Commandes', to: '/commandes', icon: ShoppingCart },
-  { name: 'Fournisseurs', to: '/fournisseurs', icon: Truck },
-  { name: 'Clients', to: '/clients', icon: Users },
-  { name: 'Réglages', to: '/parametres', icon: Settings },
+// Navigation groupée : Atelier = vues quotidiennes (consultation),
+// Opérations = écritures (sorties / mouvements / commandes), Référentiels
+// = entités à entretenir occasionnellement, Système = config.
+const navGroups: { label: string; items: { name: string; to: string; icon: unknown }[] }[] = [
+  {
+    label: 'Atelier',
+    items: [
+      { name: 'Dashboard', to: '/', icon: LayoutDashboard },
+      { name: 'Stock', to: '/stock', icon: Package },
+      { name: 'Catégories', to: '/categories', icon: Tags },
+    ],
+  },
+  {
+    label: 'Opérations',
+    items: [
+      { name: 'Ventes', to: '/sorties', icon: PackageMinus },
+      { name: 'Transactions', to: '/mouvements', icon: ArrowLeftRight },
+      { name: 'Commandes', to: '/commandes', icon: ShoppingCart },
+    ],
+  },
+  {
+    label: 'Référentiels',
+    items: [
+      { name: 'Chantiers', to: '/chantiers', icon: HardHat },
+      { name: 'Bénéficiaires', to: '/beneficiaires', icon: UserCheck },
+      { name: 'Clients', to: '/clients', icon: Users },
+      { name: 'Fournisseurs', to: '/fournisseurs', icon: Truck },
+    ],
+  },
+  {
+    label: 'Système',
+    items: [{ name: 'Réglages', to: '/parametres', icon: Settings }],
+  },
 ]
 
 const { data: alertes } = await useFetch<unknown[]>('/api/alertes', { default: () => [] })
@@ -63,28 +88,33 @@ const nomComplet = computed(() => user.value.nomEntreprise?.trim() || 'Entrepris
       </button>
     </div>
 
-    <div class="px-5 pb-1.5 pt-2">
-      <div class="mono text-[9.5px] uppercase tracking-wider2 text-muted">Atelier</div>
-    </div>
-
-    <nav class="flex-1 space-y-px overflow-y-auto px-3">
-      <NuxtLink
-        v-for="item in navigation"
-        :key="item.name"
-        :to="item.to"
-        class="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-[13.5px] text-ink-3 transition-colors hover:bg-paper-2/60 hover:text-ink"
-        active-class="!bg-paper-2 !text-ink font-medium"
-        @click="$emit('close')"
-      >
-        <component :is="item.icon" class="h-4 w-4 shrink-0" />
-        <span>{{ item.name }}</span>
-        <span
-          v-if="item.to === '/stock' && nbAlertes > 0"
-          class="ml-auto inline-flex items-center rounded-full bg-rust px-2 py-px text-[10.5px] font-semibold text-white"
-        >
-          {{ nbAlertes }}
-        </span>
-      </NuxtLink>
+    <nav class="flex-1 space-y-4 overflow-y-auto pb-3 pt-2">
+      <div v-for="group in navGroups" :key="group.label">
+        <div class="px-5 pb-1.5">
+          <div class="mono text-[9.5px] uppercase tracking-wider2 text-muted">
+            {{ group.label }}
+          </div>
+        </div>
+        <div class="space-y-px px-3">
+          <NuxtLink
+            v-for="item in group.items"
+            :key="item.name"
+            :to="item.to"
+            class="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-[13.5px] text-ink-3 transition-colors hover:bg-paper-2/60 hover:text-ink"
+            active-class="!bg-paper-2 !text-ink font-medium"
+            @click="$emit('close')"
+          >
+            <component :is="item.icon" class="h-4 w-4 shrink-0" />
+            <span>{{ item.name }}</span>
+            <span
+              v-if="item.to === '/stock' && nbAlertes > 0"
+              class="ml-auto inline-flex items-center rounded-full bg-rust px-2 py-px text-[10.5px] font-semibold text-white"
+            >
+              {{ nbAlertes }}
+            </span>
+          </NuxtLink>
+        </div>
+      </div>
     </nav>
 
     <div class="space-y-3 border-t border-line px-4 py-4">

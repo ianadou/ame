@@ -48,6 +48,29 @@ export const createClientSchema = z.object({
 
 export const updateClientSchema = createClientSchema.partial()
 
+export const createChantierSchema = z.object({
+  nom: z.string().trim().min(1).max(200),
+  ville: z.string().trim().max(200).optional(),
+  adresse: z.string().trim().max(500).optional(),
+  statut: z.enum(['en_cours', 'termine', 'pause']).default('en_cours'),
+  clientId: z.string().uuid().optional(),
+  budgetAlloue: z.number().min(0).optional(),
+  dateDebut: z.string().optional(),
+  dateFinPrevue: z.string().optional(),
+  notes: z.string().optional(),
+})
+
+export const updateChantierSchema = createChantierSchema.partial()
+
+export const createBeneficiaireSchema = z.object({
+  nom: z.string().trim().min(1).max(200),
+  fonction: z.string().trim().max(200).optional(),
+  telephone: z.string().trim().max(50).optional(),
+  actif: z.boolean().default(true),
+})
+
+export const updateBeneficiaireSchema = createBeneficiaireSchema.partial()
+
 export const ligneSortieSchema = z.object({
   articleId: z.string().uuid(),
   quantite: z.number().int().positive(),
