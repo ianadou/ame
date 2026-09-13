@@ -4,7 +4,8 @@ export interface Creance {
   dateSortie: string | null
   dateEcheance: string | null
   objet: string | null
-  montantTotal: number
+  // Dû du bon, TTC sous TVA : c'est contre lui que se mesure le reste.
+  montantDu: number
   montantPaye: number
   reste: number
   statutPaiement: string

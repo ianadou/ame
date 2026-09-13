@@ -1,6 +1,7 @@
 import { eq, desc, sql } from 'drizzle-orm'
 import { db } from '../../db'
 import { clients, sorties, lignesSortie } from '../../db/schema'
+import { resteDuSql } from '../../utils/montants'
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')!
@@ -33,7 +34,10 @@ export default defineEventHandler(async (event) => {
     .select({
       nbSorties: sql<number>`count(*)`,
       totalAchete: sql<number>`coalesce(sum(${sorties.montantTotal}), 0)`,
-      totalImpaye: sql<number>`coalesce(sum(${sorties.montantTotal} - ${sorties.montantPaye}), 0)`,
+      // Même périmètre que les créances : bons actifs, dû TTC sous TVA.
+      totalImpaye: sql<number>`coalesce(sum(
+        case when ${sorties.statut} = 'actif' and ${resteDuSql} > 0.5 then ${resteDuSql} else 0 end
+      ), 0)`,
     })
     .from(sorties)
     .where(eq(sorties.clientId, id))
