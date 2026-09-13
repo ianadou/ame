@@ -1,6 +1,7 @@
 import { eq, desc, sql, and, gte, lte } from 'drizzle-orm'
 import { db } from '../../db'
 import { mouvements, articles, fournisseurs, sorties, clients } from '../../db/schema'
+import { estTypeMouvement } from '../../../shared/utils/mouvements'
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event)
@@ -19,14 +20,7 @@ export default defineEventHandler(async (event) => {
   if (articleId) conditions.push(eq(mouvements.articleId, articleId))
   if (clientId) conditions.push(eq(sorties.clientId, clientId))
   if (fournisseurId) conditions.push(eq(mouvements.fournisseurId, fournisseurId))
-  if (
-    type === 'entree' ||
-    type === 'sortie' ||
-    type === 'ajustement_positif' ||
-    type === 'ajustement_negatif'
-  ) {
-    conditions.push(eq(mouvements.type, type))
-  }
+  if (estTypeMouvement(type)) conditions.push(eq(mouvements.type, type))
   if (dateDebut) conditions.push(gte(mouvements.createdAt, dateDebut))
   if (dateFin) conditions.push(lte(mouvements.createdAt, dateFin + 'T23:59:59'))
 

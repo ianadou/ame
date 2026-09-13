@@ -174,23 +174,6 @@ async function handleMouvement(data: Record<string, unknown>) {
     notifications.danger('Transaction refusée', msg)
   }
 }
-
-// Métadonnées d'affichage par type de transaction (entrée, sortie,
-// ajustement positif/négatif). Le sens est positif sauf pour sortie
-// et ajustement_negatif → préfixe « − » dans la colonne quantité.
-function mvtMeta(type: string): {
-  label: string
-  variant: 'success' | 'danger' | 'neutral' | 'info'
-} {
-  if (type === 'entree') return { label: 'Approvisionnement', variant: 'success' }
-  if (type === 'sortie') return { label: 'Vente', variant: 'neutral' }
-  if (type === 'ajustement_positif') return { label: 'Ajustement +', variant: 'info' }
-  if (type === 'ajustement_negatif') return { label: 'Ajustement −', variant: 'info' }
-  return { label: type, variant: 'neutral' }
-}
-function mvtSigne(type: string) {
-  return type === 'sortie' || type === 'ajustement_negatif' ? '−' : '+'
-}
 </script>
 
 <template>
@@ -308,12 +291,12 @@ function mvtSigne(type: string) {
             <tr v-for="mvt in article.mouvements" :key="mvt.id" class="row-hover">
               <td class="mono text-[12px] text-ink-3">{{ formatDate(mvt.createdAt) }}</td>
               <td>
-                <AppBadge :variant="mvtMeta(mvt.type).variant">
-                  {{ mvtMeta(mvt.type).label }}
+                <AppBadge :variant="metaMouvement(mvt.type).variant">
+                  {{ metaMouvement(mvt.type).label }}
                 </AppBadge>
               </td>
               <td class="mono num text-center text-[14px] font-semibold">
-                {{ mvtSigne(mvt.type) }}{{ mvt.quantite }}
+                {{ signeMouvement(mvt.type) }}{{ mvt.quantite }}
               </td>
               <td class="text-ink-2">{{ mvt.fournisseurNom || mvt.clientNom || '' }}</td>
               <td class="text-[12.5px] text-muted">{{ mvt.motif || '' }}</td>

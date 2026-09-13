@@ -120,6 +120,13 @@
       "when": 1779837600000,
       "tag": "0016_coordonnees_entreprise",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "6",
+      "when": 1779837700000,
+      "tag": "0017_types_retour_annulation",
+      "breakpoints": true
     }
   ]
 }

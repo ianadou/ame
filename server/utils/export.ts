@@ -2,6 +2,7 @@ import { eq, desc, asc } from 'drizzle-orm'
 import ExcelJS from 'exceljs'
 import { db } from '../db'
 import { articles, categories, fournisseurs, clients, sorties, mouvements } from '../db/schema'
+import { libelleMouvement } from '../../shared/utils/mouvements'
 
 export type EntiteExport = 'articles' | 'categories' | 'fournisseurs' | 'clients' | 'mouvements'
 
@@ -173,7 +174,7 @@ async function jeuDonnees(entite: EntiteExport, opts: Options): Promise<Jeu> {
     ],
     lignes: filtre.map((r) => [
       dateFr(r.createdAt),
-      r.type === 'entree' ? 'Entrée' : 'Sortie',
+      libelleMouvement(r.type),
       r.reference ?? '',
       r.article ?? '',
       r.quantite,
