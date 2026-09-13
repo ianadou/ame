@@ -11,7 +11,14 @@ interface Props {
   align?: 'left' | 'right'
 }
 
-withDefaults(defineProps<Props>(), { type: 'text', align: 'left' })
+withDefaults(defineProps<Props>(), {
+  label: undefined,
+  error: undefined,
+  placeholder: undefined,
+  type: 'text',
+  icon: undefined,
+  align: 'left',
+})
 const model = defineModel<string>()
 </script>
 
