@@ -1,3 +1,5 @@
+import type { Reglement } from './useCreances'
+
 export interface SortieListe {
   id: string
   reference: string
@@ -17,6 +19,48 @@ export interface SortieListe {
 export interface LigneSortieInput {
   articleId: string
   quantite: number
+}
+
+export interface LigneSortieDetail {
+  id: string
+  articleId: string
+  articleReference: string
+  articleNom: string
+  unite: string
+  retournable: boolean
+  quantite: number
+  prixUnitaire: number
+  stockApres: number
+  quantiteRetournee: number
+}
+
+export interface SortieDetail {
+  id: string
+  reference: string
+  clientId: string
+  clientNom: string
+  clientTelephone: string | null
+  clientVille: string | null
+  chantierId: string | null
+  chantierNom: string | null
+  beneficiaireId: string | null
+  beneficiaireNom: string | null
+  beneficiaireFonction: string | null
+  dateSortie: string | null
+  dateEcheance: string | null
+  objet: string | null
+  montantTotal: number
+  montantPaye: number
+  conditionsReglement: string
+  statutPaiement: string
+  notes: string | null
+  statut: 'actif' | 'annule'
+  annuleLe: string | null
+  motifAnnulation: string | null
+  tauxTvaApplique: number | null
+  createdAt: string
+  lignes: LigneSortieDetail[]
+  reglements: Reglement[]
 }
 
 export function useSorties() {

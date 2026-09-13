@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { Pencil, AlertTriangle } from 'lucide-vue-next'
-import type { RegimeTva } from '~/composables/useSessionUser'
+import type { CoordonneesEntreprise, RegimeTva } from '~/composables/useSessionUser'
 
-const { user, editing, saveRegimeTva } = useSessionUser()
+const { user, editing, saveRegimeTva, saveCoordonnees } = useSessionUser()
 const notifications = useNotifications()
 
 const showConfirm = ref(false)
@@ -27,6 +27,23 @@ async function handleTvaSubmit(regime: RegimeTva, taux: number) {
     notifications.danger('Enregistrement impossible', msg)
   } finally {
     tvaSubmitting.value = false
+  }
+}
+
+const coordonneesSubmitting = ref(false)
+async function handleCoordonneesSubmit(coordonnees: CoordonneesEntreprise) {
+  coordonneesSubmitting.value = true
+  try {
+    await saveCoordonnees(coordonnees)
+    notifications.success('Coordonnées enregistrées', 'Elles figurent en tête des bons imprimés')
+  } catch (e: unknown) {
+    const msg =
+      e && typeof e === 'object' && 'data' in e
+        ? ((e as { data?: { message?: string } }).data?.message ?? 'Enregistrement impossible')
+        : 'Enregistrement impossible'
+    notifications.danger('Enregistrement impossible', msg)
+  } finally {
+    coordonneesSubmitting.value = false
   }
 }
 
@@ -57,7 +74,7 @@ async function resetData() {
         <div>
           <h3 class="text-sm font-semibold text-ink">Nom de l'entreprise</h3>
           <p class="mt-1 text-sm text-muted">
-            Affiché dans le footer de l'application et la signature des documents.
+            Affiché dans le footer de l'application et en tête des documents imprimés.
           </p>
           <p class="mt-3 text-[15px] font-medium text-ink">{{ nomEntreprise }}</p>
         </div>
@@ -66,6 +83,19 @@ async function resetData() {
           Modifier
         </AppButton>
       </div>
+    </AppCard>
+
+    <AppCard>
+      <h3 class="text-sm font-semibold text-ink">Coordonnées de l'entreprise</h3>
+      <p class="mt-1 text-sm text-muted">
+        Imprimées en tête des bons de sortie. Seuls les champs renseignés y figurent.
+      </p>
+      <CoordonneesEntrepriseForm
+        class="mt-4"
+        :initial="user"
+        :submitting="coordonneesSubmitting"
+        @submit="handleCoordonneesSubmit"
+      />
     </AppCard>
 
     <AppCard>

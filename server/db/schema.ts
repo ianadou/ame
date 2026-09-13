@@ -324,6 +324,14 @@ export const parametres = sqliteTable(
   {
     id: text('id').primaryKey(),
     nomEntreprise: text('nom_entreprise'),
+    // Coordonnées imprimées en tête des bons, toutes facultatives : l'en-tête
+    // n'affiche que ce qui est renseigné.
+    adresse: text('adresse'),
+    ville: text('ville'),
+    boitePostale: text('boite_postale'),
+    telephone: text('telephone'),
+    ncc: text('ncc'),
+    rccm: text('rccm'),
     regimeTva: text('regime_tva').notNull().default('non_assujetti'),
     tauxTva: real('taux_tva').notNull().default(18),
     updatedAt: text('updated_at')

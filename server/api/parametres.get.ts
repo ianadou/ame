@@ -1,12 +1,3 @@
-import { eq } from 'drizzle-orm'
-import { db } from '../db'
-import { parametres } from '../db/schema'
+import { lireParametres } from '../utils/parametres'
 
-export default defineEventHandler(async () => {
-  const [row] = await db.select().from(parametres).where(eq(parametres.id, 'app'))
-  return {
-    nomEntreprise: row?.nomEntreprise ?? null,
-    regimeTva: row?.regimeTva ?? 'non_assujetti',
-    tauxTva: row?.tauxTva ?? 18,
-  }
-})
+export default defineEventHandler(() => lireParametres())

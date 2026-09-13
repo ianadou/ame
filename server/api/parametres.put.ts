@@ -1,6 +1,7 @@
 import { eq, sql } from 'drizzle-orm'
 import { db } from '../db'
 import { parametres } from '../db/schema'
+import { lireParametres } from '../utils/parametres'
 import { updateParametresSchema } from '../utils/validation'
 
 export default defineEventHandler(async (event) => {
@@ -16,10 +17,5 @@ export default defineEventHandler(async (event) => {
     await db.insert(parametres).values({ id: 'app', ...body })
   }
 
-  const [row] = await db.select().from(parametres).where(eq(parametres.id, 'app'))
-  return {
-    nomEntreprise: row?.nomEntreprise ?? null,
-    regimeTva: row?.regimeTva ?? 'non_assujetti',
-    tauxTva: row?.tauxTva ?? 18,
-  }
+  return lireParametres()
 })

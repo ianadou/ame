@@ -1,54 +1,13 @@
 <script setup lang="ts">
-import { ArrowLeft, Ban, Wallet, Trash2 } from 'lucide-vue-next'
+import { ArrowLeft, Ban, Wallet, Trash2, Printer } from 'lucide-vue-next'
 import type { Reglement } from '~/composables/useCreances'
+import type { SortieDetail } from '~/composables/useSorties'
 
 const route = useRoute()
 const sortieId = route.params.id as string
 
 const { annulerSortie } = useSorties()
 const notifications = useNotifications()
-
-interface LigneSortie {
-  id: string
-  articleId: string
-  articleReference: string
-  articleNom: string
-  unite: string
-  retournable: boolean
-  quantite: number
-  prixUnitaire: number
-  stockApres: number
-  quantiteRetournee: number
-}
-
-interface SortieDetail {
-  id: string
-  reference: string
-  clientId: string
-  clientNom: string
-  clientTelephone: string | null
-  clientVille: string | null
-  chantierId: string | null
-  chantierNom: string | null
-  beneficiaireId: string | null
-  beneficiaireNom: string | null
-  beneficiaireFonction: string | null
-  dateSortie: string | null
-  dateEcheance: string | null
-  objet: string | null
-  montantTotal: number
-  montantPaye: number
-  conditionsReglement: string
-  statutPaiement: string
-  notes: string | null
-  statut: 'actif' | 'annule'
-  annuleLe: string | null
-  motifAnnulation: string | null
-  tauxTvaApplique: number | null
-  createdAt: string
-  lignes: LigneSortie[]
-  reglements: Reglement[]
-}
 
 const { data: sortie, refresh } = await useFetch<SortieDetail>(`/api/sorties/${sortieId}`)
 
@@ -87,17 +46,11 @@ async function confirmerSuppressionReglement() {
 // article retournable, sinon elle serait une colonne de tirets.
 const aRetournables = computed(() => (sortie.value?.lignes ?? []).some((l) => l.retournable))
 
-// Si le bon a été émis avec un taux TVA figé (régime assujetti à
-// l'époque), on affiche Total HT / TVA / Total TTC ; sinon une seule
-// ligne « Total » sans mention TVA. Le montantTotal stocké est interprété
-// comme HT côté assujetti, sinon comme net (TTC = HT, pas de TVA).
-const tva = computed(() => {
-  if (!sortie.value || sortie.value.tauxTvaApplique == null) return null
-  const taux = sortie.value.tauxTvaApplique
-  const ht = sortie.value.montantTotal
-  const montantTva = ht * (taux / 100)
-  return { taux, ht, montantTva, ttc: ht + montantTva }
-})
+// Avec un taux figé à l'émission : Total HT / TVA / Total TTC. Sans taux :
+// une seule ligne « Total » sans mention TVA.
+const tva = computed(() =>
+  sortie.value ? detailTva(sortie.value.montantTotal, sortie.value.tauxTvaApplique) : null,
+)
 
 // Le TTC fait foi quand un taux TVA a été figé sur le bon : c'est ce que le
 // client doit réellement.
@@ -160,7 +113,15 @@ async function confirmerAnnulation() {
           <span v-if="sortie.objet"> · {{ sortie.objet }}</span>
         </p>
       </div>
-      <div class="flex gap-2">
+      <div class="flex flex-wrap justify-end gap-2">
+        <AppButton
+          variant="secondary"
+          size="sm"
+          @click="navigateTo(`/sorties/${sortie.id}/imprimer`)"
+        >
+          <Printer class="h-4 w-4" />
+          Imprimer
+        </AppButton>
         <AppButton v-if="!annule && reste > 0.5" size="sm" @click="showReglementModal = true">
           <Wallet class="h-4 w-4" />
           Encaisser
