@@ -60,9 +60,9 @@ const form = reactive({
   dateEcheance: '',
   objet: '',
   conditionsReglement: 'comptant',
-  statutPaiement: 'paye',
+  statutPaiement: '',
   montantPaye: '',
-  modeAcompte: 'orange_money',
+  modeAcompte: '',
   notes: '',
 })
 
@@ -77,6 +77,15 @@ const statutOptions = [
   { value: 'partiel', label: 'Partiel' },
   { value: 'impaye', label: 'Impayé' },
 ]
+
+// Rien n'est présumé encaissé : une vente validée sans y penser créerait un
+// règlement fictif et ferait disparaître une créance.
+const encaisseAEmission = computed(
+  () => form.statutPaiement === 'paye' || form.statutPaiement === 'partiel',
+)
+const resteDu = computed(
+  () => form.statutPaiement === 'partiel' || form.statutPaiement === 'impaye',
+)
 
 function articleById(id: string) {
   return articles.value.find((a) => a.id === id)
@@ -141,6 +150,19 @@ function handleSubmit() {
     }
   }
 
+  if (!form.statutPaiement) {
+    erreur.value = "Indiquez ce qui a été encaissé à l'émission du bon."
+    return
+  }
+  if (form.statutPaiement === 'partiel' && !(Number(form.montantPaye) > 0)) {
+    erreur.value = 'Saisissez le montant reçu.'
+    return
+  }
+  if (encaisseAEmission.value && !form.modeAcompte) {
+    erreur.value = 'Indiquez par où le paiement a été reçu.'
+    return
+  }
+
   const data: Record<string, unknown> = {
     clientId: form.clientId,
     dateSortie: form.dateSortie || undefined,
@@ -148,15 +170,13 @@ function handleSubmit() {
     statutPaiement: form.statutPaiement,
     lignes: lignesValides,
   }
-  if (form.dateEcheance) data.dateEcheance = form.dateEcheance
+  if (resteDu.value && form.dateEcheance) data.dateEcheance = form.dateEcheance
   if (form.chantierId) data.chantierId = form.chantierId
   if (form.beneficiaireId) data.beneficiaireId = form.beneficiaireId
   if (form.objet) data.objet = form.objet
   if (form.notes) data.notes = form.notes
-  if (form.statutPaiement === 'partiel' && form.montantPaye) {
-    data.montantPaye = Number(form.montantPaye)
-  }
-  if (form.statutPaiement !== 'impaye') data.modeAcompte = form.modeAcompte
+  if (form.statutPaiement === 'partiel') data.montantPaye = Number(form.montantPaye)
+  if (encaisseAEmission.value) data.modeAcompte = form.modeAcompte
 
   emit('submit', data)
 }
@@ -249,6 +269,7 @@ function handleSubmit() {
         v-model="form.statutPaiement"
         label="Encaissé à l'émission"
         :options="statutOptions"
+        placeholder="Choisir..."
       />
       <AppInput
         v-if="form.statutPaiement === 'partiel'"
@@ -262,15 +283,16 @@ function handleSubmit() {
     <!-- Dès qu'il y a un encaissement à l'émission, on note par où il est
          passé : c'est la trace du versement, pas un détail administratif. -->
     <AppSelect
-      v-if="form.statutPaiement !== 'impaye'"
+      v-if="encaisseAEmission"
       v-model="form.modeAcompte"
       label="Reçu par"
       :options="OPTIONS_MODE_ENCAISSEMENT"
+      placeholder="Choisir le canal..."
     />
 
     <!-- L'échéance ne concerne que ce qui n'est pas encaissé tout de suite :
          c'est elle qui fera remonter le bon dans les créances en retard. -->
-    <div v-if="form.statutPaiement !== 'paye'" class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <div v-if="resteDu" class="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <AppInput v-model="form.dateEcheance" label="Échéance du solde" type="date" />
       <p class="self-end pb-2 text-[12px] text-muted">
         Sans échéance, le bon apparaît dans les créances mais jamais comme étant en retard.

@@ -45,6 +45,7 @@ watch(route, () => {
 
 const { user, load } = useSessionUser()
 const anneeCourante = new Date().getFullYear()
+const version = useRuntimeConfig().public.version
 const signature = computed(() => user.value.nomEntreprise?.trim() || 'AME')
 
 onMounted(async () => {
@@ -95,7 +96,7 @@ onMounted(async () => {
           >© AME {{ anneeCourante }} · {{ signature }}</span
         >
         <span class="flex items-center justify-end gap-4">
-          <span class="mono">v0.5.1</span>
+          <span class="mono">v{{ version }}</span>
           <span class="flex items-center gap-1.5">
             <span class="h-1.5 w-1.5 rounded-sm bg-emerald-500" />Base à jour
           </span>

@@ -4,6 +4,7 @@ import { sorties, reglements } from '../../../db/schema'
 import { createReglementSchema } from '../../../utils/validation'
 import { recalculerPaiement } from '../../../utils/reglements'
 import { generateId } from '../../../utils/helpers'
+import { montantDu } from '../../../../shared/utils/montants'
 
 /**
  * Enregistre un encaissement reçu sur un bon. L'app ne déplace pas d'argent :
@@ -25,9 +26,9 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  // On refuse d'encaisser plus que le montant du bon : un trop-perçu est une
-  // erreur de saisie, pas un état à représenter.
-  const reste = sortie.montantTotal - sortie.montantPaye
+  // On refuse d'encaisser plus que le dû du bon, TTC sous TVA : un trop-perçu
+  // est une erreur de saisie, pas un état à représenter.
+  const reste = montantDu(sortie.montantTotal, sortie.tauxTvaApplique) - sortie.montantPaye
   if (body.montant > reste + 0.5) {
     throw createError({
       statusCode: 400,

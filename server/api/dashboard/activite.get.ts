@@ -1,12 +1,14 @@
 import { and, gte, lt, eq } from 'drizzle-orm'
 import { db } from '../../db'
-import { mouvements, articles } from '../../db/schema'
+import { mouvements, articles, sorties as bons } from '../../db/schema'
 
 type Periode = 'jour' | 'semaine' | 'annee' | 'mois'
 
+type Flux = 'approvisionnement' | 'vente'
+
 interface Mvt {
   createdAt: string
-  type: string
+  flux: Flux
   quantite: number
   prix: number
 }
@@ -115,6 +117,15 @@ function pct(courant: number, precedent: number): string {
   return (p >= 0 ? '+' : '') + p + '%'
 }
 
+// Les cartes comparent achats et ventes. Retours, annulations et ajustements
+// déplacent du stock sans être ni l'un ni l'autre, et une vente annulée cesse
+// de compter comme vente.
+function fluxActivite(type: string, statutBon: string | null): Flux | null {
+  if (type === 'entree') return 'approvisionnement'
+  if (type === 'sortie' && statutBon !== 'annule') return 'vente'
+  return null
+}
+
 export default defineEventHandler(async (event) => {
   const q = getQuery(event)
   const periode = (
@@ -128,23 +139,33 @@ export default defineEventHandler(async (event) => {
     .select({
       createdAt: mouvements.createdAt,
       type: mouvements.type,
+      statutBon: bons.statut,
       quantite: mouvements.quantite,
       prix: articles.prixUnitaire,
     })
     .from(mouvements)
     .leftJoin(articles, eq(mouvements.articleId, articles.id))
+    .leftJoin(bons, eq(mouvements.sortieId, bons.id))
     .where(
       and(
         gte(mouvements.createdAt, prevDebut.toISOString().slice(0, 19).replace('T', ' ')),
         lt(mouvements.createdAt, fin.toISOString().slice(0, 19).replace('T', ' ')),
       ),
-    )) as { createdAt: string; type: string; quantite: number; prix: number | null }[]
+    )) as {
+    createdAt: string
+    type: string
+    statutBon: string | null
+    quantite: number
+    prix: number | null
+  }[]
 
   const courant: Mvt[] = []
   const precedent: Mvt[] = []
   for (const r of rows) {
+    const flux = fluxActivite(r.type, r.statutBon)
+    if (!flux) continue
     const d = parseDate(r.createdAt)
-    const m: Mvt = { createdAt: r.createdAt, type: r.type, quantite: r.quantite, prix: r.prix ?? 0 }
+    const m: Mvt = { createdAt: r.createdAt, flux, quantite: r.quantite, prix: r.prix ?? 0 }
     if (d >= debut && d < fin) courant.push(m)
     else if (d >= prevDebut && d < prevFin) precedent.push(m)
   }
@@ -165,7 +186,7 @@ export default defineEventHandler(async (event) => {
   for (const m of courant) {
     const idx = indexBucket(parseDate(m.createdAt), periode, debut)
     if (idx < 0 || idx >= n) continue
-    if (m.type === 'entree') {
+    if (m.flux === 'approvisionnement') {
       if (entrees[idx] !== null) entrees[idx] += m.quantite
       nbE += m.quantite
       valE += m.quantite * m.prix
@@ -181,7 +202,7 @@ export default defineEventHandler(async (event) => {
     pVE = 0,
     pVS = 0
   for (const m of precedent) {
-    if (m.type === 'entree') {
+    if (m.flux === 'approvisionnement') {
       pE += m.quantite
       pVE += m.quantite * m.prix
     } else {

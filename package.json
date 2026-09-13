@@ -1,5 +1,6 @@
 {
   "name": "AME",
+  "version": "0.6.0",
   "type": "module",
   "private": true,
   "scripts": {

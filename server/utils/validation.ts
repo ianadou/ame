@@ -96,21 +96,31 @@ export const MODES_REGLEMENT = [
   'cheque',
 ] as const
 
-export const createSortieSchema = z.object({
-  clientId: z.string().uuid(),
-  chantierId: z.string().uuid().optional(),
-  beneficiaireId: z.string().uuid().optional(),
-  dateSortie: z.string().optional(),
-  dateEcheance: z.string().optional(),
-  objet: z.string().max(300).optional(),
-  conditionsReglement: z.enum(['comptant', 'credit']).default('comptant'),
-  statutPaiement: z.enum(['paye', 'partiel', 'impaye']).default('paye'),
-  montantPaye: z.number().min(0).optional(),
-  // Canal de l'acompte encaissé à l'émission, quand il y en a un.
-  modeAcompte: z.enum(MODES_REGLEMENT).optional(),
-  notes: z.string().optional(),
-  lignes: z.array(ligneSortieSchema).min(1),
-})
+// Ce qui est encaissé à l'émission se déclare toujours : aucun statut par
+// défaut, un canal dès qu'il y a un montant, un montant pour un acompte.
+const encaissementEmissionSchema = z.discriminatedUnion('statutPaiement', [
+  z.object({ statutPaiement: z.literal('impaye') }),
+  z.object({ statutPaiement: z.literal('paye'), modeAcompte: z.enum(MODES_REGLEMENT) }),
+  z.object({
+    statutPaiement: z.literal('partiel'),
+    montantPaye: z.number().positive(),
+    modeAcompte: z.enum(MODES_REGLEMENT),
+  }),
+])
+
+export const createSortieSchema = z
+  .object({
+    clientId: z.string().uuid(),
+    chantierId: z.string().uuid().optional(),
+    beneficiaireId: z.string().uuid().optional(),
+    dateSortie: z.string().optional(),
+    dateEcheance: z.string().optional(),
+    objet: z.string().max(300).optional(),
+    conditionsReglement: z.enum(['comptant', 'credit']).default('comptant'),
+    notes: z.string().optional(),
+    lignes: z.array(ligneSortieSchema).min(1),
+  })
+  .and(encaissementEmissionSchema)
 
 export const createReglementSchema = z.object({
   montant: z.number().positive(),
@@ -180,10 +190,26 @@ export const archiverArticleSchema = z.object({
   motif: z.string().trim().min(3).max(500),
 })
 
+// Une coordonnée vidée dans le formulaire doit disparaître de l'en-tête des
+// bons, pas y rester sous forme de chaîne vide.
+const coordonneeEntreprise = z
+  .string()
+  .trim()
+  .max(200)
+  .transform((v) => (v === '' ? null : v))
+  .nullable()
+  .optional()
+
 export const updateParametresSchema = z.object({
   nomEntreprise: z.string().trim().min(1).max(200).optional(),
   regimeTva: z.enum(['assujetti', 'non_assujetti']).optional(),
   tauxTva: z.number().min(0).max(30).optional(),
+  adresse: coordonneeEntreprise,
+  ville: coordonneeEntreprise,
+  boitePostale: coordonneeEntreprise,
+  telephone: coordonneeEntreprise,
+  ncc: coordonneeEntreprise,
+  rccm: coordonneeEntreprise,
 })
 
 // --- Import Excel/CSV : schémas dédiés (entrées = chaînes, coercition) ---

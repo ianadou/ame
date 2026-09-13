@@ -13,6 +13,7 @@ import {
 } from '../../db/schema'
 import { createSortieSchema } from '../../utils/validation'
 import { generateId, generateSortieReference } from '../../utils/helpers'
+import { montantDu } from '../../../shared/utils/montants'
 
 export default defineEventHandler(async (event) => {
   const body = await readValidatedBody(event, createSortieSchema.parse)
@@ -103,25 +104,27 @@ export default defineEventHandler(async (event) => {
   })
 
   const montantTotal = lignes.reduce((s, l) => s + l.quantite * l.prixUnitaire, 0)
+  const du = montantDu(montantTotal, tauxTvaApplique)
 
   // L'acompte éventuellement encaissé à l'émission devient un règlement à part
   // entière : le statut du bon découle toujours d'une trace, jamais d'une
-  // simple déclaration.
+  // simple déclaration. Le schéma exige le canal dès qu'un encaissement est
+  // déclaré : rien n'est présumé payé.
   const acompte =
     body.statutPaiement === 'paye'
-      ? montantTotal
-      : body.statutPaiement === 'impaye'
-        ? 0
-        : Math.min(body.montantPaye ?? 0, montantTotal)
+      ? du
+      : body.statutPaiement === 'partiel'
+        ? Math.min(body.montantPaye, du)
+        : 0
 
   const reglementInitial =
-    acompte > 0
+    body.statutPaiement !== 'impaye' && acompte > 0
       ? {
           id: generateId(),
           sortieId,
           montant: acompte,
           dateReglement: body.dateSortie ?? new Date().toISOString().slice(0, 10),
-          mode: body.modeAcompte ?? 'especes',
+          mode: body.modeAcompte,
           reference: null,
           notes: "Encaissé à l'émission du bon",
         }
@@ -138,7 +141,7 @@ export default defineEventHandler(async (event) => {
     objet: body.objet ?? null,
     montantTotal,
     conditionsReglement: body.conditionsReglement,
-    statutPaiement: acompte <= 0 ? 'impaye' : acompte >= montantTotal ? 'paye' : 'partiel',
+    statutPaiement: acompte <= 0 ? 'impaye' : acompte + 0.5 >= du ? 'paye' : 'partiel',
     montantPaye: acompte,
     notes: body.notes ?? null,
     tauxTvaApplique,

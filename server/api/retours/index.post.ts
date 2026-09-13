@@ -6,8 +6,8 @@ import { generateId } from '../../utils/helpers'
 
 /**
  * Enregistre le retour d'un matériel prêté :
- *  - 'bon' : le stock est réincrémenté et une transaction d'entrée est
- *    inscrite au journal, comme pour une annulation partielle.
+ *  - 'bon' : le stock est réincrémenté et une transaction « retour » est
+ *    inscrite au journal, distincte d'un approvisionnement fournisseur.
  *  - 'endommage' : la ligne est soldée sans réintégration : l'article ne
  *    revient pas à l'inventaire, la perte reste visible dans l'historique.
  * Les retours partiels sont acceptés tant que le cumul ne dépasse pas la
@@ -84,7 +84,7 @@ export default defineEventHandler(async (event) => {
       await tx.insert(mouvements).values({
         id: generateId(),
         articleId: ligne.articleId,
-        type: 'entree',
+        type: 'retour',
         quantite: retour.quantite,
         sortieId: ligne.sortieId,
         motif: `Retour matériel · bon ${ligne.reference}`,

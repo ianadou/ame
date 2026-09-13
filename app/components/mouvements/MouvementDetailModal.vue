@@ -59,14 +59,6 @@ watch(
   { immediate: true },
 )
 
-function mvtMeta(type: string): { label: string; variant: 'success' | 'neutral' | 'info' } {
-  if (type === 'entree') return { label: 'Approvisionnement', variant: 'success' }
-  if (type === 'sortie') return { label: 'Vente', variant: 'neutral' }
-  if (type === 'ajustement_positif') return { label: 'Ajustement +', variant: 'info' }
-  if (type === 'ajustement_negatif') return { label: 'Ajustement −', variant: 'info' }
-  return { label: type, variant: 'neutral' }
-}
-
 function formatDateTime(iso: string) {
   const d = new Date(iso.includes('T') ? iso : iso.replace(' ', 'T'))
   return new Intl.DateTimeFormat('fr-FR', {
@@ -95,8 +87,8 @@ function formatDateTime(iso: string) {
       <!-- Type + quantité + horodatage -->
       <div class="flex items-start justify-between gap-4">
         <div>
-          <AppBadge :variant="mvtMeta(detail.type).variant">
-            {{ mvtMeta(detail.type).label }}
+          <AppBadge :variant="metaMouvement(detail.type).variant">
+            {{ metaMouvement(detail.type).label }}
           </AppBadge>
           <p class="mt-2 text-xs text-muted">{{ formatDateTime(detail.createdAt) }}</p>
         </div>

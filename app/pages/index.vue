@@ -397,8 +397,8 @@ const exportEntites = [
               :class="i < recent.length - 1 ? 'border-b border-line/60' : ''"
             >
               <td class="w-[88px] py-2.5 pl-5 pr-2">
-                <AppBadge :variant="m.type === 'entree' ? 'success' : 'neutral'">
-                  {{ m.type === 'entree' ? 'Approvisionnement' : 'Vente' }}
+                <AppBadge :variant="metaMouvement(m.type).variant">
+                  {{ metaMouvement(m.type).label }}
                 </AppBadge>
               </td>
               <td class="mono w-[80px] px-2 py-2.5 text-[12px] text-ink-2">
@@ -409,7 +409,7 @@ const exportEntites = [
                 {{ m.fournisseurNom || m.clientNom || '' }}
               </td>
               <td class="mono num w-[58px] px-2 py-2.5 text-right text-[13.5px] font-semibold">
-                {{ m.type === 'entree' ? '+' : '−' }}{{ m.quantite }}
+                {{ signeMouvement(m.type) }}{{ m.quantite }}
               </td>
               <td class="mono w-[100px] py-2.5 pl-2 pr-5 text-right text-[11px] text-muted">
                 {{ fmtDate(m.createdAt) }}<br />{{ fmtTime(m.createdAt) }}

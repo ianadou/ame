@@ -68,7 +68,9 @@ if (process.platform === 'win32') {
     }
     console.log(`postbuild-libsql: ${dllCount} DLL MSVC bundlée(s) à côté du .node libsql`)
   } else {
-    console.warn(`postbuild-libsql: dossier ${nodeBindingDir} absent (binding Windows non installé)`)
+    console.warn(
+      `postbuild-libsql: dossier ${nodeBindingDir} absent (binding Windows non installé)`,
+    )
   }
 }
 
