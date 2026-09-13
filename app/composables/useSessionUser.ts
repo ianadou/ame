@@ -1,19 +1,35 @@
 export type RegimeTva = 'assujetti' | 'non_assujetti'
 
-export interface SessionUser {
+export interface CoordonneesEntreprise {
+  adresse: string | null
+  ville: string | null
+  boitePostale: string | null
+  telephone: string | null
+  ncc: string | null
+  rccm: string | null
+}
+
+export interface SessionUser extends CoordonneesEntreprise {
   nomEntreprise: string | null
   regimeTva: RegimeTva
   tauxTva: number
 }
 
-// Identité de l'entreprise et configuration fiscale partagées entre la
-// modal de premier lancement, la sidebar, le footer et les composants
-// d'édition rapide (dashboard + page réglages).
+// Identité de l'entreprise, coordonnées imprimées sur les bons et
+// configuration fiscale, partagées entre la modal de premier lancement, la
+// sidebar, le footer, les documents imprimables et les composants d'édition
+// rapide (dashboard + page réglages).
 export function useSessionUser() {
   const user = useState<SessionUser>('session-user', () => ({
     nomEntreprise: null,
     regimeTva: 'non_assujetti',
     tauxTva: 18,
+    adresse: null,
+    ville: null,
+    boitePostale: null,
+    telephone: null,
+    ncc: null,
+    rccm: null,
   }))
   const editing = useState<boolean>('session-user-editing', () => false)
   // Tant que `load()` n'a pas répondu, on ne sait pas si l'entreprise est
@@ -35,20 +51,35 @@ export function useSessionUser() {
     }
   }
 
-  async function save(nomEntreprise: string) {
+  async function enregistrer(champs: Partial<SessionUser>) {
     user.value = await $fetch<SessionUser>('/api/parametres', {
       method: 'PUT',
-      body: { nomEntreprise },
+      body: champs,
     })
+  }
+
+  async function save(nomEntreprise: string) {
+    await enregistrer({ nomEntreprise })
     editing.value = false
   }
 
   async function saveRegimeTva(regimeTva: RegimeTva, tauxTva: number) {
-    user.value = await $fetch<SessionUser>('/api/parametres', {
-      method: 'PUT',
-      body: { regimeTva, tauxTva },
-    })
+    await enregistrer({ regimeTva, tauxTva })
   }
 
-  return { user, editing, loaded, configured, assujettiTva, load, save, saveRegimeTva }
+  async function saveCoordonnees(coordonnees: CoordonneesEntreprise) {
+    await enregistrer(coordonnees)
+  }
+
+  return {
+    user,
+    editing,
+    loaded,
+    configured,
+    assujettiTva,
+    load,
+    save,
+    saveRegimeTva,
+    saveCoordonnees,
+  }
 }

@@ -180,10 +180,26 @@ export const archiverArticleSchema = z.object({
   motif: z.string().trim().min(3).max(500),
 })
 
+// Une coordonnée vidée dans le formulaire doit disparaître de l'en-tête des
+// bons, pas y rester sous forme de chaîne vide.
+const coordonneeEntreprise = z
+  .string()
+  .trim()
+  .max(200)
+  .transform((v) => (v === '' ? null : v))
+  .nullable()
+  .optional()
+
 export const updateParametresSchema = z.object({
   nomEntreprise: z.string().trim().min(1).max(200).optional(),
   regimeTva: z.enum(['assujetti', 'non_assujetti']).optional(),
   tauxTva: z.number().min(0).max(30).optional(),
+  adresse: coordonneeEntreprise,
+  ville: coordonneeEntreprise,
+  boitePostale: coordonneeEntreprise,
+  telephone: coordonneeEntreprise,
+  ncc: coordonneeEntreprise,
+  rccm: coordonneeEntreprise,
 })
 
 // --- Import Excel/CSV : schémas dédiés (entrées = chaînes, coercition) ---
