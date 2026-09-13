@@ -139,7 +139,7 @@ async function confirmerAnnulation() {
       </p>
       <p class="mt-1 text-sm text-ink-2">Motif : {{ sortie.motifAnnulation }}</p>
       <p class="mt-2 text-xs text-muted">
-        Le stock a été restitué et une transaction d'entrée a été enregistrée pour chaque ligne.
+        Le stock a été restitué et une transaction d'annulation a été enregistrée pour chaque ligne.
       </p>
     </AppCard>
 
@@ -325,7 +325,7 @@ async function confirmerAnnulation() {
       <div class="space-y-3">
         <p class="text-sm text-muted">
           L'annulation va restituer le stock article par article et enregistrer une transaction
-          d'entrée pour chaque ligne. Cette action est définitive.
+          d'annulation pour chaque ligne. Cette action est définitive.
         </p>
         <div>
           <label class="mb-1.5 block text-sm font-medium text-ink">

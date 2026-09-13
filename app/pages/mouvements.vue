@@ -30,27 +30,6 @@ const currentPage = ref(1)
 const showEntreeModal = ref(false)
 const selectedMvtId = ref<string | null>(null)
 
-const typeOptions = [
-  { value: 'entree', label: 'Approvisionnements' },
-  { value: 'sortie', label: 'Ventes' },
-  { value: 'ajustement_positif', label: 'Ajustements +' },
-  { value: 'ajustement_negatif', label: 'Ajustements −' },
-]
-
-function mvtMeta(type: string): {
-  label: string
-  variant: 'success' | 'danger' | 'neutral' | 'info'
-} {
-  if (type === 'entree') return { label: 'Approvisionnement', variant: 'success' }
-  if (type === 'sortie') return { label: 'Vente', variant: 'neutral' }
-  if (type === 'ajustement_positif') return { label: 'Ajustement +', variant: 'info' }
-  if (type === 'ajustement_negatif') return { label: 'Ajustement −', variant: 'info' }
-  return { label: type, variant: 'neutral' }
-}
-function mvtSigne(type: string) {
-  return type === 'sortie' || type === 'ajustement_negatif' ? '−' : '+'
-}
-
 const queryParams = computed(() => ({
   type: typeFilter.value || undefined,
   dateDebut: dateDebut.value || undefined,
@@ -83,7 +62,11 @@ async function handleMouvement(data: Record<string, unknown>) {
     <!-- Filters bar -->
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div class="flex flex-1 flex-col gap-3 sm:flex-row">
-        <AppSelect v-model="typeFilter" :options="typeOptions" placeholder="Tous types" />
+        <AppSelect
+          v-model="typeFilter"
+          :options="OPTIONS_TYPE_MOUVEMENT"
+          placeholder="Tous types"
+        />
         <AppInput v-model="dateDebut" label="" type="date" placeholder="Date début" />
         <AppInput v-model="dateFin" label="" type="date" placeholder="Date fin" />
       </div>
@@ -123,8 +106,8 @@ async function handleMouvement(data: Record<string, unknown>) {
             >
               <td class="mono text-[12px] text-ink-3">{{ formatDate(mvt.createdAt) }}</td>
               <td>
-                <AppBadge :variant="mvtMeta(mvt.type).variant">
-                  {{ mvtMeta(mvt.type).label }}
+                <AppBadge :variant="metaMouvement(mvt.type).variant">
+                  {{ metaMouvement(mvt.type).label }}
                 </AppBadge>
               </td>
               <td>
@@ -132,7 +115,7 @@ async function handleMouvement(data: Record<string, unknown>) {
                 · {{ mvt.articleNom }}
               </td>
               <td class="mono num text-center text-[14px] font-semibold">
-                {{ mvtSigne(mvt.type) }}{{ mvt.quantite }}
+                {{ signeMouvement(mvt.type) }}{{ mvt.quantite }}
               </td>
               <td class="text-ink-2">{{ mvt.fournisseurNom || mvt.clientNom || '' }}</td>
               <td class="mono text-[12px] text-muted">

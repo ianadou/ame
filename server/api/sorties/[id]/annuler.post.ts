@@ -8,7 +8,7 @@ import { generateId } from '../../../utils/helpers'
  * Annule un bon de sortie en CONTRE-PASSANT (jamais de suppression) :
  *  - statut → 'annule', date + motif renseignés
  *  - restitution du stock article par article
- *  - mouvement d'entrée par ligne (type 'entree', lié à sortie_id) pour
+ *  - mouvement d'annulation par ligne (type 'annulation', lié à sortie_id) pour
  *    laisser une trace auditable dans le journal des transactions.
  * Idempotence : refus 409 si déjà annulé.
  */
@@ -65,7 +65,7 @@ export default defineEventHandler(async (event) => {
       await tx.insert(mouvements).values({
         id: generateId(),
         articleId: ligne.articleId,
-        type: 'entree',
+        type: 'annulation',
         quantite: ligne.quantite,
         sortieId: id,
         motif: `Annulation bon de sortie ${sortie.reference} · ${body.motif}`,

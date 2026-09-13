@@ -283,7 +283,7 @@ export const mouvements = sqliteTable(
     check('mouvements_quantite_positive', sql`${t.quantite} > 0`),
     check(
       'mouvements_type_valide',
-      sql`${t.type} IN ('entree','sortie','ajustement_positif','ajustement_negatif')`,
+      sql`${t.type} IN ('entree','sortie','retour','annulation','ajustement_positif','ajustement_negatif')`,
     ),
   ],
 )

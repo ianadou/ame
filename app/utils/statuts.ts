@@ -3,6 +3,15 @@
 // pendant que « Partiel » était en ambre, une facture impayée paraissait
 // donc plus calme qu'une facture à moitié réglée.
 
+import {
+  LISTE_TYPES_MOUVEMENT,
+  TYPES_MOUVEMENT,
+  estEntrant,
+  estTypeMouvement,
+  libelleMouvement,
+  type TypeMouvement,
+} from '../../shared/utils/mouvements'
+
 export type VarianteBadge = 'success' | 'warning' | 'danger' | 'info' | 'neutral'
 
 export interface MetaStatut {
@@ -90,3 +99,30 @@ export function metaActif(actif: boolean): MetaStatut {
 export function libelleConditions(conditions: string): string {
   return CONDITIONS[conditions] ?? conditions
 }
+
+// Une annulation remet du stock en rayon mais signale une vente défaite :
+// elle ressort en rouge là où un retour ressort comme une entrée ordinaire.
+const VARIANTE_MOUVEMENT: Record<TypeMouvement, VarianteBadge> = {
+  entree: 'success',
+  sortie: 'neutral',
+  retour: 'success',
+  annulation: 'danger',
+  ajustement_positif: 'info',
+  ajustement_negatif: 'info',
+}
+
+export function metaMouvement(type: string): MetaStatut {
+  return {
+    label: libelleMouvement(type),
+    variant: estTypeMouvement(type) ? VARIANTE_MOUVEMENT[type] : 'neutral',
+  }
+}
+
+export function signeMouvement(type: string): string {
+  return estEntrant(type) ? '+' : '−'
+}
+
+export const OPTIONS_TYPE_MOUVEMENT = LISTE_TYPES_MOUVEMENT.map((type) => ({
+  value: type,
+  label: TYPES_MOUVEMENT[type].pluriel,
+}))

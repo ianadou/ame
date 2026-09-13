@@ -1,6 +1,7 @@
-import { and, eq, sql } from 'drizzle-orm'
+import { and, eq, inArray, sql } from 'drizzle-orm'
 import { db } from '../../db'
 import { mouvements, articles, fournisseurs, sorties, clients } from '../../db/schema'
+import { TYPES_ENTRANTS, estEntrant } from '../../../shared/utils/mouvements'
 
 /**
  * Détail enrichi d'une transaction de stock. Reconstitue le stock avant/après
@@ -46,7 +47,7 @@ export default defineEventHandler(async (event) => {
   const [{ posterieures }] = await db
     .select({
       posterieures: sql<number>`coalesce(sum(
-        CASE WHEN ${mouvements.type} IN ('entree','ajustement_positif')
+        CASE WHEN ${inArray(mouvements.type, TYPES_ENTRANTS)}
           THEN ${mouvements.quantite}
           ELSE -${mouvements.quantite}
         END
@@ -58,7 +59,7 @@ export default defineEventHandler(async (event) => {
     )
 
   const stockApres = (mvt.stockActuel ?? 0) - posterieures
-  const signe = mvt.type === 'entree' || mvt.type === 'ajustement_positif' ? 1 : -1
+  const signe = estEntrant(mvt.type) ? 1 : -1
   const stockAvant = stockApres - signe * mvt.quantite
 
   return {
