@@ -121,7 +121,7 @@ await load()
                 <span v-else class="text-[12.5px] text-muted">{{ libelleEcheance(c) }}</span>
               </td>
               <td class="text-muted">{{ c.chantierNom ?? '' }}</td>
-              <td class="mono num text-right text-muted">{{ fcfa(c.montantTotal) }}</td>
+              <td class="mono num text-right text-muted">{{ fcfa(c.montantDu) }}</td>
               <td class="mono num text-right text-muted">{{ fcfa(c.montantPaye) }}</td>
               <td
                 class="mono num text-right font-semibold"

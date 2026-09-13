@@ -13,6 +13,7 @@ import {
 } from '../../db/schema'
 import { createSortieSchema } from '../../utils/validation'
 import { generateId, generateSortieReference } from '../../utils/helpers'
+import { montantDu } from '../../../shared/utils/montants'
 
 export default defineEventHandler(async (event) => {
   const body = await readValidatedBody(event, createSortieSchema.parse)
@@ -103,6 +104,7 @@ export default defineEventHandler(async (event) => {
   })
 
   const montantTotal = lignes.reduce((s, l) => s + l.quantite * l.prixUnitaire, 0)
+  const du = montantDu(montantTotal, tauxTvaApplique)
 
   // L'acompte éventuellement encaissé à l'émission devient un règlement à part
   // entière : le statut du bon découle toujours d'une trace, jamais d'une
@@ -110,9 +112,9 @@ export default defineEventHandler(async (event) => {
   // déclaré : rien n'est présumé payé.
   const acompte =
     body.statutPaiement === 'paye'
-      ? montantTotal
+      ? du
       : body.statutPaiement === 'partiel'
-        ? Math.min(body.montantPaye, montantTotal)
+        ? Math.min(body.montantPaye, du)
         : 0
 
   const reglementInitial =
@@ -139,7 +141,7 @@ export default defineEventHandler(async (event) => {
     objet: body.objet ?? null,
     montantTotal,
     conditionsReglement: body.conditionsReglement,
-    statutPaiement: acompte <= 0 ? 'impaye' : acompte >= montantTotal ? 'paye' : 'partiel',
+    statutPaiement: acompte <= 0 ? 'impaye' : acompte + 0.5 >= du ? 'paye' : 'partiel',
     montantPaye: acompte,
     notes: body.notes ?? null,
     tauxTvaApplique,

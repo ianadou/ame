@@ -1,6 +1,7 @@
 import { eq, sql, lte, desc } from 'drizzle-orm'
 import { db } from '../db'
 import { articles, clients, sorties, mouvements, fournisseurs } from '../db/schema'
+import { resteDuSql } from '../utils/montants'
 
 export default defineEventHandler(async () => {
   const [stats] = await db
@@ -21,12 +22,12 @@ export default defineEventHandler(async () => {
   // est déjà passée : c'est cette seconde ligne qui appelle une relance.
   const [creances] = await db
     .select({
-      aEncaisser: sql<number>`coalesce(sum(${sorties.montantTotal} - ${sorties.montantPaye}), 0)`,
+      aEncaisser: sql<number>`coalesce(sum(${resteDuSql}), 0)`,
       nbBons: sql<number>`count(*)`,
       enRetard: sql<number>`coalesce(sum(
         case when ${sorties.dateEcheance} is not null
               and date(${sorties.dateEcheance}) < date('now')
-             then ${sorties.montantTotal} - ${sorties.montantPaye} else 0 end
+             then ${resteDuSql} else 0 end
       ), 0)`,
       nbEnRetard: sql<number>`coalesce(sum(
         case when ${sorties.dateEcheance} is not null
@@ -35,9 +36,7 @@ export default defineEventHandler(async () => {
       ), 0)`,
     })
     .from(sorties)
-    .where(
-      sql`${sorties.statut} = 'actif' AND ${sorties.montantTotal} - ${sorties.montantPaye} > 0.5`,
-    )
+    .where(sql`${sorties.statut} = 'actif' AND ${resteDuSql} > 0.5`)
 
   const derniersMouvements = await db
     .select({
