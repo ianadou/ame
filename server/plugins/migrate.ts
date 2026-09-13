@@ -3,6 +3,11 @@ import { migrate } from 'drizzle-orm/libsql/migrator'
 import { db } from '../db'
 import { categories, parametres } from '../db/schema'
 import { seedDemo } from '../utils/demoData'
+import {
+  creerSauvegarde,
+  migrationsEnAttente,
+  sauvegardeQuotidienneSiBesoin,
+} from '../utils/sauvegardes'
 
 // Mode packagé (Tauri) uniquement : applique les migrations Drizzle au
 // démarrage sur la base par-utilisateur. AME_MIGRATIONS_DIR est fourni par
@@ -11,6 +16,18 @@ import { seedDemo } from '../utils/demoData'
 export default defineNitroPlugin(async () => {
   const migrationsFolder = process.env.AME_MIGRATIONS_DIR
   if (!migrationsFolder) return
+
+  // Une mise à jour qui touche au schéma opère sur les vraies données : on en
+  // garde une copie intacte avant d'appliquer quoi que ce soit. Les migrations
+  // restent atomiques, un échec de copie ne bloque donc pas le démarrage.
+  try {
+    if (await migrationsEnAttente(migrationsFolder)) {
+      const copie = await creerSauvegarde('avant-mise-a-jour')
+      console.log(`sauvegarde: copie avant mise à jour ${copie.nom}`)
+    }
+  } catch (e) {
+    console.error('sauvegarde: échec de la copie avant mise à jour', e)
+  }
 
   try {
     await migrate(db, { migrationsFolder })
@@ -32,5 +49,12 @@ export default defineNitroPlugin(async () => {
     }
   } catch (e) {
     console.error('migrate: échec du seed de démonstration', e)
+  }
+
+  try {
+    const copie = await sauvegardeQuotidienneSiBesoin()
+    if (copie) console.log(`sauvegarde: copie quotidienne ${copie.nom}`)
+  } catch (e) {
+    console.error('sauvegarde: échec de la copie quotidienne', e)
   }
 })
