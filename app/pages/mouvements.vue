@@ -115,7 +115,7 @@ async function handleMouvement(data: Record<string, unknown>) {
                 · {{ mvt.articleNom }}
               </td>
               <td class="mono num text-center text-[14px] font-semibold">
-                {{ signeMouvement(mvt.type) }}{{ mvt.quantite }}
+                {{ signeMouvement(mvt.type) }}{{ formatQuantite(mvt.quantite) }}
               </td>
               <td class="text-ink-2">{{ mvt.fournisseurNom || mvt.clientNom || '' }}</td>
               <td class="mono text-[12px] text-muted">

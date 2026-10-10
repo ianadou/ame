@@ -72,12 +72,13 @@ async function handleNewCategory(data: Record<string, unknown>) {
 
 const uniteOptions = [
   { value: 'pièce', label: 'Pièce' },
+  { value: 'tonne', label: 'Tonne' },
   { value: 'mètre', label: 'Mètre' },
-  { value: 'kg', label: 'Kilogramme' },
   { value: 'litre', label: 'Litre' },
   { value: 'sac', label: 'Sac' },
   { value: 'rouleau', label: 'Rouleau' },
   { value: 'lot', label: 'Lot' },
+  { value: 'kg', label: 'Kilogramme' },
 ]
 
 function handleSubmit() {

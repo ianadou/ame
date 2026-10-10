@@ -206,7 +206,7 @@ function statutVariant(statut: string) {
               <td class="px-4 py-3 text-xs text-muted">{{ formatDate(entree.createdAt) }}</td>
               <td class="px-4 py-3 text-sm text-ink-2">{{ entree.articleNom ?? '' }}</td>
               <td class="px-4 py-3 text-right text-sm font-medium text-ink">
-                {{ entree.quantite }}
+                {{ formatQuantite(entree.quantite) }}
               </td>
               <td class="px-4 py-3 text-sm text-muted">{{ entree.bonLivraison ?? '' }}</td>
             </tr>

@@ -3,6 +3,11 @@ import { db } from '../../db'
 import { retours, lignesSortie, sorties, articles, mouvements } from '../../db/schema'
 import { createRetourSchema } from '../../utils/validation'
 import { generateId } from '../../utils/helpers'
+import {
+  arrondirQuantite,
+  DECIMALES_QUANTITE,
+  formatQuantite,
+} from '../../../shared/utils/quantites'
 
 /**
  * Enregistre le retour d'un matériel prêté :
@@ -52,11 +57,11 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const restant = ligne.quantite - ligne.quantiteRetournee
+  const restant = arrondirQuantite(ligne.quantite - ligne.quantiteRetournee)
   if (body.quantite > restant) {
     throw createError({
       statusCode: 400,
-      message: `Quantité trop élevée : ${restant} restant(s) à rendre sur cette ligne.`,
+      message: `Quantité trop élevée : ${formatQuantite(restant)} restant(s) à rendre sur cette ligne.`,
     })
   }
 
@@ -76,7 +81,7 @@ export default defineEventHandler(async (event) => {
       await tx
         .update(articles)
         .set({
-          stockActuel: sql`${articles.stockActuel} + ${retour.quantite}`,
+          stockActuel: sql`round(${articles.stockActuel} + ${retour.quantite}, ${DECIMALES_QUANTITE})`,
           updatedAt: sql`(datetime('now'))`,
         })
         .where(eq(articles.id, ligne.articleId))
@@ -93,5 +98,5 @@ export default defineEventHandler(async (event) => {
   })
 
   setResponseStatus(event, 201)
-  return { ...retour, restant: restant - retour.quantite }
+  return { ...retour, restant: arrondirQuantite(restant - retour.quantite) }
 })

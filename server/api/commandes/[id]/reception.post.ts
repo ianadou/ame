@@ -3,6 +3,11 @@ import { db } from '../../../db'
 import { commandes, lignesCommande, articles, mouvements } from '../../../db/schema'
 import { receptionSchema } from '../../../utils/validation'
 import { generateId } from '../../../utils/helpers'
+import {
+  arrondirQuantite,
+  DECIMALES_QUANTITE,
+  formatQuantite,
+} from '../../../../shared/utils/quantites'
 
 /**
  * Enregistre une réception (totale ou partielle) d'une commande : pour
@@ -30,11 +35,11 @@ export default defineEventHandler(async (event) => {
     if (!ligne) {
       throw createError({ statusCode: 400, message: 'Ligne de commande inconnue' })
     }
-    const reste = ligne.quantite - ligne.quantiteRecue
+    const reste = arrondirQuantite(ligne.quantite - ligne.quantiteRecue)
     if (recu.quantite > reste) {
       throw createError({
         statusCode: 400,
-        message: `Réception (${recu.quantite}) supérieure au reste à recevoir (${reste})`,
+        message: `Réception (${formatQuantite(recu.quantite)}) supérieure au reste à recevoir (${formatQuantite(reste)})`,
       })
     }
   }
@@ -45,13 +50,15 @@ export default defineEventHandler(async (event) => {
       await tx
         .update(articles)
         .set({
-          stockActuel: sql`${articles.stockActuel} + ${recu.quantite}`,
+          stockActuel: sql`round(${articles.stockActuel} + ${recu.quantite}, ${DECIMALES_QUANTITE})`,
           updatedAt: sql`(datetime('now'))`,
         })
         .where(eq(articles.id, ligne.articleId))
       await tx
         .update(lignesCommande)
-        .set({ quantiteRecue: sql`${lignesCommande.quantiteRecue} + ${recu.quantite}` })
+        .set({
+          quantiteRecue: sql`round(${lignesCommande.quantiteRecue} + ${recu.quantite}, ${DECIMALES_QUANTITE})`,
+        })
         .where(eq(lignesCommande.id, ligne.id))
       await tx.insert(mouvements).values({
         id: generateId(),
