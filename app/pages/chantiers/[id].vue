@@ -205,7 +205,9 @@ async function handleDelete() {
           <tbody>
             <tr v-for="ligne in materiel" :key="ligne.ligneSortieId" class="row-hover">
               <td class="font-medium text-ink">{{ ligne.articleNom }}</td>
-              <td class="mono num text-right text-ink-2">{{ ligne.restant }} {{ ligne.unite }}</td>
+              <td class="mono num text-right text-ink-2">
+                {{ formatQuantite(ligne.restant) }} {{ ligne.unite }}
+              </td>
               <td class="text-muted">{{ ligne.beneficiaireNom ?? '' }}</td>
               <td>
                 <NuxtLink

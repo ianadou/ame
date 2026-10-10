@@ -1,4 +1,12 @@
 import { z } from 'zod'
+import { respectePrecisionQuantite, DECIMALES_QUANTITE } from '../../shared/utils/quantites'
+
+const MESSAGE_PRECISION = `${DECIMALES_QUANTITE} décimales au plus`
+
+const quantite = () => z.number().positive().refine(respectePrecisionQuantite, MESSAGE_PRECISION)
+
+const quantitePositiveOuNulle = () =>
+  z.number().min(0).refine(respectePrecisionQuantite, MESSAGE_PRECISION)
 
 export const createCategorieSchema = z.object({
   nom: z.string().min(1).max(200),
@@ -14,7 +22,7 @@ export const createArticleSchema = z.object({
   categorieId: z.string().uuid().optional(),
   unite: z.string().default('pièce'),
   prixUnitaire: z.number().positive().optional(),
-  seuilAlerte: z.number().int().min(0).default(5),
+  seuilAlerte: quantitePositiveOuNulle().default(5),
   emplacement: z.string().optional(),
   type: z.enum(['consommable', 'equipement']).default('consommable'),
   retournable: z.boolean().default(false),
@@ -75,7 +83,7 @@ export const updateBeneficiaireSchema = createBeneficiaireSchema.partial()
 
 export const ligneSortieSchema = z.object({
   articleId: z.string().uuid(),
-  quantite: z.number().int().positive(),
+  quantite: quantite(),
 })
 
 export const annulerSortieSchema = z.object({
@@ -133,7 +141,7 @@ export const createReglementSchema = z.object({
 
 export const createRetourSchema = z.object({
   ligneSortieId: z.string().uuid(),
-  quantite: z.number().int().positive(),
+  quantite: quantite(),
   dateRetour: z.string().optional(),
   etat: z.enum(['bon', 'endommage']).default('bon'),
   notes: z.string().max(500).optional(),
@@ -141,7 +149,7 @@ export const createRetourSchema = z.object({
 
 export const ligneCommandeSchema = z.object({
   articleId: z.string().uuid(),
-  quantite: z.number().int().positive(),
+  quantite: quantite(),
   prixUnitaire: z.number().positive().optional(),
 })
 
@@ -158,7 +166,7 @@ export const receptionSchema = z.object({
     .array(
       z.object({
         ligneId: z.string().uuid(),
-        quantite: z.number().int().positive(),
+        quantite: quantite(),
       }),
     )
     .min(1),
@@ -175,14 +183,14 @@ export const updateCommandeSchema = z.object({
 export const createMouvementSchema = z.object({
   articleId: z.string().uuid(),
   type: z.enum(['entree', 'sortie']),
-  quantite: z.number().int().positive(),
+  quantite: quantite(),
   fournisseurId: z.string().uuid().optional(),
   bonLivraison: z.string().optional(),
   motif: z.string().optional(),
 })
 
 export const ajustementSchema = z.object({
-  stockPhysique: z.number().int().min(0),
+  stockPhysique: quantitePositiveOuNulle(),
   motif: z.string().trim().min(3).max(500),
 })
 
@@ -219,10 +227,15 @@ const texteOpt = z.preprocess(
   (v) => (typeof v === 'string' && v.trim() === '' ? undefined : v),
   z.string().trim().optional(),
 )
-const entierOpt = (def: number) =>
+// Un tableur français écrit « 2,5 » : la virgule doit devenir un point avant
+// la conversion, sinon la cellule est rejetée.
+const quantiteOpt = (def: number) =>
   z.preprocess(
-    (v) => (v === '' || v === null || v === undefined ? def : v),
-    z.coerce.number().int().min(0),
+    (v) => {
+      if (v === '' || v === null || v === undefined) return def
+      return typeof v === 'string' ? v.trim().replace(',', '.') : v
+    },
+    z.coerce.number().min(0).refine(respectePrecisionQuantite, MESSAGE_PRECISION),
   )
 const decimalOpt = z.preprocess(
   (v) => (v === '' || v === null || v === undefined ? undefined : v),
@@ -238,8 +251,8 @@ export const importArticleSchema = z.object({
     z.string(),
   ),
   prixUnitaire: decimalOpt,
-  stockActuel: entierOpt(0),
-  seuilAlerte: entierOpt(5),
+  stockActuel: quantiteOpt(0),
+  seuilAlerte: quantiteOpt(5),
   emplacement: texteOpt,
   notes: texteOpt,
 })

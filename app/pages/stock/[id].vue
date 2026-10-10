@@ -116,14 +116,14 @@ const ajustementSubmitting = ref(false)
 const stockTheorique = computed(() => article.value?.stockActuel ?? 0)
 const delta = computed(() => {
   if (stockPhysique.value === null || Number.isNaN(stockPhysique.value)) return 0
-  return stockPhysique.value - stockTheorique.value
+  return arrondirQuantite(stockPhysique.value - stockTheorique.value)
 })
 const motifAjustementValide = computed(() => motifAjustement.value.trim().length >= 3)
 const stockPhysiqueValide = computed(
   () =>
     stockPhysique.value !== null &&
     stockPhysique.value >= 0 &&
-    Number.isInteger(stockPhysique.value),
+    respectePrecisionQuantite(stockPhysique.value),
 )
 const peutAjuster = computed(
   () => stockPhysiqueValide.value && delta.value !== 0 && motifAjustementValide.value,
@@ -142,7 +142,7 @@ async function confirmerAjustement() {
     const res = await ajusterStock(articleId, stockPhysique.value!, motifAjustement.value.trim())
     notifications.success(
       'Stock ajusté',
-      `${res.delta > 0 ? '+' : ''}${res.delta} ${article.value?.unite ?? ''}, nouveau stock ${res.stockApres}`,
+      `${res.delta > 0 ? '+' : ''}${formatQuantite(res.delta)} ${article.value?.unite ?? ''}, nouveau stock ${formatQuantite(res.stockApres)}`,
     )
     showAjustementModal.value = false
     await refresh()
@@ -164,7 +164,7 @@ async function handleMouvement(data: Record<string, unknown>) {
     await refresh()
     notifications.success(
       'Entrée enregistrée',
-      `${data.quantite} × ${article.value?.reference ?? ''}`,
+      `${formatQuantite(data.quantite as number)} × ${article.value?.reference ?? ''}`,
     )
   } catch (e: unknown) {
     const msg =
@@ -228,11 +228,15 @@ async function handleMouvement(data: Record<string, unknown>) {
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <AppCard>
         <p class="text-sm text-muted">Stock actuel</p>
-        <p class="text-lg font-semibold text-ink">{{ article.stockActuel }} {{ article.unite }}</p>
+        <p class="text-lg font-semibold text-ink">
+          {{ formatQuantite(article.stockActuel) }} {{ article.unite }}
+        </p>
       </AppCard>
       <AppCard>
         <p class="text-sm text-muted">Seuil d'alerte</p>
-        <p class="text-lg font-semibold text-ink">{{ article.seuilAlerte }} {{ article.unite }}</p>
+        <p class="text-lg font-semibold text-ink">
+          {{ formatQuantite(article.seuilAlerte) }} {{ article.unite }}
+        </p>
       </AppCard>
       <AppCard>
         <p class="text-sm text-muted">{{ assujettiTva ? 'Prix unitaire HT' : 'Prix unitaire' }}</p>
@@ -296,7 +300,7 @@ async function handleMouvement(data: Record<string, unknown>) {
                 </AppBadge>
               </td>
               <td class="mono num text-center text-[14px] font-semibold">
-                {{ signeMouvement(mvt.type) }}{{ mvt.quantite }}
+                {{ signeMouvement(mvt.type) }}{{ formatQuantite(mvt.quantite) }}
               </td>
               <td class="text-ink-2">{{ mvt.fournisseurNom || mvt.clientNom || '' }}</td>
               <td class="text-[12.5px] text-muted">{{ mvt.motif || '' }}</td>
@@ -380,7 +384,7 @@ async function handleMouvement(data: Record<string, unknown>) {
               v-model.number="stockPhysique"
               type="number"
               min="0"
-              step="1"
+              step="any"
               class="mono num w-full rounded-md border border-line bg-white px-3 py-2 text-sm text-ink focus:border-forest focus:outline-none focus:ring-1 focus:ring-forest/30"
             />
           </div>
@@ -398,8 +402,10 @@ async function handleMouvement(data: Record<string, unknown>) {
         >
           <span class="font-medium">Écart</span>
           <span class="mono num font-semibold">
-            <template v-if="delta > 0">+{{ delta }} {{ article.unite }}</template>
-            <template v-else-if="delta < 0">{{ delta }} {{ article.unite }}</template>
+            <template v-if="delta > 0">+{{ formatQuantite(delta) }} {{ article.unite }}</template>
+            <template v-else-if="delta < 0"
+              >{{ formatQuantite(delta) }} {{ article.unite }}</template
+            >
             <template v-else>Aucun écart</template>
           </span>
         </div>

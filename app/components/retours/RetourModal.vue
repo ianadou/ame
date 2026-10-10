@@ -34,7 +34,7 @@ watch(open, (ouvert) => {
 
 const quantiteValide = computed(() => {
   const n = Number(quantite.value)
-  return Number.isInteger(n) && n > 0 && n <= (props.ligne?.restant ?? 0)
+  return respectePrecisionQuantite(n) && n > 0 && n <= (props.ligne?.restant ?? 0)
 })
 
 async function confirmer() {
@@ -52,7 +52,7 @@ async function confirmer() {
     })
     notifications.success(
       'Retour enregistré',
-      `${quantite.value} ${props.ligne.unite} · ${props.ligne.articleNom}`,
+      `${formatQuantite(Number(quantite.value))} ${props.ligne.unite} · ${props.ligne.articleNom}`,
     )
     open.value = false
     emit('saved')
@@ -80,7 +80,8 @@ async function confirmer() {
           <span v-if="ligne.beneficiaireNom"> · retiré par {{ ligne.beneficiaireNom }}</span>
         </p>
         <p class="mt-1 text-[12px] text-ink-3">
-          {{ ligne.restant }} {{ ligne.unite }} à rendre sur {{ ligne.quantite }} sorti(s)
+          {{ formatQuantite(ligne.restant) }} {{ ligne.unite }} à rendre sur
+          {{ formatQuantite(ligne.quantite) }} sorti(s)
         </p>
       </div>
 

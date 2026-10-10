@@ -10,6 +10,7 @@ import {
   retours,
   reglements,
 } from '../../db/schema'
+import { DECIMALES_QUANTITE } from '../../../shared/utils/quantites'
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')!
@@ -64,10 +65,10 @@ export default defineEventHandler(async (event) => {
       quantite: lignesSortie.quantite,
       prixUnitaire: lignesSortie.prixUnitaire,
       stockApres: lignesSortie.stockApres,
-      quantiteRetournee: sql<number>`coalesce((
+      quantiteRetournee: sql<number>`round(coalesce((
         select sum(${retours.quantite}) from ${retours}
         where ${retours.ligneSortieId} = ${lignesSortie.id}
-      ), 0)`,
+      ), 0), ${DECIMALES_QUANTITE})`,
     })
     .from(lignesSortie)
     .innerJoin(articles, eq(lignesSortie.articleId, articles.id))

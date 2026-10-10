@@ -3,6 +3,7 @@ import { db } from '../../../db'
 import { articles, mouvements } from '../../../db/schema'
 import { ajustementSchema } from '../../../utils/validation'
 import { generateId } from '../../../utils/helpers'
+import { arrondirQuantite } from '../../../../shared/utils/quantites'
 
 /**
  * Ajustement de stock manuel : réconcilie le stock théorique avec un
@@ -19,7 +20,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, message: 'Article introuvable' })
   }
 
-  const delta = body.stockPhysique - article.stockActuel
+  const delta = arrondirQuantite(body.stockPhysique - article.stockActuel)
   if (delta === 0) {
     throw createError({ statusCode: 400, message: 'Aucun écart à enregistrer' })
   }

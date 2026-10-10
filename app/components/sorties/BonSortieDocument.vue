@@ -119,7 +119,7 @@ const editeLe = formatDateTime(new Date().toISOString())
           <td class="mono py-2 pr-3 text-ink-2">{{ ligne.articleReference }}</td>
           <td class="py-2 pr-3">{{ ligne.articleNom }}</td>
           <td class="mono num whitespace-nowrap py-2 pr-3 text-right">
-            {{ ligne.quantite }} {{ ligne.unite }}
+            {{ formatQuantite(ligne.quantite) }} {{ ligne.unite }}
           </td>
           <td v-if="aRetournables" class="py-2 pr-3 text-center font-semibold">
             {{ ligne.retournable ? 'Oui' : '' }}

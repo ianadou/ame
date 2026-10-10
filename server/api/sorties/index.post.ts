@@ -14,6 +14,11 @@ import {
 import { createSortieSchema } from '../../utils/validation'
 import { generateId, generateSortieReference } from '../../utils/helpers'
 import { montantDu } from '../../../shared/utils/montants'
+import {
+  arrondirQuantite,
+  DECIMALES_QUANTITE,
+  formatQuantite,
+} from '../../../shared/utils/quantites'
 
 export default defineEventHandler(async (event) => {
   const body = await readValidatedBody(event, createSortieSchema.parse)
@@ -54,7 +59,7 @@ export default defineEventHandler(async (event) => {
   for (const ligne of body.lignes) {
     quantitesParArticle.set(
       ligne.articleId,
-      (quantitesParArticle.get(ligne.articleId) ?? 0) + ligne.quantite,
+      arrondirQuantite((quantitesParArticle.get(ligne.articleId) ?? 0) + ligne.quantite),
     )
   }
   const articleIds = [...quantitesParArticle.keys()]
@@ -71,7 +76,7 @@ export default defineEventHandler(async (event) => {
     if (article.stockActuel < demande) {
       throw createError({
         statusCode: 400,
-        message: `Stock insuffisant pour « ${article.nom} » (${article.stockActuel} disponible, ${demande} demandé)`,
+        message: `Stock insuffisant pour « ${article.nom} » (${formatQuantite(article.stockActuel)} disponible, ${formatQuantite(demande)} demandé)`,
       })
     }
   }
@@ -91,7 +96,7 @@ export default defineEventHandler(async (event) => {
   const prixParArticle = new Map(articlesData.map((a) => [a.id, a.prixUnitaire ?? 0]))
 
   const lignes = [...quantitesParArticle.entries()].map(([articleId, quantite]) => {
-    const stockApres = stockSuivi.get(articleId)! - quantite
+    const stockApres = arrondirQuantite(stockSuivi.get(articleId)! - quantite)
     stockSuivi.set(articleId, stockApres)
     return {
       id: generateId(),
@@ -156,7 +161,7 @@ export default defineEventHandler(async (event) => {
       await tx
         .update(articles)
         .set({
-          stockActuel: sql`${articles.stockActuel} - ${ligne.quantite}`,
+          stockActuel: sql`round(${articles.stockActuel} - ${ligne.quantite}, ${DECIMALES_QUANTITE})`,
           updatedAt: sql`(datetime('now'))`,
         })
         .where(eq(articles.id, ligne.articleId))

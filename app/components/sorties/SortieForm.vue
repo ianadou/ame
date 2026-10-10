@@ -145,7 +145,7 @@ function handleSubmit() {
   for (const l of lignesValides) {
     const a = articleById(l.articleId)
     if (a && l.quantite > a.stockActuel) {
-      erreur.value = `Stock insuffisant pour « ${a.nom} » (${a.stockActuel} disponible).`
+      erreur.value = `Stock insuffisant pour « ${a.nom} » (${formatQuantite(a.stockActuel)} disponible).`
       return
     }
   }
@@ -245,7 +245,7 @@ function handleSubmit() {
             <Trash2 class="h-4 w-4" />
           </button>
           <p v-if="ligne.articleId" class="col-span-3 -mt-1 text-[11px] text-muted">
-            {{ articleById(ligne.articleId)?.stockActuel ?? 0 }}
+            {{ formatQuantite(articleById(ligne.articleId)?.stockActuel ?? 0) }}
             {{ articleById(ligne.articleId)?.unite }} en stock ·
             {{ fcfa(articleById(ligne.articleId)?.prixUnitaire ?? 0) }} / u · sous-total
             {{
