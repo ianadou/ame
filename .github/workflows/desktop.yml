@@ -45,7 +45,7 @@ jobs:
           workspaces: src-tauri
 
       - name: Installer les dépendances
-        run: bun install
+        run: bun install --frozen-lockfile
 
       # `tauri build` exécute le beforeBuildCommand de tauri.conf.json :
       # nuxt build + copie @libsql + prépare le sidecar bun de la plateforme.

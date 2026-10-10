@@ -28,9 +28,6 @@ logs
 *.db
 *.db-journal
 
-# Bun
-bun.lock
-
 # Turso
 .turso/
 
