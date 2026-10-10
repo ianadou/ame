@@ -93,7 +93,7 @@ function formatDateTime(iso: string) {
           <p class="mt-2 text-xs text-muted">{{ formatDateTime(detail.createdAt) }}</p>
         </div>
         <div class="mono num text-right text-[28px] font-semibold leading-none text-ink">
-          {{ detail.signe > 0 ? '+' : '−' }}{{ detail.quantite }}
+          {{ detail.signe > 0 ? '+' : '−' }}{{ formatQuantite(detail.quantite) }}
           <span class="ml-1 text-[13px] font-normal text-muted">{{ detail.article.unite }}</span>
         </div>
       </div>
@@ -166,12 +166,16 @@ function formatDateTime(iso: string) {
         <div class="mt-1 flex items-center gap-3">
           <div class="text-center">
             <p class="text-[11px] text-muted">Avant</p>
-            <p class="mono num text-lg font-semibold text-ink-2">{{ detail.stockAvant }}</p>
+            <p class="mono num text-lg font-semibold text-ink-2">
+              {{ formatQuantite(detail.stockAvant) }}
+            </p>
           </div>
           <ArrowRight class="h-4 w-4 text-ink-4" />
           <div class="text-center">
             <p class="text-[11px] text-muted">Après</p>
-            <p class="mono num text-lg font-semibold text-ink">{{ detail.stockApres }}</p>
+            <p class="mono num text-lg font-semibold text-ink">
+              {{ formatQuantite(detail.stockApres) }}
+            </p>
           </div>
           <span class="ml-auto text-[12px] text-muted">{{ detail.article.unite }}</span>
         </div>

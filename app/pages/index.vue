@@ -409,7 +409,7 @@ const exportEntites = [
                 {{ m.fournisseurNom || m.clientNom || '' }}
               </td>
               <td class="mono num w-[58px] px-2 py-2.5 text-right text-[13.5px] font-semibold">
-                {{ signeMouvement(m.type) }}{{ m.quantite }}
+                {{ signeMouvement(m.type) }}{{ formatQuantite(m.quantite) }}
               </td>
               <td class="mono w-[100px] py-2.5 pl-2 pr-5 text-right text-[11px] text-muted">
                 {{ fmtDate(m.createdAt) }}<br />{{ fmtTime(m.createdAt) }}
@@ -446,9 +446,11 @@ const exportEntites = [
                   class="mono num text-[14.5px] font-semibold"
                   :class="a.stockActuel <= a.seuilAlerte ? 'text-rust-dark' : 'text-amber-700'"
                 >
-                  {{ a.stockActuel }}
+                  {{ formatQuantite(a.stockActuel) }}
                 </span>
-                <span class="text-[11px] text-muted">/ {{ a.seuilAlerte }} {{ a.unite }}</span>
+                <span class="text-[11px] text-muted"
+                  >/ {{ formatQuantite(a.seuilAlerte) }} {{ a.unite }}</span
+                >
               </div>
               <div class="mt-1 h-1 overflow-hidden rounded-full bg-paper-2">
                 <div

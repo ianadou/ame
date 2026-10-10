@@ -299,20 +299,22 @@ async function confirmerAnnulation() {
               <td class="px-4 py-3 text-sm font-medium text-ink">{{ l.articleReference }}</td>
               <td class="px-4 py-3 text-sm text-ink-2">{{ l.articleNom }}</td>
               <td class="px-4 py-3 text-center text-sm text-ink-2">
-                {{ l.quantite }} {{ l.unite }}
+                {{ formatQuantite(l.quantite) }} {{ l.unite }}
               </td>
               <td class="px-4 py-3 text-center text-sm text-muted">{{ fcfa(l.prixUnitaire) }}</td>
               <td class="px-4 py-3 text-center text-sm font-medium text-ink">
                 {{ fcfa(l.prixUnitaire * l.quantite) }}
               </td>
-              <td class="px-4 py-3 text-center text-sm text-muted">{{ l.stockApres }}</td>
+              <td class="px-4 py-3 text-center text-sm text-muted">
+                {{ formatQuantite(l.stockApres) }}
+              </td>
               <td v-if="aRetournables" class="px-4 py-3 text-center text-sm">
                 <span v-if="!l.retournable" class="text-[12px] text-muted">Non retournable</span>
                 <AppBadge v-else-if="l.quantiteRetournee >= l.quantite" variant="success">
                   Rendu
                 </AppBadge>
                 <AppBadge v-else variant="warning">
-                  {{ l.quantite - l.quantiteRetournee }} dehors
+                  {{ formatQuantite(arrondirQuantite(l.quantite - l.quantiteRetournee)) }} dehors
                 </AppBadge>
               </td>
             </tr>

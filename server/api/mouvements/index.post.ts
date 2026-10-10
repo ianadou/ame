@@ -3,6 +3,7 @@ import { db } from '../../db'
 import { articles, mouvements } from '../../db/schema'
 import { createMouvementSchema } from '../../utils/validation'
 import { generateId } from '../../utils/helpers'
+import { DECIMALES_QUANTITE, formatQuantite } from '../../../shared/utils/quantites'
 
 export default defineEventHandler(async (event) => {
   const body = await readValidatedBody(event, createMouvementSchema.parse)
@@ -15,7 +16,7 @@ export default defineEventHandler(async (event) => {
   if (body.type === 'sortie' && article.stockActuel < body.quantite) {
     throw createError({
       statusCode: 400,
-      message: `Stock insuffisant (${article.stockActuel} disponible, ${body.quantite} demandé)`,
+      message: `Stock insuffisant (${formatQuantite(article.stockActuel)} disponible, ${formatQuantite(body.quantite)} demandé)`,
     })
   }
 
@@ -30,7 +31,7 @@ export default defineEventHandler(async (event) => {
   await db
     .update(articles)
     .set({
-      stockActuel: sql`${articles.stockActuel} + ${stockChange}`,
+      stockActuel: sql`round(${articles.stockActuel} + ${stockChange}, ${DECIMALES_QUANTITE})`,
       updatedAt: sql`(datetime('now'))`,
     })
     .where(eq(articles.id, body.articleId))

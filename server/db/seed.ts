@@ -114,7 +114,7 @@ async function seed() {
   console.log(`  ${clientsData.length} clients créés`)
 
   // Articles
-  const unites = ['pièce', 'mètre', 'kg', 'litre', 'sac', 'rouleau', 'lot']
+  const unites = ['pièce', 'tonne', 'mètre', 'kg', 'litre', 'sac', 'rouleau', 'lot']
   const prefixes: Record<string, string> = {
     Plomberie: 'PLB',
     Électricité: 'ELC',

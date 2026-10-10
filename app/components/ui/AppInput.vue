@@ -37,6 +37,7 @@ const model = defineModel<string>()
       <input
         v-model="model"
         :type="type"
+        :step="type === 'number' ? 'any' : undefined"
         :placeholder="placeholder"
         class="h-9 w-full rounded-md bg-transparent pr-3 text-[13px] text-ink placeholder:text-muted/80 focus:outline-none"
         :class="[icon ? 'pl-2' : 'pl-3', mono ? 'mono' : '', align === 'right' ? 'text-right' : '']"

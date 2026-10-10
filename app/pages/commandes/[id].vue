@@ -53,7 +53,7 @@ const peutReceptionner = computed(
 )
 
 function reste(l: LigneCommande) {
-  return l.quantite - l.quantiteRecue
+  return arrondirQuantite(l.quantite - l.quantiteRecue)
 }
 
 function openReception(toutRecevoir = false) {
@@ -286,9 +286,11 @@ const tva = computed(() => {
               <td class="px-4 py-3 text-sm font-medium text-ink">{{ ligne.reference }}</td>
               <td class="px-4 py-3 text-sm text-ink-2">{{ ligne.nom }}</td>
               <td class="px-4 py-3 text-center text-sm text-ink">
-                {{ ligne.quantite }} {{ ligne.unite }}
+                {{ formatQuantite(ligne.quantite) }} {{ ligne.unite }}
               </td>
-              <td class="px-4 py-3 text-center text-sm text-ink-2">{{ ligne.quantiteRecue }}</td>
+              <td class="px-4 py-3 text-center text-sm text-ink-2">
+                {{ formatQuantite(ligne.quantiteRecue) }}
+              </td>
               <td
                 class="px-4 py-3 text-center text-sm font-medium"
                 :class="reste(ligne) > 0 ? 'text-rust-dark' : 'text-ink-3'"
@@ -329,7 +331,9 @@ const tva = computed(() => {
                 <td class="px-4 py-2 text-sm text-ink-2">
                   {{ ligne.reference }} · {{ ligne.nom }}
                 </td>
-                <td class="px-4 py-2 text-center text-sm text-muted">{{ reste(ligne) }}</td>
+                <td class="px-4 py-2 text-center text-sm text-muted">
+                  {{ formatQuantite(reste(ligne)) }}
+                </td>
                 <td class="px-4 py-2">
                   <AppInput
                     v-model="recu[ligne.id]"

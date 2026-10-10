@@ -20,8 +20,11 @@ export const articles = sqliteTable(
     categorieId: text('categorie_id').references(() => categories.id, { onDelete: 'set null' }),
     unite: text('unite').notNull().default('pièce'),
     prixUnitaire: real('prix_unitaire'),
-    stockActuel: integer('stock_actuel').notNull().default(0),
-    seuilAlerte: integer('seuil_alerte').notNull().default(5),
+    // Quantités décimales (tonnes). Les bases existantes gardent l'affinité
+    // INTEGER de leurs colonnes : SQLite y conserve 2,5 tel quel, d'où
+    // l'absence de migration reconstruisant les tables.
+    stockActuel: real('stock_actuel').notNull().default(0),
+    seuilAlerte: real('seuil_alerte').notNull().default(5),
     emplacement: text('emplacement'),
     notes: text('notes'),
     // Nature physique de l'article : `consommable` = sortie définitive
@@ -187,9 +190,9 @@ export const lignesSortie = sqliteTable(
     articleId: text('article_id')
       .references(() => articles.id, { onDelete: 'restrict' })
       .notNull(),
-    quantite: integer('quantite').notNull(),
+    quantite: real('quantite').notNull(),
     prixUnitaire: real('prix_unitaire').notNull().default(0),
-    stockApres: integer('stock_apres').notNull().default(0),
+    stockApres: real('stock_apres').notNull().default(0),
   },
   (t) => [
     check('lignes_sortie_quantite_positive', sql`${t.quantite} > 0`),
@@ -246,7 +249,7 @@ export const retours = sqliteTable(
     ligneSortieId: text('ligne_sortie_id')
       .references(() => lignesSortie.id, { onDelete: 'cascade' })
       .notNull(),
-    quantite: integer('quantite').notNull(),
+    quantite: real('quantite').notNull(),
     dateRetour: text('date_retour').notNull(),
     etat: text('etat').notNull().default('bon'),
     notes: text('notes'),
@@ -268,7 +271,7 @@ export const mouvements = sqliteTable(
       .references(() => articles.id, { onDelete: 'restrict' })
       .notNull(),
     type: text('type').notNull(),
-    quantite: integer('quantite').notNull(),
+    quantite: real('quantite').notNull(),
     fournisseurId: text('fournisseur_id').references(() => fournisseurs.id, {
       onDelete: 'set null',
     }),
@@ -354,8 +357,8 @@ export const lignesCommande = sqliteTable(
     articleId: text('article_id')
       .references(() => articles.id, { onDelete: 'restrict' })
       .notNull(),
-    quantite: integer('quantite').notNull(),
-    quantiteRecue: integer('quantite_recue').notNull().default(0),
+    quantite: real('quantite').notNull(),
+    quantiteRecue: real('quantite_recue').notNull().default(0),
     prixUnitaire: real('prix_unitaire'),
   },
   (t) => [

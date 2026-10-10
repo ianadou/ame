@@ -180,7 +180,7 @@ onMounted(async () => {
                     article.statut === 'actif' && stockStatus(article) === 'warning',
                 }"
               >
-                {{ article.stockActuel }}
+                {{ formatQuantite(article.stockActuel) }}
               </td>
               <td class="!pl-12 text-muted">{{ article.unite }}</td>
               <td class="!pl-6">

@@ -101,9 +101,9 @@ await load()
                 <span class="ml-2 text-[12px] text-muted">{{ ligne.articleReference }}</span>
               </td>
               <td class="mono num text-right text-ink-2">
-                {{ ligne.restant }} {{ ligne.unite }}
+                {{ formatQuantite(ligne.restant) }} {{ ligne.unite }}
                 <span v-if="ligne.quantiteRetournee > 0" class="text-[11.5px] text-muted">
-                  / {{ ligne.quantite }}
+                  / {{ formatQuantite(ligne.quantite) }}
                 </span>
               </td>
               <td class="text-muted">{{ ligne.chantierNom ?? '' }}</td>
@@ -146,7 +146,9 @@ await load()
                 <span class="font-medium text-ink">{{ r.articleNom }}</span>
                 <span class="ml-2 text-[12px] text-muted">{{ r.articleReference }}</span>
               </td>
-              <td class="mono num text-right text-ink-2">{{ r.quantite }} {{ r.unite }}</td>
+              <td class="mono num text-right text-ink-2">
+                {{ formatQuantite(r.quantite) }} {{ r.unite }}
+              </td>
               <td>
                 <AppBadge :variant="r.etat === 'bon' ? 'success' : 'danger'">
                   {{ r.etat === 'bon' ? 'Bon état' : 'Endommagé' }}

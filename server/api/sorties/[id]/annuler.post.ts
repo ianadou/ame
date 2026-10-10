@@ -3,6 +3,7 @@ import { db } from '../../../db'
 import { sorties, lignesSortie, articles, mouvements, retours } from '../../../db/schema'
 import { annulerSortieSchema } from '../../../utils/validation'
 import { generateId } from '../../../utils/helpers'
+import { DECIMALES_QUANTITE } from '../../../../shared/utils/quantites'
 
 /**
  * Annule un bon de sortie en CONTRE-PASSANT (jamais de suppression) :
@@ -57,7 +58,7 @@ export default defineEventHandler(async (event) => {
       await tx
         .update(articles)
         .set({
-          stockActuel: sql`${articles.stockActuel} + ${ligne.quantite}`,
+          stockActuel: sql`round(${articles.stockActuel} + ${ligne.quantite}, ${DECIMALES_QUANTITE})`,
           updatedAt: sql`(datetime('now'))`,
         })
         .where(eq(articles.id, ligne.articleId))
