@@ -199,7 +199,7 @@ function handleSubmit() {
         v-model="form.chantierId"
         label="Chantier (optionnel)"
         :options="chantierOptions"
-        placeholder="Aucun (vente au comptoir)"
+        placeholder="Aucun (sortie au comptoir)"
       />
       <AppSelect
         v-model="form.beneficiaireId"

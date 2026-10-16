@@ -7,6 +7,7 @@ import {
   Truck,
   Users,
   PackageMinus,
+  PackagePlus,
   Tags,
   Settings,
   Search,
@@ -36,7 +37,8 @@ const navGroups: { label: string; items: { name: string; to: string; icon: unkno
   {
     label: 'Opérations',
     items: [
-      { name: 'Ventes', to: '/sorties', icon: PackageMinus },
+      { name: 'Entrées', to: '/entrees', icon: PackagePlus },
+      { name: 'Sorties', to: '/sorties', icon: PackageMinus },
       { name: 'Créances', to: '/creances', icon: Wallet },
       { name: 'Transactions', to: '/mouvements', icon: ArrowLeftRight },
       { name: 'Commandes', to: '/commandes', icon: ShoppingCart },

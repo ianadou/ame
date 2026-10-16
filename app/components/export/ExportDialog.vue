@@ -37,8 +37,8 @@ const optionsFormat = [
 
 const optionsType = [
   { value: '', label: 'Toutes les transactions' },
-  { value: 'entree', label: 'Approvisionnements seulement' },
-  { value: 'sortie', label: 'Ventes seulement' },
+  { value: 'entree', label: 'Entrées seulement' },
+  { value: 'sortie', label: 'Sorties seulement' },
 ]
 
 function lancer() {

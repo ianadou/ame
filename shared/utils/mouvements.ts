@@ -2,8 +2,8 @@
 // entre l'app et le serveur : les copies locales avaient divergé, et retours
 // comme annulations passaient pour des approvisionnements fournisseur.
 export const TYPES_MOUVEMENT = {
-  entree: { libelle: 'Approvisionnement', pluriel: 'Approvisionnements', entrant: true },
-  sortie: { libelle: 'Vente', pluriel: 'Ventes', entrant: false },
+  entree: { libelle: 'Entrée', pluriel: 'Entrées', entrant: true },
+  sortie: { libelle: 'Sortie', pluriel: 'Sorties', entrant: false },
   retour: { libelle: 'Retour', pluriel: 'Retours', entrant: true },
   annulation: { libelle: 'Annulation', pluriel: 'Annulations', entrant: true },
   ajustement_positif: { libelle: 'Ajustement +', pluriel: 'Ajustements +', entrant: true },

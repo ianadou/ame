@@ -123,7 +123,7 @@ async function resetData() {
       <div class="mt-4 flex items-center gap-3 rounded-md bg-rust/5 px-4 py-3">
         <AlertTriangle class="h-5 w-5 shrink-0 text-rust" />
         <p class="flex-1 text-[13px] text-rust-dark">
-          Effacer catalogue, stock, clients, ventes, règlements, chantiers, bénéficiaires et
+          Effacer catalogue, stock, clients, sorties, règlements, chantiers, bénéficiaires et
           commandes.
         </p>
         <AppButton variant="danger" size="sm" @click="showConfirm = true"> Tout effacer </AppButton>

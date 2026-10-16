@@ -12,7 +12,7 @@ const notifications = useNotifications()
 const { data: sortie, refresh } = await useFetch<SortieDetail>(`/api/sorties/${sortieId}`)
 
 if (!sortie.value) {
-  throw createError({ statusCode: 404, message: 'Bon de vente introuvable' })
+  throw createError({ statusCode: 404, message: 'Bon de sortie introuvable' })
 }
 
 const annule = computed(() => sortie.value?.statut === 'annule')
@@ -76,7 +76,7 @@ async function confirmerAnnulation() {
   try {
     const ref = sortie.value?.reference ?? 'Bon'
     await annulerSortie(sortieId, motif.value.trim())
-    notifications.success('Vente annulée', `${ref}, stock restitué`)
+    notifications.success('Sortie annulée', `${ref}, stock restitué`)
     showAnnulerModal.value = false
     await refresh()
   } catch (e: unknown) {
@@ -323,7 +323,7 @@ async function confirmerAnnulation() {
       </AppCard>
     </div>
 
-    <AppModal v-model:open="showAnnulerModal" title="Annuler ce bon de vente">
+    <AppModal v-model:open="showAnnulerModal" title="Annuler ce bon de sortie">
       <div class="space-y-3">
         <p class="text-sm text-muted">
           L'annulation va restituer le stock article par article et enregistrer une transaction

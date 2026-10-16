@@ -215,7 +215,7 @@ function statutVariant(statut: string) {
         <AppEmptyState
           v-else
           title="Aucune entrée"
-          description="Aucune approvisionnement liée à ce fournisseur."
+          description="Aucune entrée liée à ce fournisseur."
         />
       </AppCard>
     </div>

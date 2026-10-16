@@ -42,7 +42,7 @@ await load()
       </div>
       <AppButton @click="navigateTo('/sorties/nouveau')">
         <Plus class="h-4 w-4" />
-        Nouvelle vente
+        Nouvelle sortie
       </AppButton>
     </div>
 
@@ -94,13 +94,13 @@ await load()
       <AppEmptyState
         v-if="!loading && sorties.length === 0"
         :icon="PackageMinus"
-        title="Aucune vente"
-        description="Créez un bon de vente pour livrer des articles à un client."
+        title="Aucune sortie"
+        description="Créez un bon de sortie pour livrer des articles à un client."
       >
         <template #action>
           <AppButton @click="navigateTo('/sorties/nouveau')">
             <Plus class="h-4 w-4" />
-            Nouvelle vente
+            Nouvelle sortie
           </AppButton>
         </template>
       </AppEmptyState>
