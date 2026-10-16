@@ -7,17 +7,17 @@ const PAGE_META: Record<string, { title: string; kicker: string; crumb: string }
   '/stock': { title: 'Stock', kicker: 'Inventaire articles', crumb: 'Catalogue' },
   '/mouvements': {
     title: 'Transactions',
-    kicker: 'Historique approvisionnements et ventes',
+    kicker: 'Historique des entrées et sorties',
     crumb: 'Journal',
   },
   '/commandes': {
     title: 'Commandes',
     kicker: 'Bons de commande fournisseurs',
-    crumb: 'Achats',
+    crumb: 'Entrées',
   },
   '/fournisseurs': { title: 'Fournisseurs', kicker: 'Carnet fournisseurs', crumb: 'Partenaires' },
-  '/clients': { title: 'Clients', kicker: 'Carnet clients', crumb: 'Ventes' },
-  '/sorties': { title: 'Ventes', kicker: 'Ventes aux clients', crumb: 'Ventes' },
+  '/clients': { title: 'Clients', kicker: 'Carnet clients', crumb: 'Sorties' },
+  '/sorties': { title: 'Sorties', kicker: 'Sorties vers les clients', crumb: 'Sorties' },
   '/categories': { title: 'Catégories', kicker: 'Familles d’articles', crumb: 'Catalogue' },
   '/chantiers': { title: 'Chantiers', kicker: 'Sites et budgets', crumb: 'Référentiels' },
   '/beneficiaires': {

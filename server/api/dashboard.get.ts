@@ -86,7 +86,7 @@ export default defineEventHandler(async () => {
     topClients: topClients.map((c) => ({
       nom: c.nom,
       valeur: Math.round(c.valeur),
-      sub: `${c.nb} vente${c.nb > 1 ? 's' : ''}`,
+      sub: `${c.nb} sortie${c.nb > 1 ? 's' : ''}`,
     })),
   }
 })

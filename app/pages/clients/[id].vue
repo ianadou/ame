@@ -99,7 +99,7 @@ async function handleDelete() {
           @click="navigateTo(`/sorties/nouveau?client=${client.id}`)"
         >
           <Plus class="h-4 w-4" />
-          Nouvelle vente
+          Nouvelle sortie
         </AppButton>
         <AppButton variant="secondary" size="sm" @click="showEditModal = true">
           <Pencil class="h-4 w-4" />
@@ -118,7 +118,7 @@ async function handleDelete() {
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
       <AppCard>
-        <p class="text-sm text-muted">Ventes</p>
+        <p class="text-sm text-muted">Sorties</p>
         <p class="text-lg font-semibold text-ink">{{ client.totaux.nbSorties }}</p>
       </AppCard>
       <AppCard>
@@ -189,8 +189,8 @@ async function handleDelete() {
         </table>
         <AppEmptyState
           v-else
-          title="Aucune vente"
-          description="Ce client n'a encore aucun bon de vente enregistré."
+          title="Aucune sortie"
+          description="Ce client n'a encore aucun bon de sortie enregistré."
         />
       </AppCard>
     </div>
@@ -221,7 +221,7 @@ async function handleDelete() {
       v-model:open="showDeleteModal"
       title="Supprimer ce client"
       :cible="client.nom"
-      message="La fiche est retirée définitivement. Les bons de vente déjà émis à son nom bloquent la suppression et resteront intacts."
+      message="La fiche est retirée définitivement. Les bons de sortie déjà émis à son nom bloquent la suppression et resteront intacts."
       :loading="deleting"
       @confirm="handleDelete"
     />

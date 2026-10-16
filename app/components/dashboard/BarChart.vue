@@ -139,7 +139,7 @@ const infobulle = computed(() => {
           fill="transparent"
           tabindex="0"
           role="button"
-          :aria-label="`${libelles[i] ?? ''} : ${entrees[i] ?? 0} approvisionnements, ${sorties[i] ?? 0} ventes`"
+          :aria-label="`${libelles[i] ?? ''} : ${entrees[i] ?? 0} entrées, ${sorties[i] ?? 0} sorties`"
           class="cursor-pointer focus:outline-none"
           @pointerenter="actif = i"
           @pointerleave="actif = null"
@@ -170,14 +170,14 @@ const infobulle = computed(() => {
             <span class="mono num text-[13px] font-semibold text-ink">{{
               entrees[actif!] ?? 0
             }}</span>
-            <span class="text-[11.5px] text-muted">approvisionnements</span>
+            <span class="text-[11.5px] text-muted">entrées</span>
           </div>
           <div class="mt-1 flex items-center gap-2 whitespace-nowrap">
             <span class="h-0.5 w-3 rounded-full" :style="{ background: COULEUR_SORTIES }" />
             <span class="mono num text-[13px] font-semibold text-ink">{{
               sorties[actif!] ?? 0
             }}</span>
-            <span class="text-[11.5px] text-muted">ventes</span>
+            <span class="text-[11.5px] text-muted">sorties</span>
           </div>
         </template>
       </div>
