@@ -199,7 +199,7 @@ async function handleMouvement(data: Record<string, unknown>) {
           </AppButton>
           <AppButton variant="secondary" size="sm" @click="showEntreeModal = true">
             <Plus class="h-4 w-4" />
-            Approvisionnement
+            Entrée
           </AppButton>
           <AppButton variant="ghost" size="sm" @click="ouvrirArchivage">
             <Archive class="h-4 w-4" />
@@ -315,7 +315,7 @@ async function handleMouvement(data: Record<string, unknown>) {
       </AppCard>
     </div>
     <!-- Mouvement modals -->
-    <AppModal v-model:open="showEntreeModal" title="Approvisionnement">
+    <AppModal v-model:open="showEntreeModal" title="Entrée">
       <MouvementForm
         :article-id="article.id"
         :article-label="`${article.reference} · ${article.nom}`"

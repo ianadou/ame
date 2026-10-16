@@ -60,7 +60,12 @@
     @apply bg-paper-2;
   }
   .data-table th {
-    @apply border-b border-line px-4 py-2.5 text-left text-[11px] font-medium text-muted;
+    @apply border-b border-line px-4 py-2.5 text-[11px] font-medium text-muted;
+  }
+  /* :where() ramène la spécificité à celle d'une classe, sinon text-center et
+     text-right posés sur un <th> perdent contre cette règle. */
+  .data-table :where(th) {
+    text-align: left;
   }
   .data-table td {
     @apply border-b border-line/60 px-4 py-3 text-[13px] text-ink align-middle;

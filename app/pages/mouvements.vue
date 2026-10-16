@@ -77,7 +77,7 @@ async function handleMouvement(data: Record<string, unknown>) {
         </AppButton>
         <AppButton variant="secondary" @click="navigateTo('/sorties/nouveau')">
           <Minus class="h-4 w-4" />
-          Bon de vente
+          Bon de sortie
         </AppButton>
       </div>
     </div>
@@ -171,7 +171,7 @@ async function handleMouvement(data: Record<string, unknown>) {
     </AppCard>
 
     <!-- Mouvement modals -->
-    <AppModal v-model:open="showEntreeModal" title="Nouvelle approvisionnement">
+    <AppModal v-model:open="showEntreeModal" title="Nouvelle entrée">
       <MouvementForm @submit="handleMouvement">
         <template #actions>
           <AppButton variant="secondary" @click="showEntreeModal = false">Annuler</AppButton>

@@ -267,7 +267,7 @@ async function handleDelete() {
         <AppEmptyState
           v-else
           title="Aucun bon rattaché"
-          description="Affectez un chantier lors de la création d'un bon de vente pour suivre ici la consommation et le matériel sorti."
+          description="Affectez un chantier lors de la création d'un bon de sortie pour suivre ici la consommation et le matériel sorti."
         />
       </AppCard>
     </div>
@@ -299,7 +299,7 @@ async function handleDelete() {
       v-model:open="showDeleteModal"
       title="Supprimer ce chantier"
       :cible="chantier.nom"
-      message="Le chantier est retiré définitivement. Les bons de vente qui lui sont rattachés bloquent la suppression : dans ce cas, passez-le plutôt en « Terminé »."
+      message="Le chantier est retiré définitivement. Les bons de sortie qui lui sont rattachés bloquent la suppression : dans ce cas, passez-le plutôt en « Terminé »."
       :loading="deleting"
       @confirm="handleDelete"
     />

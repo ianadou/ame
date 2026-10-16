@@ -172,10 +172,10 @@ const exportEntites = [
         <Plus class="h-4 w-4" />Nouvel article
       </AppButton>
       <AppButton variant="secondary" @click="navigateTo('/mouvements')">
-        <ArrowDownLeft class="h-4 w-4" />Approvisionnement
+        <ArrowDownLeft class="h-4 w-4" />Entrée
       </AppButton>
       <AppButton variant="secondary" @click="navigateTo('/sorties/nouveau')">
-        <ArrowUpRight class="h-4 w-4" />Nouvelle vente
+        <ArrowUpRight class="h-4 w-4" />Nouvelle sortie
       </AppButton>
       <AppButton variant="secondary" @click="navigateTo('/commandes')">
         <FilePlus class="h-4 w-4" />Bon de commande
@@ -283,7 +283,7 @@ const exportEntites = [
         spark-color="#0F172A"
       />
       <KpiCard
-        label="Approvisionnements"
+        label="Entrées"
         to="/mouvements"
         :value="fmt(data.kpi.entrees)"
         :delta="data.delta.entrees"
@@ -292,7 +292,7 @@ const exportEntites = [
         spark-color="#10B981"
       />
       <KpiCard
-        label="Ventes"
+        label="Sorties"
         to="/sorties"
         :value="fmt(data.kpi.sorties)"
         :delta="data.delta.sorties"
@@ -322,18 +322,15 @@ const exportEntites = [
       />
     </div>
 
-    <!-- Approvisionnements vs ventes (pleine largeur) -->
-    <PanelCard
-      :kicker="'Transactions / ' + data.label.toLowerCase()"
-      title="Approvisionnements vs ventes"
-    >
+    <!-- Entrées vs sorties (pleine largeur) -->
+    <PanelCard :kicker="'Transactions / ' + data.label.toLowerCase()" title="Entrées vs sorties">
       <template #action>
         <div class="flex items-center gap-4 text-[11.5px]">
           <span class="flex items-center gap-1.5"
-            ><span class="h-2.5 w-2.5 rounded-[2px] bg-forest-dark" />Approvisionnements</span
+            ><span class="h-2.5 w-2.5 rounded-[2px] bg-forest-dark" />Entrées</span
           >
           <span class="flex items-center gap-1.5"
-            ><span class="h-2.5 w-2.5 rounded-[2px] bg-ochre-dark" />Ventes</span
+            ><span class="h-2.5 w-2.5 rounded-[2px] bg-ochre-dark" />Sorties</span
           >
         </div>
       </template>
@@ -369,7 +366,7 @@ const exportEntites = [
     </PanelCard>
 
     <!-- Top clients (pleine largeur) -->
-    <PanelCard :kicker="'Ventes / ' + data.label.toLowerCase()" title="Top clients">
+    <PanelCard :kicker="'Sorties / ' + data.label.toLowerCase()" title="Top clients">
       <template #action><span class="text-[11.5px] text-muted">FCFA HT</span></template>
       <HBarList :items="dashboard?.topClients ?? []" accent="forest" />
     </PanelCard>

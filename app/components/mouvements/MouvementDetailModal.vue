@@ -126,7 +126,7 @@ function formatDateTime(iso: string) {
       </div>
 
       <div v-if="detail.sortie" class="rounded-md border border-line px-3 py-2.5">
-        <p class="text-[11px] uppercase tracking-wider text-muted">Bon de vente</p>
+        <p class="text-[11px] uppercase tracking-wider text-muted">Bon de sortie</p>
         <NuxtLink
           :to="`/sorties/${detail.sortie.id}`"
           class="mt-1 inline-block text-sm font-medium text-ink hover:text-forest"
