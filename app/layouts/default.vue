@@ -17,6 +17,7 @@ const PAGE_META: Record<string, { title: string; kicker: string; crumb: string }
   },
   '/fournisseurs': { title: 'Fournisseurs', kicker: 'Carnet fournisseurs', crumb: 'Partenaires' },
   '/clients': { title: 'Clients', kicker: 'Carnet clients', crumb: 'Sorties' },
+  '/entrees': { title: 'Entrées', kicker: 'Réceptions de stock', crumb: 'Entrées' },
   '/sorties': { title: 'Sorties', kicker: 'Sorties vers les clients', crumb: 'Sorties' },
   '/categories': { title: 'Catégories', kicker: 'Familles d’articles', crumb: 'Catalogue' },
   '/chantiers': { title: 'Chantiers', kicker: 'Sites et budgets', crumb: 'Référentiels' },
